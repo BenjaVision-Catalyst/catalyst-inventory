@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'gearType',
 		'slot',
-		'modifiers'
+		'modifiers',
+		'familyId'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -19,6 +20,16 @@ BVCGearDefinition class >> id: anId name: aName icon: anIcon type: aType slot: a
 		type: aType
 		slot: aSlot
 		modifiers: aCollection
+]
+
+{ #category : 'accessing' }
+BVCGearDefinition >> familyId [
+	^ familyId
+]
+
+{ #category : 'accessing' }
+BVCGearDefinition >> familyId: anId [
+	familyId := anId
 ]
 
 { #category : 'accessing' }

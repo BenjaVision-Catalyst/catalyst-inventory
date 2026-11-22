@@ -16,3 +16,6 @@ for the rules, reproduction commands, rankings and all 24 results.
 
 The [Unreal companion plugin](https://github.com/BenjaVision-Catalyst/catalyst-inventory-ue-plugin)
 owns the future ACF integration.
+
+The [family milestone](docs/gear-family-v2.md) adds cumulative two-, three-,
+and four-piece thresholds and a proposed launch roster of manufacturers.

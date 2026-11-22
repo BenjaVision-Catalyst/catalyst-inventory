@@ -35,11 +35,17 @@ BVCGearSimulator >> evaluate: outfit in: scenario [
 							ifFalse: [ self error: 'Only while-equipped additive modifiers are supported' ].
 						active := modifier appliesTo: (scenario at: #targetClass).
 						delta := active ifTrue: [ modifier magnitude ] ifFalse: [ 0 ].
-						raw at: modifier stat put: (raw at: modifier stat) + delta.
 						{#item -> item id.
 							#modifier -> modifier.
 							#active -> active.
 							#rawDelta -> delta} asDictionary ] ].
+	contributions := contributions
+			, (BVCGearFamilyEvaluator new contributionsFor: outfit in: scenario).
+	contributions
+		do: [ :entry | 
+			| stat |
+			stat := (entry at: #modifier) stat.
+			raw at: stat put: (raw at: stat) + (entry at: #rawDelta) ].
 	effective := raw collect: [ :value | value max: 0 ].
 	effective
 		at: #criticalChance
