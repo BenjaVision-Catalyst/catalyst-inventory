@@ -1,16 +1,16 @@
 # Gear simulation milestone 1
 
 `BVC-Inventory-Core` defines general inventory items and adds gear-specific
-slots, modifiers and outfit constraints through `BVCGearDefinition` and
-`BVCGearOutfit`. `BVC-Inventory-GearSimulation` evaluates catalogues and
+slots, modifiers and outfit constraints through `CIGearDefinition` and
+`CIGearOutfit`. `BVC-Inventory-GearSimulation` evaluates catalogues and
 scenarios. `BVC-Inventory-GearSimulation-Tests` owns the gear-v1 fixture and
 its SUnit checks.
 
 In GT, load the Metacello group `GearSimulationTests` from a checkout of this
-repository. Evaluate `BVCGearSimulationTest suite run` and
-`BVCGearSimulationFixture new run`. Each result includes its scenario ID,
+repository. Evaluate `CIGearSimulationTest suite run` and
+`CIGearSimulationFixture new run`. Each result includes its scenario ID,
 item IDs, applied and inactive modifiers, and raw and effective stats.
-Use `BVCGearSimulator new comparisonsFor: row in: rows` for differences
+Use `CIGearSimulator new comparisonsFor: row in: rows` for differences
 against the empty outfit and the constituent one-piece outfits in that scenario.
 
 ## Fixture and rules

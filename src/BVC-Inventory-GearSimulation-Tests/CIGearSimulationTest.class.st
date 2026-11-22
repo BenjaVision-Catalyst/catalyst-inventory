@@ -1,21 +1,21 @@
 Class {
-	#name : 'BVCGearSimulationTest',
+	#name : 'CIGearSimulationTest',
 	#superclass : 'TestCase',
 	#category : 'BVC-Inventory-GearSimulation-Tests',
 	#package : 'BVC-Inventory-GearSimulation-Tests'
 }
 
 { #category : 'tests' }
-BVCGearSimulationTest >> rowWith: ids scenario: scenario in: rows [
+CIGearSimulationTest >> rowWith: ids scenario: scenario in: rows [
 	^ rows
 		detect: [ :row | (row at: #outfit) = ids and: [ (row at: #scenario) = scenario ] ]
 ]
 
 { #category : 'tests' }
-BVCGearSimulationTest >> testComparisonsAndRankings [
+CIGearSimulationTest >> testComparisonsAndRankings [
 	| fixture simulator rows row comparisons |
-	fixture := BVCGearSimulationFixture new.
-	simulator := BVCGearSimulator new.
+	fixture := CIGearSimulationFixture new.
+	simulator := CIGearSimulator new.
 	rows := fixture run.
 	row := self
 			rowWith: #(vest goggles helmet)
@@ -45,9 +45,9 @@ BVCGearSimulationTest >> testComparisonsAndRankings [
 ]
 
 { #category : 'tests' }
-BVCGearSimulationTest >> testConditionsAndCap [
+CIGearSimulationTest >> testConditionsAndCap [
 	| rows raider drone |
-	rows := BVCGearSimulationFixture new run.
+	rows := CIGearSimulationFixture new run.
 	raider := self
 			rowWith: #(vest goggles helmet)
 			scenario: #raider
@@ -68,10 +68,10 @@ BVCGearSimulationTest >> testConditionsAndCap [
 ]
 
 { #category : 'tests' }
-BVCGearSimulationTest >> testCoverage [
+CIGearSimulationTest >> testCoverage [
 	| fixture outfits rows |
-	fixture := BVCGearSimulationFixture new.
-	outfits := BVCGearSimulator new outfitsFor: fixture catalogue.
+	fixture := CIGearSimulationFixture new.
+	outfits := CIGearSimulator new outfitsFor: fixture catalogue.
 	rows := fixture run.
 	self assert: outfits size equals: 12.
 	self assert: rows size equals: 24.
@@ -86,15 +86,15 @@ BVCGearSimulationTest >> testCoverage [
 ]
 
 { #category : 'tests' }
-BVCGearSimulationTest >> testSlotAndItemRules [
+CIGearSimulationTest >> testSlotAndItemRules [
 	| fixture vests plainItem |
-	fixture := BVCGearSimulationFixture new.
+	fixture := CIGearSimulationFixture new.
 	vests := fixture catalogue select: [ :item | item slot = #chest ].
-	self should: [ BVCGearOutfit withPieces: vests ] raise: Error.
-	plainItem := BVCInventoryItemDefinition
+	self should: [ CIGearOutfit withPieces: vests ] raise: Error.
+	plainItem := CIInventoryItemDefinition
 			id: #drink
 			name: 'Drink'
 			icon: 'gearIcon_Drink.png'.
 	self assert: plainItem id equals: #drink.
-	self should: [ BVCGearOutfit withPieces: {plainItem} ] raise: Error
+	self should: [ CIGearOutfit withPieces: {plainItem} ] raise: Error
 ]

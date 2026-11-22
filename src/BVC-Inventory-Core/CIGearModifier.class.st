@@ -1,5 +1,5 @@
 Class {
-	#name : 'BVCGearModifier',
+	#name : 'CIGearModifier',
 	#superclass : 'Object',
 	#instVars : [
 		'stat',
@@ -13,7 +13,7 @@ Class {
 }
 
 { #category : 'accessing' }
-BVCGearModifier class >> stat: aStat operation: anOperation magnitude: aMagnitude targetClass: aTarget duration: aDuration [
+CIGearModifier class >> stat: aStat operation: anOperation magnitude: aMagnitude targetClass: aTarget duration: aDuration [
 	^ self new
 		initializeStat: aStat
 		operation: anOperation
@@ -23,17 +23,17 @@ BVCGearModifier class >> stat: aStat operation: anOperation magnitude: aMagnitud
 ]
 
 { #category : 'accessing' }
-BVCGearModifier >> appliesTo: aTargetClass [
+CIGearModifier >> appliesTo: aTargetClass [
 	^ targetClass isNil or: [ targetClass = aTargetClass ]
 ]
 
 { #category : 'accessing' }
-BVCGearModifier >> duration [
+CIGearModifier >> duration [
 	^ duration
 ]
 
 { #category : 'accessing' }
-BVCGearModifier >> initializeStat: aStat operation: anOperation magnitude: aMagnitude targetClass: aTarget duration: aDuration [
+CIGearModifier >> initializeStat: aStat operation: anOperation magnitude: aMagnitude targetClass: aTarget duration: aDuration [
 	stat := aStat.
 	operation := anOperation.
 	magnitude := aMagnitude.
@@ -42,21 +42,21 @@ BVCGearModifier >> initializeStat: aStat operation: anOperation magnitude: aMagn
 ]
 
 { #category : 'accessing' }
-BVCGearModifier >> magnitude [
+CIGearModifier >> magnitude [
 	^ magnitude
 ]
 
 { #category : 'accessing' }
-BVCGearModifier >> operation [
+CIGearModifier >> operation [
 	^ operation
 ]
 
 { #category : 'accessing' }
-BVCGearModifier >> stat [
+CIGearModifier >> stat [
 	^ stat
 ]
 
 { #category : 'accessing' }
-BVCGearModifier >> targetClass [
+CIGearModifier >> targetClass [
 	^ targetClass
 ]

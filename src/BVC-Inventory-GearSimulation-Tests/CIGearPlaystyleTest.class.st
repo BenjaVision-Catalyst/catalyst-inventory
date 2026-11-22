@@ -1,17 +1,17 @@
 Class {
-	#name : 'BVCGearPlaystyleTest',
+	#name : 'CIGearPlaystyleTest',
 	#superclass : 'TestCase',
 	#category : 'BVC-Inventory-GearSimulation-Tests',
 	#package : 'BVC-Inventory-GearSimulation-Tests'
 }
 
 { #category : 'tests' }
-BVCGearPlaystyleTest >> testAllRolesHaveChoices [
+CIGearPlaystyleTest >> testAllRolesHaveChoices [
 	| comparison catalogue |
-	catalogue := BVCGearPlaystyleCatalogue new.
+	catalogue := CIGearPlaystyleCatalogue new.
 	self assert: catalogue standalone size equals: 24.
 	self assert: (catalogue standalone allSatisfy: [ :gear | gear familyId isNil ]).
-	comparison := BVCGearPlaystyleComparison new run.
+	comparison := CIGearPlaystyleComparison new run.
 	self assert: comparison size equals: 5.
 	comparison
 		do: [ :role | 
@@ -25,10 +25,10 @@ BVCGearPlaystyleTest >> testAllRolesHaveChoices [
 ]
 
 { #category : 'tests' }
-BVCGearPlaystyleTest >> testResponseTradeoff [
+CIGearPlaystyleTest >> testResponseTradeoff [
 	| role winners standalone fullSet |
-	role := BVCGearPlaystyleComparison new
-			compare: BVCGearPlaystyleComparison new profiles last.
+	role := CIGearPlaystyleComparison new
+			compare: CIGearPlaystyleComparison new profiles last.
 	winners := role at: #winners.
 	standalone := (winners first at: #row) at: #metrics.
 	fullSet := (winners last at: #row) at: #metrics.

@@ -1,12 +1,12 @@
 Class {
-	#name : 'BVCGearPlaystyleCatalogue',
+	#name : 'CIGearPlaystyleCatalogue',
 	#superclass : 'Object',
 	#category : 'BVC-Inventory-GearSimulation',
 	#package : 'BVC-Inventory-GearSimulation'
 }
 
 { #category : 'catalogue' }
-BVCGearPlaystyleCatalogue >> add: magnitude to: stat [
+CIGearPlaystyleCatalogue >> add: magnitude to: stat [
 	^ self
 		add: magnitude
 		to: stat
@@ -14,8 +14,8 @@ BVCGearPlaystyleCatalogue >> add: magnitude to: stat [
 ]
 
 { #category : 'catalogue' }
-BVCGearPlaystyleCatalogue >> add: magnitude to: stat against: target [
-	^ BVCGearModifier
+CIGearPlaystyleCatalogue >> add: magnitude to: stat against: target [
+	^ CIGearModifier
 		stat: stat
 		operation: #add
 		magnitude: magnitude
@@ -24,8 +24,8 @@ BVCGearPlaystyleCatalogue >> add: magnitude to: stat against: target [
 ]
 
 { #category : 'catalogue' }
-BVCGearPlaystyleCatalogue >> containmentFamily [
-	^ BVCGearFamily
+CIGearPlaystyleCatalogue >> containmentFamily [
+	^ CIGearFamily
 		id: #containment
 		manufacturer: 'Sable Instruments'
 		tiers: {self
@@ -49,7 +49,7 @@ BVCGearPlaystyleCatalogue >> containmentFamily [
 ]
 
 { #category : 'catalogue' }
-BVCGearPlaystyleCatalogue >> containmentPieces [
+CIGearPlaystyleCatalogue >> containmentPieces [
 	^ {self
 			gear: #containmentHead
 			named: 'Containment Helmet'
@@ -85,13 +85,13 @@ BVCGearPlaystyleCatalogue >> containmentPieces [
 ]
 
 { #category : 'catalogue' }
-BVCGearPlaystyleCatalogue >> familyFor: familyId [
+CIGearPlaystyleCatalogue >> familyFor: familyId [
 	^ self perform: (familyId asString , 'Family') asSymbol
 ]
 
 { #category : 'catalogue' }
-BVCGearPlaystyleCatalogue >> gear: id named: name icon: icon slot: slot family: familyId modifiers: modifiers [
-	^ (BVCGearDefinition
+CIGearPlaystyleCatalogue >> gear: id named: name icon: icon slot: slot family: familyId modifiers: modifiers [
+	^ (CIGearDefinition
 		id: id
 		name: name
 		icon: 'gearIcon_' , icon , '.png'
@@ -105,13 +105,13 @@ BVCGearPlaystyleCatalogue >> gear: id named: name icon: icon slot: slot family: 
 ]
 
 { #category : 'catalogue' }
-BVCGearPlaystyleCatalogue >> itemsFor: familyId [
+CIGearPlaystyleCatalogue >> itemsFor: familyId [
 	^ self standalone , (self perform: (familyId asString , 'Pieces') asSymbol)
 ]
 
 { #category : 'catalogue' }
-BVCGearPlaystyleCatalogue >> responseFamily [
-	^ BVCGearFamily
+CIGearPlaystyleCatalogue >> responseFamily [
+	^ CIGearFamily
 		id: #response
 		manufacturer: 'Relay Works'
 		tiers: {self
@@ -135,7 +135,7 @@ BVCGearPlaystyleCatalogue >> responseFamily [
 ]
 
 { #category : 'catalogue' }
-BVCGearPlaystyleCatalogue >> responsePieces [
+CIGearPlaystyleCatalogue >> responsePieces [
 	^ {self
 			gear: #responseHead
 			named: 'Response Helmet'
@@ -173,7 +173,7 @@ BVCGearPlaystyleCatalogue >> responsePieces [
 ]
 
 { #category : 'catalogue' }
-BVCGearPlaystyleCatalogue >> standalone [
+CIGearPlaystyleCatalogue >> standalone [
 	^ {self
 			gear: #trailCap
 			named: 'Trail Cap'
@@ -367,8 +367,8 @@ BVCGearPlaystyleCatalogue >> standalone [
 ]
 
 { #category : 'catalogue' }
-BVCGearPlaystyleCatalogue >> stillpointFamily [
-	^ BVCGearFamily
+CIGearPlaystyleCatalogue >> stillpointFamily [
+	^ CIGearFamily
 		id: #stillpoint
 		manufacturer: 'Meridian Range'
 		tiers: {self
@@ -392,7 +392,7 @@ BVCGearPlaystyleCatalogue >> stillpointFamily [
 ]
 
 { #category : 'catalogue' }
-BVCGearPlaystyleCatalogue >> stillpointPieces [
+CIGearPlaystyleCatalogue >> stillpointPieces [
 	^ {self
 			gear: #stillpointHead
 			named: 'Stillpoint Helmet'
@@ -428,10 +428,10 @@ BVCGearPlaystyleCatalogue >> stillpointPieces [
 ]
 
 { #category : 'catalogue' }
-BVCGearPlaystyleCatalogue >> tier: threshold adds: magnitude to: stat trigger: trigger consumeOn: event [
-	^ BVCGearFamilyTier
+CIGearPlaystyleCatalogue >> tier: threshold adds: magnitude to: stat trigger: trigger consumeOn: event [
+	^ CIGearFamilyTier
 		pieces: threshold
-		modifiers: {BVCGearModifier
+		modifiers: {CIGearModifier
 					stat: stat
 					operation: #add
 					magnitude: magnitude
@@ -443,8 +443,8 @@ BVCGearPlaystyleCatalogue >> tier: threshold adds: magnitude to: stat trigger: t
 ]
 
 { #category : 'catalogue' }
-BVCGearPlaystyleCatalogue >> traverseFamily [
-	^ BVCGearFamily
+CIGearPlaystyleCatalogue >> traverseFamily [
+	^ CIGearFamily
 		id: #traverse
 		manufacturer: 'Crosswind Systems'
 		tiers: {self
@@ -468,7 +468,7 @@ BVCGearPlaystyleCatalogue >> traverseFamily [
 ]
 
 { #category : 'catalogue' }
-BVCGearPlaystyleCatalogue >> traversePieces [
+CIGearPlaystyleCatalogue >> traversePieces [
 	^ {self
 			gear: #traverseHead
 			named: 'Traverse Hood'
@@ -504,8 +504,8 @@ BVCGearPlaystyleCatalogue >> traversePieces [
 ]
 
 { #category : 'catalogue' }
-BVCGearPlaystyleCatalogue >> watchlineFamily [
-	^ BVCGearFamily
+CIGearPlaystyleCatalogue >> watchlineFamily [
+	^ CIGearFamily
 		id: #watchline
 		manufacturer: 'Bastion Fabrication'
 		tiers: {self
@@ -529,7 +529,7 @@ BVCGearPlaystyleCatalogue >> watchlineFamily [
 ]
 
 { #category : 'catalogue' }
-BVCGearPlaystyleCatalogue >> watchlinePieces [
+CIGearPlaystyleCatalogue >> watchlinePieces [
 	^ {self
 			gear: #watchlineHead
 			named: 'Watchline Helmet'

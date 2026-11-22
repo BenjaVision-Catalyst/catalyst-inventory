@@ -1,6 +1,6 @@
 Class {
-	#name : 'BVCGearDefinition',
-	#superclass : 'BVCInventoryItemDefinition',
+	#name : 'CIGearDefinition',
+	#superclass : 'CIInventoryItemDefinition',
 	#instVars : [
 		'gearType',
 		'slot',
@@ -12,7 +12,7 @@ Class {
 }
 
 { #category : 'accessing' }
-BVCGearDefinition class >> id: anId name: aName icon: anIcon type: aType slot: aSlot modifiers: aCollection [
+CIGearDefinition class >> id: anId name: aName icon: anIcon type: aType slot: aSlot modifiers: aCollection [
 	^ self new
 		initializeId: anId
 		name: aName
@@ -23,22 +23,22 @@ BVCGearDefinition class >> id: anId name: aName icon: anIcon type: aType slot: a
 ]
 
 { #category : 'accessing' }
-BVCGearDefinition >> familyId [
+CIGearDefinition >> familyId [
 	^ familyId
 ]
 
 { #category : 'accessing' }
-BVCGearDefinition >> familyId: anId [
+CIGearDefinition >> familyId: anId [
 	familyId := anId
 ]
 
 { #category : 'accessing' }
-BVCGearDefinition >> gearType [
+CIGearDefinition >> gearType [
 	^ gearType
 ]
 
 { #category : 'accessing' }
-BVCGearDefinition >> initializeId: anId name: aName icon: anIcon type: aType slot: aSlot modifiers: aCollection [
+CIGearDefinition >> initializeId: anId name: aName icon: anIcon type: aType slot: aSlot modifiers: aCollection [
 	aSlot ifNil: [ self error: 'Gear requires an equipment slot' ].
 	super
 		initializeId: anId
@@ -50,11 +50,11 @@ BVCGearDefinition >> initializeId: anId name: aName icon: anIcon type: aType slo
 ]
 
 { #category : 'accessing' }
-BVCGearDefinition >> modifiers [
+CIGearDefinition >> modifiers [
 	^ modifiers copy
 ]
 
 { #category : 'accessing' }
-BVCGearDefinition >> slot [
+CIGearDefinition >> slot [
 	^ slot
 ]

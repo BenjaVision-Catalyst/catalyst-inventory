@@ -1,5 +1,5 @@
 Class {
-	#name : 'BVCGearFamily',
+	#name : 'CIGearFamily',
 	#superclass : 'Object',
 	#instVars : [
 		'id',
@@ -11,7 +11,7 @@ Class {
 }
 
 { #category : 'instance creation' }
-BVCGearFamily class >> id: anId manufacturer: aManufacturer tiers: someTiers [
+CIGearFamily class >> id: anId manufacturer: aManufacturer tiers: someTiers [
 	^ self new
 		initializeId: anId
 		manufacturer: aManufacturer
@@ -19,12 +19,12 @@ BVCGearFamily class >> id: anId manufacturer: aManufacturer tiers: someTiers [
 ]
 
 { #category : 'accessing' }
-BVCGearFamily >> id [
+CIGearFamily >> id [
 	^ id
 ]
 
 { #category : 'accessing' }
-BVCGearFamily >> initializeId: anId manufacturer: aManufacturer tiers: someTiers [
+CIGearFamily >> initializeId: anId manufacturer: aManufacturer tiers: someTiers [
 	(someTiers collect: #pieceCount) asSet size = someTiers size
 		ifFalse: [ self error: 'Duplicate family threshold' ].
 	id := anId.
@@ -33,11 +33,11 @@ BVCGearFamily >> initializeId: anId manufacturer: aManufacturer tiers: someTiers
 ]
 
 { #category : 'accessing' }
-BVCGearFamily >> manufacturer [
+CIGearFamily >> manufacturer [
 	^ manufacturer
 ]
 
 { #category : 'accessing' }
-BVCGearFamily >> tiers [
+CIGearFamily >> tiers [
 	^ tiers copy
 ]

@@ -1,12 +1,12 @@
 Class {
-	#name : 'BVCGearPlaystyleComparison',
+	#name : 'CIGearPlaystyleComparison',
 	#superclass : 'Object',
 	#category : 'BVC-Inventory-GearSimulation',
 	#package : 'BVC-Inventory-GearSimulation'
 }
 
 { #category : 'simulation' }
-BVCGearPlaystyleComparison >> bestIn: rows group: group profile: profile simulator: simulator [
+CIGearPlaystyleComparison >> bestIn: rows group: group profile: profile simulator: simulator [
 	| candidates ranking winner |
 	candidates := rows select: [ :row | (row at: #gearGroup) = group ].
 	ranking := simulator
@@ -27,10 +27,10 @@ BVCGearPlaystyleComparison >> bestIn: rows group: group profile: profile simulat
 ]
 
 { #category : 'simulation' }
-BVCGearPlaystyleComparison >> compare: profile [
+CIGearPlaystyleComparison >> compare: profile [
 	| catalogue simulator scenario outfits rows |
-	catalogue := BVCGearPlaystyleCatalogue new itemsFor: profile second.
-	simulator := BVCGearSimulator new.
+	catalogue := CIGearPlaystyleCatalogue new itemsFor: profile second.
+	simulator := CIGearSimulator new.
 	scenario := self scenarioFor: profile.
 	outfits := simulator outfitsFor: catalogue.
 	rows := outfits
@@ -53,31 +53,31 @@ BVCGearPlaystyleComparison >> compare: profile [
 ]
 
 { #category : 'simulation' }
-BVCGearPlaystyleComparison >> groupForSetCount: count [
+CIGearPlaystyleComparison >> groupForSetCount: count [
 	count = 0 ifTrue: [ ^ #standalone ].
 	count = 4 ifTrue: [ ^ #fullSet ].
 	^ #mixed
 ]
 
 { #category : 'simulation' }
-BVCGearPlaystyleComparison >> profiles [
+CIGearPlaystyleComparison >> profiles [
 	^ #(#(runAndGun traverse #(sprint closeHit) #(#(mobility 4 6 1) #(damage 440 500 1))) #(sniper stillpoint #(settle aimedHit) #(#(precision 4 6 1) #(damage 440 500 1))) #(overwatch watchline #(takeCover sustainBurst) #(#(suppression 4 6 1) #(damage 440 500 1))) #(crowdControl containment #(interrupt deploySlow) #(#(control 3 5 1) #(damage 440 500 1))) #(support response #(interrupt heal) #(#(control 3 3 1) #(healing 30 30 1))))
 ]
 
 { #category : 'simulation' }
-BVCGearPlaystyleComparison >> run [
+CIGearPlaystyleComparison >> run [
 	^ self profiles collect: [ :profile | self compare: profile ]
 ]
 
 { #category : 'simulation' }
-BVCGearPlaystyleComparison >> scenarioFor: profile [
+CIGearPlaystyleComparison >> scenarioFor: profile [
 	^ {#id -> profile first.
 		#version -> 'gear-playstyles-v3'.
 		#character -> #shaki.
 		#weapon -> #trainingRifle.
 		#targetClass -> #raider.
 		#events -> profile third.
-		#families -> {BVCGearPlaystyleCatalogue new familyFor: profile second}.
+		#families -> {CIGearPlaystyleCatalogue new familyFor: profile second}.
 		#encounterSeconds -> 10.
 		#incomingDamage -> 80.
 		#shots -> 4.

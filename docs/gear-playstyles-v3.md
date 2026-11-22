@@ -1,13 +1,13 @@
 # Standalone gear and playstyle comparisons
 
-`BVCGearPlaystyleCatalogue` defines 24 standalone pieces and four pieces
+`CIGearPlaystyleCatalogue` defines 24 standalone pieces and four pieces
 for each of five specialist sets. Standalone pieces are the majority of the
 44-piece catalogue. They have individual stats and no set membership. Names,
 values, slot assignments and icon reuse are provisional.
 
-Load `GearSimulationTests` in GT. Evaluate `BVCGearPlaystyleComparison new run`
+Load `GearSimulationTests` in GT. Evaluate `CIGearPlaystyleComparison new run`
 for the role winners, counts, scores and ties. The three suites are
-`BVCGearSimulationTest`, `BVCGearFamilyTest` and `BVCGearPlaystyleTest`.
+`CIGearSimulationTest`, `CIGearFamilyTest` and `CIGearPlaystyleTest`.
 
 ## Coverage and scoring
 

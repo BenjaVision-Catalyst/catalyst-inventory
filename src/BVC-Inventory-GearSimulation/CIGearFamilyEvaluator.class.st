@@ -1,12 +1,12 @@
 Class {
-	#name : 'BVCGearFamilyEvaluator',
+	#name : 'CIGearFamilyEvaluator',
 	#superclass : 'Object',
 	#category : 'BVC-Inventory-GearSimulation',
 	#package : 'BVC-Inventory-GearSimulation'
 }
 
 { #category : 'accessing' }
-BVCGearFamilyEvaluator >> activationsFor: tier events: events [
+CIGearFamilyEvaluator >> activationsFor: tier events: events [
 	| armed used |
 	tier trigger ifNil: [ ^ 1 ].
 	armed := false.
@@ -21,7 +21,7 @@ BVCGearFamilyEvaluator >> activationsFor: tier events: events [
 ]
 
 { #category : 'accessing' }
-BVCGearFamilyEvaluator >> contributionsFor: tier family: family equipped: count events: events target: target [
+CIGearFamilyEvaluator >> contributionsFor: tier family: family equipped: count events: events target: target [
 	| eligible activations |
 	eligible := count >= tier pieceCount.
 	activations := eligible
@@ -49,7 +49,7 @@ BVCGearFamilyEvaluator >> contributionsFor: tier family: family equipped: count 
 ]
 
 { #category : 'accessing' }
-BVCGearFamilyEvaluator >> contributionsFor: outfit in: scenario [
+CIGearFamilyEvaluator >> contributionsFor: outfit in: scenario [
 	| counts families events |
 	counts := Bag new.
 	outfit pieces do: [ :item | item familyId ifNotNil: [ :id | counts add: id ] ].

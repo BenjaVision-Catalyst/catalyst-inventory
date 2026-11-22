@@ -1,23 +1,23 @@
 Class {
-	#name : 'BVCGearFamilyFixture',
+	#name : 'CIGearFamilyFixture',
 	#superclass : 'Object',
 	#category : 'BVC-Inventory-GearSimulation-Tests',
 	#package : 'BVC-Inventory-GearSimulation-Tests'
 }
 
 { #category : 'simulation' }
-BVCGearFamilyFixture >> catalogue [
+CIGearFamilyFixture >> catalogue [
 	| gear boots |
-	gear := BVCGearSimulationFixture new catalogue.
+	gear := CIGearSimulationFixture new catalogue.
 	(gear reject: [ :item | item id = #vest ])
 		do: [ :item | item familyId: #response ].
-	boots := BVCGearDefinition
+	boots := CIGearDefinition
 			id: #boots
 			name: 'Response Boots'
 			icon: 'gearIcon_Boots.png'
 			type: #armour
 			slot: #feet
-			modifiers: {BVCGearSimulationFixture new
+			modifiers: {CIGearSimulationFixture new
 						add: 5
 						to: #armour
 						against: nil}.
@@ -26,19 +26,19 @@ BVCGearFamilyFixture >> catalogue [
 ]
 
 { #category : 'simulation' }
-BVCGearFamilyFixture >> family [
-	^ BVCGearPlaystyleCatalogue new responseFamily
+CIGearFamilyFixture >> family [
+	^ CIGearPlaystyleCatalogue new responseFamily
 ]
 
 { #category : 'simulation' }
-BVCGearFamilyFixture >> run [
-	^ BVCGearSimulator new runCatalogue: self catalogue scenarios: self scenarios
+CIGearFamilyFixture >> run [
+	^ CIGearSimulator new runCatalogue: self catalogue scenarios: self scenarios
 ]
 
 { #category : 'simulation' }
-BVCGearFamilyFixture >> scenarios [
+CIGearFamilyFixture >> scenarios [
 	| base family |
-	base := BVCGearSimulationFixture new scenarios first.
+	base := CIGearSimulationFixture new scenarios first.
 	family := self family.
 	^ #(#(zero #(heal heal)) #(one #(interrupt heal heal)) #(two #(interrupt heal interrupt heal)))
 		collect: [ :entry | 

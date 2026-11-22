@@ -1,13 +1,13 @@
 Class {
-	#name : 'BVCGearSimulationFixture',
+	#name : 'CIGearSimulationFixture',
 	#superclass : 'Object',
 	#category : 'BVC-Inventory-GearSimulation-Tests',
 	#package : 'BVC-Inventory-GearSimulation-Tests'
 }
 
 { #category : 'simulation' }
-BVCGearSimulationFixture >> add: magnitude to: stat against: targetClass [
-	^ BVCGearModifier
+CIGearSimulationFixture >> add: magnitude to: stat against: targetClass [
+	^ CIGearModifier
 		stat: stat
 		operation: #add
 		magnitude: magnitude
@@ -16,8 +16,8 @@ BVCGearSimulationFixture >> add: magnitude to: stat against: targetClass [
 ]
 
 { #category : 'simulation' }
-BVCGearSimulationFixture >> catalogue [
-	^ {BVCGearDefinition
+CIGearSimulationFixture >> catalogue [
+	^ {CIGearDefinition
 			id: #helmet
 			name: 'Field Helmet'
 			icon: 'gearIcon_Helmet.png'
@@ -31,7 +31,7 @@ BVCGearSimulationFixture >> catalogue [
 						add: 1 / 5
 						to: #criticalChance
 						against: nil}.
-		BVCGearDefinition
+		CIGearDefinition
 			id: #goggles
 			name: 'Field Goggles'
 			icon: 'gearIcon_Mask.png'
@@ -45,7 +45,7 @@ BVCGearSimulationFixture >> catalogue [
 						add: 2
 						to: #controlSeconds
 						against: #raider}.
-		BVCGearDefinition
+		CIGearDefinition
 			id: #vest
 			name: 'Field Vest'
 			icon: 'gearIcon_Vest.png'
@@ -59,7 +59,7 @@ BVCGearSimulationFixture >> catalogue [
 						add: 15
 						to: #weaponDamage
 						against: #raider}.
-		BVCGearDefinition
+		CIGearDefinition
 			id: #pouchVest
 			name: 'Aid Vest'
 			icon: 'gearIcon_VestWithPouch.png'
@@ -76,22 +76,22 @@ BVCGearSimulationFixture >> catalogue [
 ]
 
 { #category : 'simulation' }
-BVCGearSimulationFixture >> damageGoals [
+CIGearSimulationFixture >> damageGoals [
 	^ #(#(damage 440 440 1))
 ]
 
 { #category : 'simulation' }
-BVCGearSimulationFixture >> mixedGoals [
+CIGearSimulationFixture >> mixedGoals [
 	^ #(#(control 3 3 1) #(healing 30 30 1))
 ]
 
 { #category : 'simulation' }
-BVCGearSimulationFixture >> run [
-	^ BVCGearSimulator new runCatalogue: self catalogue scenarios: self scenarios
+CIGearSimulationFixture >> run [
+	^ CIGearSimulator new runCatalogue: self catalogue scenarios: self scenarios
 ]
 
 { #category : 'simulation' }
-BVCGearSimulationFixture >> scenarios [
+CIGearSimulationFixture >> scenarios [
 	^ #(raider drone)
 		collect: [ :targetClass | 
 			{#id -> targetClass.

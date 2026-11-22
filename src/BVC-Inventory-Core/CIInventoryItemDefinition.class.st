@@ -1,5 +1,5 @@
 Class {
-	#name : 'BVCInventoryItemDefinition',
+	#name : 'CIInventoryItemDefinition',
 	#superclass : 'Object',
 	#instVars : [
 		'id',
@@ -11,7 +11,7 @@ Class {
 }
 
 { #category : 'accessing' }
-BVCInventoryItemDefinition class >> id: anId name: aName icon: anIcon [
+CIInventoryItemDefinition class >> id: anId name: aName icon: anIcon [
 	^ self new
 		initializeId: anId
 		name: aName
@@ -19,22 +19,22 @@ BVCInventoryItemDefinition class >> id: anId name: aName icon: anIcon [
 ]
 
 { #category : 'accessing' }
-BVCInventoryItemDefinition >> displayName [
+CIInventoryItemDefinition >> displayName [
 	^ displayName
 ]
 
 { #category : 'accessing' }
-BVCInventoryItemDefinition >> icon [
+CIInventoryItemDefinition >> icon [
 	^ icon
 ]
 
 { #category : 'accessing' }
-BVCInventoryItemDefinition >> id [
+CIInventoryItemDefinition >> id [
 	^ id
 ]
 
 { #category : 'accessing' }
-BVCInventoryItemDefinition >> initializeId: anId name: aName icon: anIcon [
+CIInventoryItemDefinition >> initializeId: anId name: aName icon: anIcon [
 	id := anId.
 	displayName := aName.
 	icon := anIcon

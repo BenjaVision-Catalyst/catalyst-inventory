@@ -1,5 +1,5 @@
 Class {
-	#name : 'BVCGearFamilyTier',
+	#name : 'CIGearFamilyTier',
 	#superclass : 'Object',
 	#instVars : [
 		'pieceCount',
@@ -13,7 +13,7 @@ Class {
 }
 
 { #category : 'instance creation' }
-BVCGearFamilyTier class >> pieces: count modifiers: modifiers trigger: trigger consumeOn: event limit: maxActivations [
+CIGearFamilyTier class >> pieces: count modifiers: modifiers trigger: trigger consumeOn: event limit: maxActivations [
 	^ self new
 		initializePieces: count
 		modifiers: modifiers
@@ -23,12 +23,12 @@ BVCGearFamilyTier class >> pieces: count modifiers: modifiers trigger: trigger c
 ]
 
 { #category : 'accessing' }
-BVCGearFamilyTier >> consumeEvent [
+CIGearFamilyTier >> consumeEvent [
 	^ consumeEvent
 ]
 
 { #category : 'accessing' }
-BVCGearFamilyTier >> initializePieces: count modifiers: someModifiers trigger: triggerEvent consumeOn: event limit: maxActivations [
+CIGearFamilyTier >> initializePieces: count modifiers: someModifiers trigger: triggerEvent consumeOn: event limit: maxActivations [
 	(#(2 3 4) includes: count)
 		ifFalse: [ self error: 'Unsupported family threshold' ].
 	triggerEvent isNil = event isNil
@@ -43,21 +43,21 @@ BVCGearFamilyTier >> initializePieces: count modifiers: someModifiers trigger: t
 ]
 
 { #category : 'accessing' }
-BVCGearFamilyTier >> limit [
+CIGearFamilyTier >> limit [
 	^ limit
 ]
 
 { #category : 'accessing' }
-BVCGearFamilyTier >> modifiers [
+CIGearFamilyTier >> modifiers [
 	^ modifiers copy
 ]
 
 { #category : 'accessing' }
-BVCGearFamilyTier >> pieceCount [
+CIGearFamilyTier >> pieceCount [
 	^ pieceCount
 ]
 
 { #category : 'accessing' }
-BVCGearFamilyTier >> trigger [
+CIGearFamilyTier >> trigger [
 	^ trigger
 ]

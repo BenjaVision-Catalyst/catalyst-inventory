@@ -7,7 +7,7 @@ modifier and outfit rules.
 
 GT loads the `CatalystInventory` Metacello baseline with group `Core` from
 `src`. A Rowan deployment loads `rowan/specs/CatalystInventoryCore.ston`.
-Verify either installation by resolving `BVCInventoryComponent` in the
+Verify either installation by resolving `CIInventoryComponent` in the
 installed image or stone.
 
 The opt-in GT groups `GearSimulation` and `GearSimulationTests` load the

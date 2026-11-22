@@ -20,8 +20,8 @@ and keep minimum requirements for mixed roles. A set can reward a particular
 combat loop while standalone pieces cover the same role through different
 strengths and trade-offs.
 
-Load `GearSimulationTests` in GT. Run `BVCGearFamilyTest suite run` and
-`BVCGearSimulationTest suite run`. Evaluate `BVCGearFamilyFixture new run`
+Load `GearSimulationTests` in GT. Run `CIGearFamilyTest suite run` and
+`CIGearSimulationTest suite run`. Evaluate `CIGearFamilyFixture new run`
 for the case results. The regression checks all five metrics in each of the
 24 original cases. The new fixture runs 24 legal outfits against three
 ordered event streams, for 72 unique cases. Per scenario, the counts at

@@ -1,12 +1,12 @@
 Class {
-	#name : 'BVCGearSimulator',
+	#name : 'CIGearSimulator',
 	#superclass : 'Object',
 	#category : 'BVC-Inventory-GearSimulation',
 	#package : 'BVC-Inventory-GearSimulation'
 }
 
 { #category : 'simulation' }
-BVCGearSimulator >> comparisonsFor: row in: rows [
+CIGearSimulator >> comparisonsFor: row in: rows [
 	| pieces |
 	pieces := row at: #outfit.
 	^ (rows
@@ -23,7 +23,7 @@ BVCGearSimulator >> comparisonsFor: row in: rows [
 ]
 
 { #category : 'simulation' }
-BVCGearSimulator >> evaluate: outfit in: scenario [
+CIGearSimulator >> evaluate: outfit in: scenario [
 	| raw effective contributions chance shots damage bonus incoming metrics |
 	raw := (scenario at: #baseStats) copy.
 	contributions := outfit pieces
@@ -40,7 +40,7 @@ BVCGearSimulator >> evaluate: outfit in: scenario [
 							#active -> active.
 							#rawDelta -> delta} asDictionary ] ].
 	contributions := contributions
-			, (BVCGearFamilyEvaluator new contributionsFor: outfit in: scenario).
+			, (CIGearFamilyEvaluator new contributionsFor: outfit in: scenario).
 	contributions
 		do: [ :entry | 
 			| stat |
@@ -74,7 +74,7 @@ BVCGearSimulator >> evaluate: outfit in: scenario [
 ]
 
 { #category : 'simulation' }
-BVCGearSimulator >> outfitsFor: catalogue [
+CIGearSimulator >> outfitsFor: catalogue [
 	| slots combinations |
 	(catalogue collect: #id) asSet size = catalogue size
 		ifFalse: [ self error: 'Catalogue item IDs must be unique' ].
@@ -86,11 +86,11 @@ BVCGearSimulator >> outfitsFor: catalogue [
 			choices := catalogue select: [ :item | item slot = slot ].
 			combinations := combinations
 					flatCollect: [ :pieces | {pieces} , (choices collect: [ :item | pieces copyWith: item ]) ] ].
-	^ combinations collect: [ :pieces | BVCGearOutfit withPieces: pieces ]
+	^ combinations collect: [ :pieces | CIGearOutfit withPieces: pieces ]
 ]
 
 { #category : 'simulation' }
-BVCGearSimulator >> rank: rows scenario: scenarioId goals: goals [
+CIGearSimulator >> rank: rows scenario: scenarioId goals: goals [
 	"Each goal is {metric. minimum. positive normalization value. weight}."
 
 	| eligible scored |
@@ -112,7 +112,7 @@ BVCGearSimulator >> rank: rows scenario: scenarioId goals: goals [
 ]
 
 { #category : 'simulation' }
-BVCGearSimulator >> runCatalogue: catalogue scenarios: scenarios [
+CIGearSimulator >> runCatalogue: catalogue scenarios: scenarios [
 	^ (self outfitsFor: catalogue)
 		flatCollect: [ :outfit | scenarios collect: [ :scenario | self evaluate: outfit in: scenario ] ]
 ]
