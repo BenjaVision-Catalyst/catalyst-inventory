@@ -1,0 +1,7 @@
+RwSimpleProjectLoadComponentV2 {
+ #name : 'Core',
+ #projectNames : [],
+ #componentNames : [],
+ #packageNames : [ 'BVC-Inventory-Core' ],
+ #comment : 'Portable Catalyst Inventory core'
+}
