@@ -1,0 +1,16 @@
+role,group,cases,qualified,top_score_ties,score,outfit,expected_damage,damage_variance,damage_taken,mobility,precision,suppression,control_seconds,healing
+runAndGun,standalone,2401,841,1,2.7933333333333334,runnerJacket+runnerGoggles+fastBoots+trailCap,480.0,6400.0,68.0,11.0,1.0,1.0,1.0,10.0
+runAndGun,mixed,1694,938,2,2.6746666666666665,runnerJacket+traverseEyes+fastBoots+trailCap,504.0,7056.0,70.0,10.0,1.0,1.0,1.0,10.0
+runAndGun,fullSet,1,1,1,2.424,traverseChest+traverseEyes+traverseFeet+traverseHead,462.0,3969.0,57.0,9.0,1.0,1.0,1.0,10.0
+sniper,standalone,2401,841,1,2.7485333333333335,rangeJacket+surveyGoggles+ridgeBoots+rangeHood,457.6,3893.76,58.0,1.0,11.0,1.0,1.0,10.0
+sniper,mixed,1694,864,1,2.5818666666666665,rangeJacket+surveyGoggles+stillpointFeet+rangeHood,457.6,3893.76,59.0,1.0,10.0,1.0,1.0,10.0
+sniper,fullSet,1,1,1,2.3701333333333334,stillpointChest+stillpointEyes+stillpointFeet+stillpointHead,518.4,7464.96,53.0,1.0,8.0,1.0,1.0,10.0
+overwatch,standalone,2401,727,2,2.38,fieldVest+observerGoggles+anchorBoots+bastionHelmet,440.0,3600.0,31.0,1.0,3.0,9.0,1.0,10.0
+overwatch,mixed,1694,960,2,2.4152,fieldVest+watchlineEyes+anchorBoots+watchlineHead,457.6,3893.76,35.0,1.0,1.0,9.0,1.0,10.0
+overwatch,fullSet,1,1,1,2.4152,watchlineChest+watchlineEyes+watchlineFeet+watchlineHead,457.6,3893.76,42.0,1.0,1.0,9.0,1.0,10.0
+crowdControl,standalone,2401,392,7,1.776,utilityVest+signalGoggles+anchorBoots+surveyHelmet,488.0,6864.0,70.0,1.0,3.0,6.0,4.0,22.0
+crowdControl,mixed,1694,551,1,2.16,containmentChest+signalGoggles+containmentFeet+containmentHead,480.0,6400.0,48.0,1.0,1.0,4.0,6.0,10.0
+crowdControl,fullSet,1,1,1,2.36,containmentChest+containmentEyes+containmentFeet+containmentHead,480.0,6400.0,48.0,1.0,1.0,3.0,7.0,10.0
+support,standalone,2401,51,1,2.433333333333333,utilityVest+signalGoggles+rescueBoots+firstAidHood,440.0,3600.0,67.0,1.0,1.0,3.0,4.0,33.0
+support,mixed,1694,225,1,2.8,responseChest+responseEyes+responseFeet+firstAidHood,520.0,8400.0,54.0,1.0,1.0,1.0,4.0,44.0
+support,fullSet,1,1,1,2.8,responseChest+responseEyes+responseFeet+responseHead,560.0,9600.0,50.0,1.0,1.0,1.0,4.0,44.0

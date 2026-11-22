@@ -24,7 +24,7 @@ BVCGearSimulator >> comparisonsFor: row in: rows [
 
 { #category : 'simulation' }
 BVCGearSimulator >> evaluate: outfit in: scenario [
-	| raw effective contributions chance shots damage bonus incoming |
+	| raw effective contributions chance shots damage bonus incoming metrics |
 	raw := (scenario at: #baseStats) copy.
 	contributions := outfit pieces
 			flatCollect: [ :item | 
@@ -58,17 +58,19 @@ BVCGearSimulator >> evaluate: outfit in: scenario [
 	damage := effective at: #weaponDamage.
 	bonus := damage * ((scenario at: #criticalMultiplier) - 1).
 	incoming := scenario at: #incomingDamage.
+	metrics := {#damage -> (shots * (damage + (chance * bonus))).
+			#damageVariance -> (shots * chance * (1 - chance) * bonus squared).
+			#damageTaken -> (incoming - (effective at: #armour) max: 0).
+			#control -> (effective at: #controlSeconds).
+			#healing -> (effective at: #healing)} asDictionary.
+	#(mobility precision suppression)
+		do: [ :stat | effective at: stat ifPresent: [ :value | metrics at: stat put: value ] ].
 	^ {#outfit -> outfit itemIds.
 		#scenario -> (scenario at: #id).
 		#raw -> raw.
 		#effective -> effective.
 		#contributions -> contributions.
-		#metrics
-			-> {#damage -> (shots * (damage + (chance * bonus))).
-					#damageVariance -> (shots * chance * (1 - chance) * bonus squared).
-					#damageTaken -> (incoming - (effective at: #armour) max: 0).
-					#control -> (effective at: #controlSeconds).
-					#healing -> (effective at: #healing)} asDictionary} asDictionary
+		#metrics -> metrics} asDictionary
 ]
 
 { #category : 'simulation' }

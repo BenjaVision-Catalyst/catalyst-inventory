@@ -19,3 +19,6 @@ owns the future ACF integration.
 
 The [family milestone](docs/gear-family-v2.md) adds cumulative two-, three-,
 and four-piece thresholds and a proposed launch roster of manufacturers.
+
+The [playstyle comparison](docs/gear-playstyles-v3.md) evaluates standalone,
+mixed and dedicated-set outfits for five roles.

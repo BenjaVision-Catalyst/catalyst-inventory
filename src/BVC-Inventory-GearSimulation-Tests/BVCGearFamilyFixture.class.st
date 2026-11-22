@@ -27,35 +27,7 @@ BVCGearFamilyFixture >> catalogue [
 
 { #category : 'simulation' }
 BVCGearFamilyFixture >> family [
-	^ BVCGearFamily
-		id: #response
-		manufacturer: 'Relay Works'
-		tiers: {self responseHeal: 8 at: 2.
-				BVCGearFamilyTier
-					pieces: 3
-					modifiers: {BVCGearSimulationFixture new
-								add: 1
-								to: #controlSeconds
-								against: nil}
-					trigger: nil
-					consumeOn: nil
-					limit: 1.
-				self responseHeal: 6 at: 4}
-]
-
-{ #category : 'simulation' }
-BVCGearFamilyFixture >> responseHeal: amount at: threshold [
-	^ BVCGearFamilyTier
-		pieces: threshold
-		modifiers: {BVCGearModifier
-					stat: #healing
-					operation: #add
-					magnitude: amount
-					targetClass: nil
-					duration: #onConsume}
-		trigger: #interrupt
-		consumeOn: #heal
-		limit: 1
+	^ BVCGearPlaystyleCatalogue new responseFamily
 ]
 
 { #category : 'simulation' }
