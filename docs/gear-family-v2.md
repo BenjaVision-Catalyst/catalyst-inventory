@@ -7,6 +7,19 @@ pieces by family ID and records threshold eligibility, applications, and
 the raw contribution of each modifier. Eligible tiers stack before stat
 caps.
 
+Most gear is standalone and competes for slots through its own stats and
+effects. A manufacturer can make both standalone pieces and pieces in
+designated sets. Only an explicit set membership counts toward a threshold;
+sharing a manufacturer or playstyle does not grant membership. The Response
+fixture is deliberately set-heavy so it can exercise every threshold. Its
+catalogue proportions are specific to that test.
+
+For each supported playstyle, balance a standalone outfit and a mixed outfit
+alongside dedicated sets. Compare their performance on the same role metrics
+and keep minimum requirements for mixed roles. A set can reward a particular
+combat loop while standalone pieces cover the same role through different
+strengths and trade-offs.
+
 Load `GearSimulationTests` in GT. Run `BVCGearFamilyTest suite run` and
 `BVCGearSimulationTest suite run`. Evaluate `BVCGearFamilyFixture new run`
 for the case results. The regression checks all five metrics in each of the
@@ -53,6 +66,7 @@ control and 30 healing.
 ## Proposed manufacturer roster
 
 The roster uses original names and effects. These are design proposals.
+Each proposed set is one specialist line within a broader standalone catalogue.
 Relay Works Response is the implemented simulation fixture.
 
 | Weapon company | Focus | Characteristic weapons |
