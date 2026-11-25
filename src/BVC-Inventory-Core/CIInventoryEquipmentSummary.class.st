@@ -98,8 +98,12 @@ CIInventoryEquipmentSummary >> inventoryTypeCount [
 
 { #category : 'descriptions' }
 CIInventoryEquipmentSummary >> magritteDescription [
+	| fields |
+	fields := super magritteDescription children asArray.
+	presentationKind = 'gadget'
+		ifTrue: [ fields := fields reject: [ :each | each accessor readSelector = #tierId ] ].
 	^ MAContainer
-		withAll: super magritteDescription children asArray
+		withAll: fields
 				, {self readOnlyField: #presentationKind label: 'Presentation kind'.
 						self
 							readOnly: (MANumberDescription new
@@ -172,6 +176,12 @@ CIInventoryEquipmentSummary >> readOnly: description [
 { #category : 'accessing' }
 CIInventoryEquipmentSummary >> talentIdentifier [
 	^ talentIdentifier copy
+]
+
+{ #category : 'accessing' }
+CIInventoryEquipmentSummary >> tierId [
+	presentationKind = 'gadget' ifTrue: [ ^ nil ].
+	^ super tierId
 ]
 
 { #category : 'accessing' }
