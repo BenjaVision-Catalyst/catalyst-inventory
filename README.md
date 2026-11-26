@@ -34,6 +34,11 @@ when its eligible slots change. Older rows use the server-captured slot as
 evidence that the item fits. The response refreshes the equipped items in
 the profile.
 
+Overwrite uses operation 106 with the same saved-set UUID payload as Equip.
+The service captures the authenticated player's currently equipped slots for
+the set's kind and replaces its snapshot in place. It keeps the set's ID,
+name, and order and returns the updated profile.
+
 The [family milestone](docs/gear-family-v2.md) adds cumulative two-, three-,
 and four-piece thresholds and a proposed launch roster of manufacturers.
 

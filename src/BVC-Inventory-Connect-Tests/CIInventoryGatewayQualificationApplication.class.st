@@ -51,6 +51,21 @@ CIInventoryGatewayQualificationApplication class >> equipFixtureRowsAfterChange:
 ]
 
 { #category : 'qualification' }
+CIInventoryGatewayQualificationApplication class >> equipFixtureRowsForOverwriteReset [
+	| rows |
+	rows := self equipFixtureRowsAfterChange: true.
+	(rows detect: [ :row | row itemIdentifier = 'responseChest' ])
+		equippedSlotIdentifier: 'Chest'.
+	(rows detect: [ :row | row itemIdentifier = 'fieldVest' ])
+		equippedSlotIdentifier: nil.
+	(rows detect: [ :row | row itemIdentifier = 'extraGripShoes' ])
+		equippedApparelSlotIdentifier: 'Shoes'.
+	(rows detect: [ :row | row itemIdentifier = 'fieldShoes' ])
+		equippedApparelSlotIdentifier: nil.
+	^ rows
+]
+
+{ #category : 'qualification' }
 CIInventoryGatewayQualificationApplication class >> proofNames: proofs users: users inventory: inventory [
 	ProofNames := proofs.
 	UsersService := users.
@@ -78,7 +93,7 @@ CIInventoryGatewayQualificationApplication class >> qualifyIn: directory [
 			nativeOptionsJson: (STONJSON toString: settings);
 			libraryPath: (directory / 'native-library-path') contents trimBoth;
 			principal: 'qualification-peer';
-			allowedOperations: #(101 102 103 104 105);
+			allowedOperations: #(101 102 103 104 105 106);
 			applicationClass: self;
 			bindings: {CRServiceBindingConfiguration new
 						identifier: #users;
@@ -204,6 +219,20 @@ CIInventoryGatewayQualificationApplication class >> qualifyIn: directory [
 						forOwner: alice userIdentifier.
 					(directory / 'fixture-equipment-change-ready') ensureCreateFile.
 					equipmentPhase := 2 ].
+			(equipmentPhase = 2
+				and: [ (directory / 'fixture-equipment-overwrite') exists ])
+				ifTrue: [ inventory
+						replaceReadRows: (self equipFixtureRowsAfterChange: true)
+						forOwner: alice userIdentifier.
+					(directory / 'fixture-equipment-overwrite-ready') ensureCreateFile.
+					equipmentPhase := 3 ].
+			(equipmentPhase = 3
+				and: [ (directory / 'fixture-equipment-overwrite-reset') exists ])
+				ifTrue: [ inventory
+						replaceReadRows: self equipFixtureRowsForOverwriteReset
+						forOwner: alice userIdentifier.
+					(directory / 'fixture-equipment-overwrite-reset-ready') ensureCreateFile.
+					equipmentPhase := 4 ].
 			(Delay forMilliseconds: 20) wait ] ]
 		ensure: [ runtime stop.
 			runtime registry unregister: runtime.
@@ -264,14 +293,18 @@ CIInventoryGatewayQualificationApplication >> authenticationOperation [
 { #category : 'qualification' }
 CIInventoryGatewayQualificationApplication >> execute: request asVerifiedUser: identity using: producer [
 	| rows fields description reply bytes |
-	request operation = 105
+	(#(105 106) includes: request operation)
 		ifTrue: [ (request body size = 36
 				and: [ request body
 						allSatisfy: [ :byte | byte = 45 or: [ (byte between: 48 and: 57) or: [ byte between: 97 and: 102 ] ] ] ])
 				ifFalse: [ ^ self replyWith: #[] status: 400 ].
-			bytes := InventoryService
-					equipSavedSet: request body utf8Decoded
-					forVerifiedUser: identity.
+			bytes := request operation = 105
+					ifTrue: [ InventoryService
+							equipSavedSet: request body utf8Decoded
+							forVerifiedUser: identity ]
+					ifFalse: [ InventoryService
+							overwriteSavedSet: request body utf8Decoded
+							forVerifiedUser: identity ].
 			bytes ifNil: [ ^ self replyWith: #[] status: 422 ].
 			^ self replyWith: bytes status: 0 ].
 	request operation = 104

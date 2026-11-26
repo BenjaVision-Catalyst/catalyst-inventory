@@ -39,22 +39,15 @@ CIInventoryService >> createSavedSetFor: identity outfit: isOutfit [
 
 { #category : 'writing' }
 CIInventoryService >> equipSavedSet: setIdentifier forVerifiedUser: identity [
-	^ savedSetsLock
-		critical: [ | sets |
-			sets := savedSetsByOwner at: identity ifAbsent: [ ^ nil ].
-			#('gear' 'apparel')
-				do: [ :section |
-					| entry |
-					entry := (sets at: section ifAbsent: [ #() ])
-							detect: [ :each | (each at: 'itemIdentifier') = setIdentifier ]
-							ifNone: [ nil ].
-					entry
-						ifNotNil: [ ^ self
-								applySavedSet: entry
-								forOwner: identity
-								outfit: section = 'apparel'
-								sets: sets ] ].
-			nil ]
+	^ self
+		withSavedSet: setIdentifier
+		forVerifiedUser: identity
+		do: [ :entry :section :sets |
+			self
+				applySavedSet: entry
+				forOwner: identity
+				outfit: section = 'apparel'
+				sets: sets ]
 ]
 
 { #category : 'private' }
@@ -87,6 +80,35 @@ CIInventoryService >> newSavedSetReplyFor: identity outfit: isOutfit [
 					savedSets: ownerSets).
 	reply ifNotNil: [ savedSetsByOwner at: identity copy put: ownerSets ].
 	^ reply
+]
+
+{ #category : 'writing' }
+CIInventoryService >> overwriteSavedSet: setIdentifier forVerifiedUser: identity [
+	^ self
+		withSavedSet: setIdentifier
+		forVerifiedUser: identity
+		do: [ :entry :section :sets |
+			| entries updated reply |
+			entries := (sets at: section) copy.
+			entries
+				at: (entries indexOf: entry)
+				put: (entry copy
+						at: 'slots'
+							put: (readStore equippedSlotsForOwner: identity outfit: section = 'apparel');
+						yourself).
+			updated := sets copy
+					at: section put: entries;
+					yourself.
+			reply := CIInventoryProfileGraph
+					encodeReply: (CIInventoryProfileGraph
+							forVerifiedUser: identity
+							rows: (self
+									rowsForVerifiedUser: identity
+									offset: 0
+									limit: 32)
+							savedSets: updated).
+			reply ifNotNil: [ savedSetsByOwner at: identity copy put: updated ].
+			reply ]
 ]
 
 { #category : 'accessing' }
@@ -128,4 +150,23 @@ CIInventoryService >> stop [
 	savedSetsLock := nil.
 	readStore := nil.
 	super stop
+]
+
+{ #category : 'private' }
+CIInventoryService >> withSavedSet: setIdentifier forVerifiedUser: identity do: action [
+	^ savedSetsLock
+		critical: [ | sets |
+			sets := savedSetsByOwner at: identity ifAbsent: [ ^ nil ].
+			#('gear' 'apparel')
+				do: [ :section |
+					| entry |
+					entry := (sets at: section ifAbsent: [ #() ])
+							detect: [ :each | (each at: 'itemIdentifier') = setIdentifier ]
+							ifNone: [ nil ].
+					entry
+						ifNotNil: [ ^ action
+								value: entry
+								value: section
+								value: sets ] ].
+			nil ]
 ]
