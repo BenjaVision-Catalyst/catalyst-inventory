@@ -2,7 +2,9 @@ Class {
 	#name : 'CIInventoryService',
 	#superclass : 'CRWorkerService',
 	#instVars : [
-		'readStore'
+		'readStore',
+		'savedSetsByOwner',
+		'savedSetsLock'
 	],
 	#category : 'BVC-Inventory-Runtime',
 	#package : 'BVC-Inventory-Runtime'
@@ -13,6 +15,44 @@ CIInventoryService class >> configurationClass [
 	^ CIInventoryConfiguration
 ]
 
+{ #category : 'writing' }
+CIInventoryService >> createSavedSetFor: identity outfit: isOutfit [
+	^ savedSetsLock
+		critical: [ self newSavedSetReplyFor: identity outfit: isOutfit ]
+]
+
+{ #category : 'private' }
+CIInventoryService >> newSavedSetReplyFor: identity outfit: isOutfit [
+	| rows section ownerSets entries name prefix number entry reply |
+	rows := self
+			rowsForVerifiedUser: identity
+			offset: 0
+			limit: 32.
+	section := isOutfit ifTrue: [ 'apparel' ] ifFalse: [ 'gear' ].
+	ownerSets := (savedSetsByOwner at: identity ifAbsent: [ Dictionary new ]) copy.
+	entries := ownerSets at: section ifAbsent: [ #() ].
+	entries size >= 32 ifTrue: [ ^ nil ].
+	prefix := isOutfit ifTrue: [ 'Outfit ' ] ifFalse: [ 'Gear Set ' ].
+	number := 1.
+	[ name := prefix , number asString.
+	entries anySatisfy: [ :existing | (existing at: 'displayName') sameAs: name ] ]
+		whileTrue: [ number := number + 1 ].
+	entry := Dictionary new
+			at: 'itemIdentifier' put: UUID new asString;
+			at: 'displayName' put: name;
+			at: 'slots'
+				put: (readStore equippedSlotsForOwner: identity outfit: isOutfit);
+			yourself.
+	ownerSets at: section put: (entries copyWith: entry).
+	reply := CIInventoryProfileGraph
+			encodeReply: (CIInventoryProfileGraph
+					forVerifiedUser: identity
+					rows: rows
+					savedSets: ownerSets).
+	reply ifNotNil: [ savedSetsByOwner at: identity copy put: ownerSets ].
+	^ reply
+]
+
 { #category : 'accessing' }
 CIInventoryService >> profileGraphForVerifiedUser: identity [
 	^ CIInventoryProfileGraph
@@ -21,6 +61,8 @@ CIInventoryService >> profileGraphForVerifiedUser: identity [
 				rowsForVerifiedUser: identity
 				offset: 0
 				limit: 32)
+		savedSets: (savedSetsLock
+				critical: [ savedSetsByOwner at: identity ifAbsent: [ Dictionary new ] ])
 ]
 
 { #category : 'reading' }
@@ -39,11 +81,15 @@ CIInventoryService >> rowsForVerifiedUser: anIdentifier offset: anOffset limit: 
 { #category : 'lifecycle' }
 CIInventoryService >> start [
 	super start.
-	readStore := CIInventoryReadStore new
+	readStore := CIInventoryReadStore new.
+	savedSetsByOwner := Dictionary new.
+	savedSetsLock := Semaphore forMutualExclusion
 ]
 
 { #category : 'lifecycle' }
 CIInventoryService >> stop [
+	savedSetsByOwner := nil.
+	savedSetsLock := nil.
 	readStore := nil.
 	super stop
 ]

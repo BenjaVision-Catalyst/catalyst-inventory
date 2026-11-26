@@ -165,7 +165,7 @@ CIInventoryProfileGraph class >> equipmentCardsFor: slots kind: kind owned: item
 			| slot found |
 			slot := spec first.
 			found := items
-					detect: [ :each | (each respondsTo: #gearSlotIdentifier) and: [ each gearSlotIdentifier = slot ] ]
+					detect: [ :each | each equippedSlotIdentifier = slot ]
 					ifNone: [ nil ].
 			found
 				ifNil: [ Dictionary new
@@ -207,6 +207,14 @@ CIInventoryProfileGraph class >> field: id from: description [
 
 { #category : 'projection' }
 CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items [
+	^ self
+		forVerifiedUser: identity
+		rows: items
+		savedSets: Dictionary new
+]
+
+{ #category : 'projection' }
+CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets: savedSets [
 	| sections descriptions objects inventoryId profileId profileValues known |
 	sections := self inventoryDescription children asArray.
 	inventoryId := identity , ':inventory'.
@@ -243,6 +251,13 @@ CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items [
 			target := key , 'Section'.
 			sectionId := inventoryId , ':' , key.
 			groups := self groupsFor: key owned: items.
+			(#('gear' 'apparel') includes: key)
+				ifTrue: [ groups := groups
+							copyWith: {key , 'SavedSets'.
+									'Saved sets'.
+									'savedSet'.
+									(savedSets at: key ifAbsent: [ #() ])
+										collect: [ :entry | self savedSetValuesFor: entry ]} ].
 			properties := Dictionary new.
 			key = 'stats'
 				ifFalse: [ properties at: 'metadata:ciGrid' put: (self atom: 'symbol' value: key) ].
@@ -258,7 +273,7 @@ CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items [
 			contents := Dictionary new.
 			groups
 				withIndexDo: [ :group :priority |
-					| groupId rowKind groupDescription refs |
+					| groupId rowKind groupDescription relation refs |
 					groupId := group first.
 					rowKind := group third.
 					groupDescription := MAToManyRelationDescription new
@@ -266,11 +281,15 @@ CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items [
 							group: group second;
 							priority: priority * 10;
 							yourself.
-					descriptions
-						add: (self
-								relation: groupId
-								from: groupDescription
-								to: rowKind).
+					relation := self
+							relation: groupId
+							from: groupDescription
+							to: rowKind.
+					rowKind = 'savedSet'
+						ifTrue: [ (relation at: 'properties')
+								at: 'visible'
+								put: (self atom: 'boolean' value: false) ].
+					descriptions add: relation.
 					self
 						addRecordSchema: rowKind
 						to: descriptions
@@ -331,15 +350,21 @@ CIInventoryProfileGraph class >> groupsFor: section owned: items [
 						'apparelSlot'.
 						group third
 							collect: [ :category |
-								| count slot |
+								| count slot equipped |
 								count := category = 'Shoes'
 										ifTrue: [ items count: [ :item | item definitionIdentifier = 'extraGripShoes' ] ]
 										ifFalse: [ 0 ].
+								equipped := items
+										detect: [ :item |
+											(item isKindOf: CIInventoryApparelItemSummary)
+												and: [ item equippedApparelSlotIdentifier = category ] ]
+										ifNone: [ nil ].
 								slot := CIInventoryApparelSlotSummary
 										category: category
 										tier: 1
 										inventoryCount: count
-										equippedDefinition: nil.
+										equippedDefinition: (equipped
+												ifNotNil: [ equipped definitionIdentifier ]).
 								self valuesFor: slot fields: (self recordFieldsFor: 'apparelSlot') ]} ] ].
 	section = 'resources'
 		ifTrue: [ ^ self resourceGroups
@@ -416,6 +441,7 @@ CIInventoryProfileGraph class >> object: id description: description values: val
 
 { #category : 'projection' }
 CIInventoryProfileGraph class >> recordFieldsFor: aKind [
+	aKind = 'savedSet' ifTrue: [ ^ #(itemIdentifier displayName) ].
 	aKind = 'apparelSlot'
 		ifTrue: [ ^ #(categoryIdentifier inventoryTypeCount tierId equippedDefinitionIdentifier) ].
 	aKind = 'resourceStack'
@@ -434,6 +460,14 @@ CIInventoryProfileGraph class >> relation: id from: description to: target [
 { #category : 'projection' }
 CIInventoryProfileGraph class >> resourceGroups [
 	^ #(#('currencies' 'Currencies' #('Credits' 'Tokens' 'Marks')) #('keys' 'Keys' #('DepotKey' 'RelayKey')) #('foodDrink' 'Food / Drink' #('Water' 'Rations' 'Fruit' 'Tea' 'Bread')) #('rock' 'Rock' #('Granite' 'Shale' 'Quartz' 'Flint')) #('wood' 'Wood' #('Oak' 'Birch' 'Pine')) #('garden' 'Garden' #('Seeds' 'Compost' 'Sprouts')) #('building' 'Building' #('Bricks' 'Panels' 'Fasteners' 'Glass')))
+]
+
+{ #category : 'projection' }
+CIInventoryProfileGraph class >> savedSetValuesFor: entry [
+	^ Dictionary new
+		at: 'itemIdentifier' put: (entry at: 'itemIdentifier');
+		at: 'displayName' put: (entry at: 'displayName');
+		yourself
 ]
 
 { #category : 'projection' }

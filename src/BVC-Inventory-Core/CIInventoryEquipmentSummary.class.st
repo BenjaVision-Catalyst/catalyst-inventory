@@ -13,7 +13,8 @@ Class {
 		'utilityAttributes',
 		'brandIdentifier',
 		'talentIdentifier',
-		'expertiseLevel'
+		'expertiseLevel',
+		'equippedSlotIdentifier'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -60,6 +61,11 @@ CIInventoryEquipmentSummary >> defensiveAttributes [
 ]
 
 { #category : 'accessing' }
+CIInventoryEquipmentSummary >> equippedSlotIdentifier [
+	^ equippedSlotIdentifier copy
+]
+
+{ #category : 'accessing' }
 CIInventoryEquipmentSummary >> expertiseLevel [
 	^ expertiseLevel
 ]
@@ -88,6 +94,9 @@ CIInventoryEquipmentSummary >> initializeMetadata: metadata [
 	(expertiseLevel isNil
 		or: [ expertiseLevel isInteger and: [ expertiseLevel >= 0 ] ])
 		ifFalse: [ self error: 'Invalid expertise level' ].
+	equippedSlotIdentifier := self
+			optionalIdentifierAt: #equippedSlotIdentifier
+			in: metadata.
 	^ self
 ]
 

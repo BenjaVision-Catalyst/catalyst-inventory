@@ -45,7 +45,7 @@ CIInventoryGatewayQualificationApplication class >> qualifyIn: directory [
 			nativeOptionsJson: (STONJSON toString: settings);
 			libraryPath: (directory / 'native-library-path') contents trimBoth;
 			principal: 'qualification-peer';
-			allowedOperations: #(101 102 103);
+			allowedOperations: #(101 102 103 104);
 			applicationClass: self;
 			bindings: {CRServiceBindingConfiguration new
 						identifier: #users;
@@ -218,6 +218,14 @@ CIInventoryGatewayQualificationApplication >> authenticationOperation [
 { #category : 'qualification' }
 CIInventoryGatewayQualificationApplication >> execute: request asVerifiedUser: identity using: producer [
 	| rows fields description reply bytes |
+	request operation = 104
+		ifTrue: [ (request body size = 1 and: [ #(0 1) includes: request body first ])
+				ifFalse: [ ^ self replyWith: #[] status: 400 ].
+			bytes := InventoryService
+					createSavedSetFor: identity
+					outfit: request body first = 1.
+			bytes ifNil: [ ^ self replyWith: #[] status: 422 ].
+			^ self replyWith: bytes status: 0 ].
 	request operation = 103
 		ifTrue: [ request body isEmpty ifFalse: [ ^ self replyWith: #[] status: 403 ].
 			bytes := CIInventoryProfileGraph

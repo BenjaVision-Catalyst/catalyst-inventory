@@ -8,6 +8,38 @@ Class {
 	#package : 'BVC-Inventory-Core'
 }
 
+{ #category : 'reading' }
+CIInventoryReadStore >> equippedSlotsForOwner: identity outfit: isOutfit [
+	| rows slots |
+	self validateOwner: identity.
+	rows := rowsByOwner at: identity ifAbsent: [ ^ #() ].
+	slots := OrderedCollection new.
+	rows
+		do: [ :row |
+			| slot |
+			slot := isOutfit
+					ifTrue: [ (row isKindOf: CIInventoryApparelItemSummary)
+							ifTrue: [ row equippedApparelSlotIdentifier ] ]
+					ifFalse: [ self gearSetSlotFor: row ].
+			slot
+				ifNotNil: [ slots
+						add: {slot.
+								row itemIdentifier copy} ] ].
+	^ slots asArray
+]
+
+{ #category : 'private' }
+CIInventoryReadStore >> gearSetSlotFor: row [
+	| slot |
+	(row isKindOf: CIInventoryEquipmentSummary) ifFalse: [ ^ nil ].
+	slot := row equippedSlotIdentifier.
+	slot ifNil: [ ^ nil ].
+	row presentationKind = 'weapon' ifTrue: [ ^ slot ].
+	(#('Chest' 'Backpack' 'Gloves' 'KneePads' 'Mask' 'Watch' 'GadgetLeft' 'GadgetRight')
+		includes: slot) ifTrue: [ ^ slot ].
+	^ nil
+]
+
 { #category : 'initialization' }
 CIInventoryReadStore >> initialize [
 	super initialize.

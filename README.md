@@ -17,6 +17,13 @@ for the rules, reproduction commands, rankings and all 24 results.
 The [Unreal companion plugin](https://github.com/BenjaVision-Catalyst/catalyst-inventory-ue-plugin)
 owns the future ACF integration.
 
+The authenticated Inventory qualification gateway supports Create for Gear
+Sets and Outfits. Operation 104 accepts one byte, 0 for Gear Sets or 1 for
+Outfits, and derives the owner from the verified session. The Inventory service
+assigns the next available name, captures the owner's equipped slots, and
+returns the updated Magritte profile. Saved sets use the Runtime service's
+in-memory store for the lifetime of that service.
+
 The [family milestone](docs/gear-family-v2.md) adds cumulative two-, three-,
 and four-piece thresholds and a proposed launch roster of manufacturers.
 

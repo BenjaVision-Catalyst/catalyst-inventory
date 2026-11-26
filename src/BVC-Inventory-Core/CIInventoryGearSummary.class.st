@@ -21,6 +21,11 @@ CIInventoryGearSummary >> brandName [
 	^ brandName copy
 ]
 
+{ #category : 'accessing' }
+CIInventoryGearSummary >> equippedSlotIdentifier [
+	^ super equippedSlotIdentifier ifNil: [ self gearSlotIdentifier ]
+]
+
 { #category : 'initialization' }
 CIInventoryGearSummary >> flagAt: key in: metadata [
 	| flag |
