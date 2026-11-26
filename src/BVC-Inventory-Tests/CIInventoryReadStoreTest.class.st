@@ -15,6 +15,82 @@ CIInventoryReadStoreTest >> setUp [
 ]
 
 { #category : 'tests' }
+CIInventoryReadStoreTest >> testApplyingGearSetPreservesMissingSourcesAndEquipsTheRest [
+	| saved current source available displaced forbidden result makeWeapon |
+	makeWeapon := [ :id :slot |
+		CIInventoryEquipmentSummary
+			item: id
+			fromDefinition: (CIInventoryItemDefinition
+					id: id
+					name: id
+					icon: nil)
+			metadata: (Dictionary new
+					at: #presentationKind put: 'weapon';
+					at: #inventoryTypeCount put: 1;
+					at: #equippedSlotIdentifier put: slot;
+					yourself) ].
+	current := makeWeapon value: 'current' value: 'MeleeWeapon'.
+	source := makeWeapon value: 'target' value: 'LeftHandWeapon'.
+	available := makeWeapon value: 'available' value: nil.
+	displaced := makeWeapon value: 'displaced' value: 'RangedWeapon'.
+	forbidden := makeWeapon value: 'forbidden' value: nil.
+	forbidden availableEquipmentSlotIdentifiers: #('LeftHandWeapon').
+	store
+		replaceRows: {current.
+				source.
+				available.
+				displaced.
+				forbidden}
+		forOwner: 'owner'.
+	saved := #(#('MeleeWeapon' 'target') #('LeftHandWeapon' 'missing') #('RangedWeapon' 'available') #('OtherSlot' 'forbidden')).
+	result := store
+			rowsAfterEquipping: saved
+			forOwner: 'owner'
+			outfit: false.
+	self
+		assert: (result collect: #equippedSlotIdentifier) asArray
+		equals: #('MeleeWeapon' 'LeftHandWeapon' 'RangedWeapon' nil nil).
+	self assert: available equippedSlotIdentifier isNil.
+	self assert: displaced equippedSlotIdentifier equals: 'RangedWeapon'.
+	self
+		assertEmpty: (store
+				rowsAfterEquipping: saved
+				forOwner: 'other'
+				outfit: false)
+]
+
+{ #category : 'tests' }
+CIInventoryReadStoreTest >> testApplyingOutfitSwapsItemsAndKeepsUnlistedSlots [
+	| first second cap result makeApparel |
+	makeApparel := [ :id :slot |
+		(CIInventoryApparelItemSummary
+			item: id
+			fromDefinition: (CIInventoryItemDefinition
+					id: id
+					name: id
+					icon: nil))
+			equippedApparelSlotIdentifier: slot;
+			yourself ].
+	first := makeApparel value: 'first' value: 'Mask'.
+	second := makeApparel value: 'second' value: 'Neck'.
+	cap := makeApparel value: 'cap' value: 'Hat'.
+	store
+		replaceRows: {first.
+				second.
+				cap}
+		forOwner: 'owner'.
+	result := store
+			rowsAfterEquipping: #(#('Mask' 'second') #('Neck' 'first') #('Shoes' 'missing'))
+			forOwner: 'owner'
+			outfit: true.
+	self
+		assert: (result collect: #equippedApparelSlotIdentifier)
+		equals: #('Neck' 'Mask' 'Hat').
+	self assert: first equippedApparelSlotIdentifier equals: 'Mask'.
+	self assert: second equippedApparelSlotIdentifier equals: 'Neck'
+]
+
+{ #category : 'tests' }
 CIInventoryReadStoreTest >> testInvalidBoundsAndMissingOwnerRefuse [
 	self
 		should: [ store

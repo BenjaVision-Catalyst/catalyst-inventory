@@ -23,7 +23,9 @@ CIInventoryGearSummary >> brandName [
 
 { #category : 'accessing' }
 CIInventoryGearSummary >> equippedSlotIdentifier [
-	^ super equippedSlotIdentifier ifNil: [ self gearSlotIdentifier ]
+	^ equippedSlotKnown == true
+		ifTrue: [ super equippedSlotIdentifier ]
+		ifFalse: [ super equippedSlotIdentifier ifNil: [ self gearSlotIdentifier ] ]
 ]
 
 { #category : 'initialization' }

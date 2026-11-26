@@ -8,7 +8,8 @@ Class {
 		'itemIdentifier',
 		'definitionIdentifier',
 		'displayName',
-		'tierId'
+		'tierId',
+		'availableEquipmentSlotIdentifiers'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -28,6 +29,14 @@ CIInventoryItemSummary class >> item: anItemIdentifier fromDefinition: aDefiniti
 		item: anItemIdentifier
 		definition: aDefinition id
 		name: aDefinition displayName) initializeTierFrom: aDefinition
+]
+
+{ #category : 'accessing' }
+CIInventoryItemSummary >> availableEquipmentSlotIdentifiers: slots [
+	(slots
+		allSatisfy: [ :slot | slot isString and: [ slot size between: 1 and: 128 ] ])
+		ifFalse: [ self error: 'Invalid available equipment slot' ].
+	availableEquipmentSlotIdentifiers := slots collect: #copy as: Set
 ]
 
 { #category : 'accessing' }
@@ -76,6 +85,12 @@ CIInventoryItemSummary >> magritteDescription [
 				self readOnlyField: #definitionIdentifier label: 'Definition identifier'.
 				self readOnlyField: #displayName label: 'Name'.
 				tier}
+]
+
+{ #category : 'testing' }
+CIInventoryItemSummary >> permitsCapturedEquipmentSlot: slot [
+	^ availableEquipmentSlotIdentifiers isNil
+		or: [ availableEquipmentSlotIdentifiers includes: slot ]
 ]
 
 { #category : 'descriptions' }

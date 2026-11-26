@@ -14,7 +14,8 @@ Class {
 		'brandIdentifier',
 		'talentIdentifier',
 		'expertiseLevel',
-		'equippedSlotIdentifier'
+		'equippedSlotIdentifier',
+		'equippedSlotKnown'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -63,6 +64,12 @@ CIInventoryEquipmentSummary >> defensiveAttributes [
 { #category : 'accessing' }
 CIInventoryEquipmentSummary >> equippedSlotIdentifier [
 	^ equippedSlotIdentifier copy
+]
+
+{ #category : 'accessing' }
+CIInventoryEquipmentSummary >> equippedSlotIdentifier: slot [
+	equippedSlotIdentifier := slot copy.
+	equippedSlotKnown := true
 ]
 
 { #category : 'accessing' }

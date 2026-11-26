@@ -8,6 +8,23 @@ Class {
 	#package : 'BVC-Inventory-Core'
 }
 
+{ #category : 'private' }
+CIInventoryReadStore >> copyRow: row inSlot: slot outfit: isOutfit [
+	| candidate |
+	candidate := row copy.
+	isOutfit
+		ifTrue: [ candidate equippedApparelSlotIdentifier: slot ]
+		ifFalse: [ candidate equippedSlotIdentifier: slot ].
+	^ candidate
+]
+
+{ #category : 'private' }
+CIInventoryReadStore >> equippedSlotOf: row outfit: isOutfit [
+	^ isOutfit
+		ifTrue: [ row equippedApparelSlotIdentifier ]
+		ifFalse: [ row equippedSlotIdentifier ]
+]
+
 { #category : 'reading' }
 CIInventoryReadStore >> equippedSlotsForOwner: identity outfit: isOutfit [
 	| rows slots |
@@ -46,6 +63,13 @@ CIInventoryReadStore >> initialize [
 	rowsByOwner := Dictionary new
 ]
 
+{ #category : 'private' }
+CIInventoryReadStore >> isEquipmentRow: row outfit: isOutfit [
+	^ isOutfit
+		ifTrue: [ row isKindOf: CIInventoryApparelItemSummary ]
+		ifFalse: [ row isKindOf: CIInventoryEquipmentSummary ]
+]
+
 { #category : 'writing' }
 CIInventoryReadStore >> replaceRows: aCollection forOwner: anOwnerIdentifier [
 	| rows identifiers |
@@ -60,6 +84,56 @@ CIInventoryReadStore >> replaceRows: aCollection forOwner: anOwnerIdentifier [
 				ifTrue: [ self error: 'Duplicate inventory item identifier' ].
 			identifiers add: row itemIdentifier ].
 	rowsByOwner at: anOwnerIdentifier copy put: rows
+]
+
+{ #category : 'reading' }
+CIInventoryReadStore >> rowsAfterEquipping: savedSlots forOwner: identity outfit: isOutfit [
+	| rows byItem inSlot missing |
+	self validateOwner: identity.
+	rows := rowsByOwner at: identity ifAbsent: [ ^ #() ].
+	byItem := Dictionary new.
+	inSlot := Dictionary new.
+	rows
+		do: [ :row |
+			| slot |
+			(self isEquipmentRow: row outfit: isOutfit)
+				ifTrue: [ byItem at: row itemIdentifier put: row.
+					slot := self equippedSlotOf: row outfit: isOutfit.
+					slot ifNotNil: [ inSlot at: slot put: row itemIdentifier ] ] ].
+	missing := Set new.
+	savedSlots
+		do: [ :pair |
+			| row |
+			row := byItem at: pair second ifAbsent: [ nil ].
+			((inSlot at: pair first ifAbsent: [ nil ]) ~= pair second
+				and: [ row isNil or: [ (row permitsCapturedEquipmentSlot: pair first) not ] ])
+				ifTrue: [ missing add: pair first ] ].
+	savedSlots
+		do: [ :pair |
+			| destination itemId row currentSlot displaced |
+			destination := pair first.
+			itemId := pair second.
+			displaced := inSlot at: destination ifAbsent: [ nil ].
+			(displaced ~= itemId and: [ (missing includes: destination) not ])
+				ifTrue: [ row := byItem at: itemId.
+					currentSlot := self equippedSlotOf: row outfit: isOutfit.
+					(missing includes: currentSlot)
+						ifFalse: [ currentSlot ifNotNil: [ inSlot removeKey: currentSlot ifAbsent: [  ] ].
+							displaced
+								ifNotNil: [ byItem
+										at: displaced
+										put: (self
+												copyRow: (byItem at: displaced)
+												inSlot: nil
+												outfit: isOutfit) ].
+							inSlot at: destination put: itemId.
+							byItem
+								at: itemId
+								put: (self
+										copyRow: row
+										inSlot: destination
+										outfit: isOutfit) ] ] ].
+	^ rows collect: [ :row | byItem at: row itemIdentifier ifAbsent: [ row ] ]
 ]
 
 { #category : 'reading' }

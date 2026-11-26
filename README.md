@@ -24,6 +24,16 @@ assigns the next available name, captures the owner's equipped slots, and
 returns the updated Magritte profile. Saved sets use the Runtime service's
 in-memory store for the lifetime of that service.
 
+Equip uses operation 105 with the saved-set UUID as a UTF-8 payload. The
+service resolves the set within the authenticated player's Gear Sets and
+Outfits, skips slots already correct, and preserves slots whose saved item is
+missing or can no longer equip there. It also preserves an item currently in
+one of those slots when the set requests it elsewhere. An in-memory Inventory
+producer can provide `availableEquipmentSlotIdentifiers:` on an item row
+when its eligible slots change. Older rows use the server-captured slot as
+evidence that the item fits. The response refreshes the equipped items in
+the profile.
+
 The [family milestone](docs/gear-family-v2.md) adds cumulative two-, three-,
 and four-piece thresholds and a proposed launch roster of manufacturers.
 

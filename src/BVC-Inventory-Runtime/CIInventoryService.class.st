@@ -15,10 +15,46 @@ CIInventoryService class >> configurationClass [
 	^ CIInventoryConfiguration
 ]
 
+{ #category : 'private' }
+CIInventoryService >> applySavedSet: savedSet forOwner: identity outfit: isOutfit sets: ownerSets [
+	| rows reply |
+	rows := readStore
+			rowsAfterEquipping: (savedSet at: 'slots')
+			forOwner: identity
+			outfit: isOutfit.
+	reply := CIInventoryProfileGraph
+			encodeReply: (CIInventoryProfileGraph
+					forVerifiedUser: identity
+					rows: (rows first: (rows size min: 32))
+					savedSets: ownerSets).
+	reply ifNotNil: [ readStore replaceRows: rows forOwner: identity ].
+	^ reply
+]
+
 { #category : 'writing' }
 CIInventoryService >> createSavedSetFor: identity outfit: isOutfit [
 	^ savedSetsLock
 		critical: [ self newSavedSetReplyFor: identity outfit: isOutfit ]
+]
+
+{ #category : 'writing' }
+CIInventoryService >> equipSavedSet: setIdentifier forVerifiedUser: identity [
+	^ savedSetsLock
+		critical: [ | sets |
+			sets := savedSetsByOwner at: identity ifAbsent: [ ^ nil ].
+			#('gear' 'apparel')
+				do: [ :section |
+					| entry |
+					entry := (sets at: section ifAbsent: [ #() ])
+							detect: [ :each | (each at: 'itemIdentifier') = setIdentifier ]
+							ifNone: [ nil ].
+					entry
+						ifNotNil: [ ^ self
+								applySavedSet: entry
+								forOwner: identity
+								outfit: section = 'apparel'
+								sets: sets ] ].
+			nil ]
 ]
 
 { #category : 'private' }
@@ -55,19 +91,19 @@ CIInventoryService >> newSavedSetReplyFor: identity outfit: isOutfit [
 
 { #category : 'accessing' }
 CIInventoryService >> profileGraphForVerifiedUser: identity [
-	^ CIInventoryProfileGraph
-		forVerifiedUser: identity
-		rows: (self
-				rowsForVerifiedUser: identity
-				offset: 0
-				limit: 32)
-		savedSets: (savedSetsLock
-				critical: [ savedSetsByOwner at: identity ifAbsent: [ Dictionary new ] ])
+	^ savedSetsLock
+		critical: [ CIInventoryProfileGraph
+				forVerifiedUser: identity
+				rows: (self
+						rowsForVerifiedUser: identity
+						offset: 0
+						limit: 32)
+				savedSets: (savedSetsByOwner at: identity ifAbsent: [ Dictionary new ]) ]
 ]
 
 { #category : 'reading' }
 CIInventoryService >> replaceReadRows: rows forOwner: identity [
-	readStore replaceRows: rows forOwner: identity
+	savedSetsLock critical: [ readStore replaceRows: rows forOwner: identity ]
 ]
 
 { #category : 'reading' }

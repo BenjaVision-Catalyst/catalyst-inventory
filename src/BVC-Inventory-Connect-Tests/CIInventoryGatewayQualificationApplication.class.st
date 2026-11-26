@@ -18,6 +18,39 @@ CIInventoryGatewayQualificationApplication class >> clearFixture [
 ]
 
 { #category : 'qualification' }
+CIInventoryGatewayQualificationApplication class >> equipFixtureRowsAfterChange: changed [
+	| rows shoes vest replacementShoes replacementVest |
+	rows := self starterItems asOrderedCollection.
+	shoes := rows detect: [ :row | row itemIdentifier = 'extraGripShoes' ].
+	shoes equippedApparelSlotIdentifier: (changed ifFalse: [ 'Shoes' ]).
+	changed ifFalse: [ ^ rows ].
+	vest := rows detect: [ :row | row itemIdentifier = 'responseChest' ].
+	vest equippedSlotIdentifier: nil.
+	replacementVest := CIInventoryEquipmentSummary
+			item: 'fieldVest'
+			fromDefinition: (CIInventoryItemDefinition
+					id: 'fieldVest'
+					name: 'Field vest'
+					icon: nil)
+			metadata: (Dictionary new
+					at: #presentationKind put: 'gear';
+					at: #inventoryTypeCount put: 1;
+					at: #equippedSlotIdentifier put: 'Chest';
+					yourself).
+	replacementShoes := CIInventoryApparelItemSummary
+			item: 'fieldShoes'
+			fromDefinition: (CIInventoryItemDefinition
+					id: 'fieldShoes'
+					name: 'Field shoes'
+					icon: nil).
+	replacementShoes equippedApparelSlotIdentifier: 'Shoes'.
+	rows
+		add: replacementVest;
+		add: replacementShoes.
+	^ rows
+]
+
+{ #category : 'qualification' }
 CIInventoryGatewayQualificationApplication class >> proofNames: proofs users: users inventory: inventory [
 	ProofNames := proofs.
 	UsersService := users.
@@ -26,7 +59,7 @@ CIInventoryGatewayQualificationApplication class >> proofNames: proofs users: us
 
 { #category : 'qualification' }
 CIInventoryGatewayQualificationApplication class >> qualifyIn: directory [
-	| runtime config services gateway settings host worker users inventory alice bob deadline listenerPort |
+	| runtime config services gateway settings host worker users inventory alice bob deadline listenerPort equipmentPhase |
 	runtime := CRRuntime new.
 	settings := Dictionary new
 			at: 'role' put: 'server';
@@ -45,7 +78,7 @@ CIInventoryGatewayQualificationApplication class >> qualifyIn: directory [
 			nativeOptionsJson: (STONJSON toString: settings);
 			libraryPath: (directory / 'native-library-path') contents trimBoth;
 			principal: 'qualification-peer';
-			allowedOperations: #(101 102 103 104);
+			allowedOperations: #(101 102 103 104 105);
 			applicationClass: self;
 			bindings: {CRServiceBindingConfiguration new
 						identifier: #users;
@@ -155,10 +188,23 @@ CIInventoryGatewayQualificationApplication class >> qualifyIn: directory [
 				at: 'bob' put: bob userIdentifier;
 				yourself)
 		to: (directory / 'isolation-ready.json') fullName.
-	deadline := CRPlatform current currentMillis + 45000.
+	equipmentPhase := 0.
+	deadline := CRPlatform current currentMillis + 60000.
 	[ (directory / 'isolation-stop') exists
 		or: [ CRPlatform current currentMillis >= deadline ] ]
-		whileFalse: [ (Delay forMilliseconds: 20) wait ] ]
+		whileFalse: [ (equipmentPhase = 0 and: [ (directory / 'fixture-equipment-seed') exists ])
+				ifTrue: [ inventory
+						replaceReadRows: (self equipFixtureRowsAfterChange: false)
+						forOwner: alice userIdentifier.
+					(directory / 'fixture-equipment-seed-ready') ensureCreateFile.
+					equipmentPhase := 1 ].
+			(equipmentPhase = 1 and: [ (directory / 'fixture-equipment-change') exists ])
+				ifTrue: [ inventory
+						replaceReadRows: (self equipFixtureRowsAfterChange: true)
+						forOwner: alice userIdentifier.
+					(directory / 'fixture-equipment-change-ready') ensureCreateFile.
+					equipmentPhase := 2 ].
+			(Delay forMilliseconds: 20) wait ] ]
 		ensure: [ runtime stop.
 			runtime registry unregister: runtime.
 			self clearFixture.
@@ -218,6 +264,16 @@ CIInventoryGatewayQualificationApplication >> authenticationOperation [
 { #category : 'qualification' }
 CIInventoryGatewayQualificationApplication >> execute: request asVerifiedUser: identity using: producer [
 	| rows fields description reply bytes |
+	request operation = 105
+		ifTrue: [ (request body size = 36
+				and: [ request body
+						allSatisfy: [ :byte | byte = 45 or: [ (byte between: 48 and: 57) or: [ byte between: 97 and: 102 ] ] ] ])
+				ifFalse: [ ^ self replyWith: #[] status: 400 ].
+			bytes := InventoryService
+					equipSavedSet: request body utf8Decoded
+					forVerifiedUser: identity.
+			bytes ifNil: [ ^ self replyWith: #[] status: 422 ].
+			^ self replyWith: bytes status: 0 ].
 	request operation = 104
 		ifTrue: [ (request body size = 1 and: [ #(0 1) includes: request body first ])
 				ifFalse: [ ^ self replyWith: #[] status: 400 ].
