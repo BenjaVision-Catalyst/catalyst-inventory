@@ -17,6 +17,25 @@ BaselineOfCatalystInventory >> baseline: spec [
 			spec
 				package: 'BVC-Inventory-GearSimulation-Tests'
 				with: [ spec requires: #('BVC-Inventory-GearSimulation') ].
+			spec
+				package: 'BVC-Inventory-Tests'
+				with: [ spec requires: #('BVC-Inventory-Core') ].
+			spec
+				baseline: 'CatalystRuntime'
+				with: [ spec repository: 'github://BenjaVisionPro/CatalystRuntime:main/src' ].
+			spec
+				package: 'BVC-Inventory-Runtime'
+				with: [ spec requires: #('BVC-Inventory-Core' 'CatalystRuntime') ].
+			spec
+				baseline: 'CatalystUsers'
+				with: [ spec repository: 'github://BenjaVision-Catalyst/catalyst-users:main/src'.
+					spec loads: #('connect') ].
+			spec
+				package: 'BVC-Inventory-Connect-Tests'
+				with: [ spec requires: #('BVC-Inventory-Runtime' 'CatalystUsers') ].
+			spec group: 'Tests' with: #('BVC-Inventory-Tests').
+			spec group: 'ConnectTests' with: #('BVC-Inventory-Connect-Tests').
+			spec group: 'Runtime' with: #('BVC-Inventory-Runtime').
 			spec group: 'Core' with: #('BVC-Inventory-Core').
 			spec group: 'GearSimulation' with: #('BVC-Inventory-GearSimulation').
 			spec
