@@ -39,6 +39,10 @@ The service captures the authenticated player's currently equipped slots for
 the set's kind and replaces its snapshot in place. It keeps the set's ID,
 name, and order and returns the updated profile.
 
+Delete uses operation 107 with the saved-set UUID. It removes the selected
+entry from the authenticated player's Gear Sets or Outfits and returns the
+updated profile. Equipped items stay in place.
+
 The [family milestone](docs/gear-family-v2.md) adds cumulative two-, three-,
 and four-piece thresholds and a proposed launch roster of manufacturers.
 

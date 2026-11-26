@@ -38,6 +38,19 @@ CIInventoryService >> createSavedSetFor: identity outfit: isOutfit [
 ]
 
 { #category : 'writing' }
+CIInventoryService >> deleteSavedSet: setIdentifier forVerifiedUser: identity [
+	^ self
+		withSavedSet: setIdentifier
+		forVerifiedUser: identity
+		do: [ :entry :section :sets |
+			self
+				replaceSavedSets: ((sets at: section) reject: [ :each | each == entry ])
+				in: section
+				of: sets
+				forOwner: identity ]
+]
+
+{ #category : 'writing' }
 CIInventoryService >> equipSavedSet: setIdentifier forVerifiedUser: identity [
 	^ self
 		withSavedSet: setIdentifier
@@ -88,7 +101,7 @@ CIInventoryService >> overwriteSavedSet: setIdentifier forVerifiedUser: identity
 		withSavedSet: setIdentifier
 		forVerifiedUser: identity
 		do: [ :entry :section :sets |
-			| entries updated reply |
+			| entries |
 			entries := (sets at: section) copy.
 			entries
 				at: (entries indexOf: entry)
@@ -96,19 +109,11 @@ CIInventoryService >> overwriteSavedSet: setIdentifier forVerifiedUser: identity
 						at: 'slots'
 							put: (readStore equippedSlotsForOwner: identity outfit: section = 'apparel');
 						yourself).
-			updated := sets copy
-					at: section put: entries;
-					yourself.
-			reply := CIInventoryProfileGraph
-					encodeReply: (CIInventoryProfileGraph
-							forVerifiedUser: identity
-							rows: (self
-									rowsForVerifiedUser: identity
-									offset: 0
-									limit: 32)
-							savedSets: updated).
-			reply ifNotNil: [ savedSetsByOwner at: identity copy put: updated ].
-			reply ]
+			self
+				replaceSavedSets: entries
+				in: section
+				of: sets
+				forOwner: identity ]
 ]
 
 { #category : 'accessing' }
@@ -126,6 +131,24 @@ CIInventoryService >> profileGraphForVerifiedUser: identity [
 { #category : 'reading' }
 CIInventoryService >> replaceReadRows: rows forOwner: identity [
 	savedSetsLock critical: [ readStore replaceRows: rows forOwner: identity ]
+]
+
+{ #category : 'private' }
+CIInventoryService >> replaceSavedSets: entries in: section of: sets forOwner: identity [
+	| updated reply |
+	updated := sets copy
+			at: section put: entries;
+			yourself.
+	reply := CIInventoryProfileGraph
+			encodeReply: (CIInventoryProfileGraph
+					forVerifiedUser: identity
+					rows: (self
+							rowsForVerifiedUser: identity
+							offset: 0
+							limit: 32)
+					savedSets: updated).
+	reply ifNotNil: [ savedSetsByOwner at: identity copy put: updated ].
+	^ reply
 ]
 
 { #category : 'reading' }

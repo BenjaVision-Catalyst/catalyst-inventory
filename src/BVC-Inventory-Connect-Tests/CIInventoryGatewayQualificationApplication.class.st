@@ -93,7 +93,7 @@ CIInventoryGatewayQualificationApplication class >> qualifyIn: directory [
 			nativeOptionsJson: (STONJSON toString: settings);
 			libraryPath: (directory / 'native-library-path') contents trimBoth;
 			principal: 'qualification-peer';
-			allowedOperations: #(101 102 103 104 105 106);
+			allowedOperations: #(101 102 103 104 105 106 107);
 			applicationClass: self;
 			bindings: {CRServiceBindingConfiguration new
 						identifier: #users;
@@ -293,7 +293,7 @@ CIInventoryGatewayQualificationApplication >> authenticationOperation [
 { #category : 'qualification' }
 CIInventoryGatewayQualificationApplication >> execute: request asVerifiedUser: identity using: producer [
 	| rows fields description reply bytes |
-	(#(105 106) includes: request operation)
+	(#(105 106 107) includes: request operation)
 		ifTrue: [ (request body size = 36
 				and: [ request body
 						allSatisfy: [ :byte | byte = 45 or: [ (byte between: 48 and: 57) or: [ byte between: 97 and: 102 ] ] ] ])
@@ -302,9 +302,13 @@ CIInventoryGatewayQualificationApplication >> execute: request asVerifiedUser: i
 					ifTrue: [ InventoryService
 							equipSavedSet: request body utf8Decoded
 							forVerifiedUser: identity ]
-					ifFalse: [ InventoryService
-							overwriteSavedSet: request body utf8Decoded
-							forVerifiedUser: identity ].
+					ifFalse: [ request operation = 106
+							ifTrue: [ InventoryService
+									overwriteSavedSet: request body utf8Decoded
+									forVerifiedUser: identity ]
+							ifFalse: [ InventoryService
+									deleteSavedSet: request body utf8Decoded
+									forVerifiedUser: identity ] ].
 			bytes ifNil: [ ^ self replyWith: #[] status: 422 ].
 			^ self replyWith: bytes status: 0 ].
 	request operation = 104
