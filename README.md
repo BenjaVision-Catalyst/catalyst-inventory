@@ -43,6 +43,12 @@ Delete uses operation 107 with the saved-set UUID. It removes the selected
 entry from the authenticated player's Gear Sets or Outfits and returns the
 updated profile. Equipped items stay in place.
 
+Rename uses operation 108 with the 36-byte saved-set UUID followed by the
+UTF-8 name. The service trims the name, accepts 1 to 48 UTF-16 code units on
+one line, and rejects case-insensitive duplicates within the selected Gear
+Sets or Outfits list. The profile reply keeps the set's ID, position, and
+saved slots.
+
 The [family milestone](docs/gear-family-v2.md) adds cumulative two-, three-,
 and four-piece thresholds and a proposed launch roster of manufacturers.
 

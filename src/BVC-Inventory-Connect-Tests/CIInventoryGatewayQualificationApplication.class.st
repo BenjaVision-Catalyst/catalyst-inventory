@@ -93,7 +93,7 @@ CIInventoryGatewayQualificationApplication class >> qualifyIn: directory [
 			nativeOptionsJson: (STONJSON toString: settings);
 			libraryPath: (directory / 'native-library-path') contents trimBoth;
 			principal: 'qualification-peer';
-			allowedOperations: #(101 102 103 104 105 106 107);
+			allowedOperations: #(101 102 103 104 105 106 107 108);
 			applicationClass: self;
 			bindings: {CRServiceBindingConfiguration new
 						identifier: #users;
@@ -293,10 +293,10 @@ CIInventoryGatewayQualificationApplication >> authenticationOperation [
 { #category : 'qualification' }
 CIInventoryGatewayQualificationApplication >> execute: request asVerifiedUser: identity using: producer [
 	| rows fields description reply bytes |
+	request operation = 108
+		ifTrue: [ ^ self renameReplyFor: request body owner: identity ].
 	(#(105 106 107) includes: request operation)
-		ifTrue: [ (request body size = 36
-				and: [ request body
-						allSatisfy: [ :byte | byte = 45 or: [ (byte between: 48 and: 57) or: [ byte between: 97 and: 102 ] ] ] ])
+		ifTrue: [ (self validSavedSetIdentifierBytes: request body)
 				ifFalse: [ ^ self replyWith: #[] status: 400 ].
 			bytes := request operation = 105
 					ifTrue: [ InventoryService
@@ -356,6 +356,33 @@ CIInventoryGatewayQualificationApplication >> execute: request asVerifiedUser: i
 { #category : 'qualification' }
 CIInventoryGatewayQualificationApplication >> profileGraphFor: identity [
 	^ InventoryService profileGraphForVerifiedUser: identity
+]
+
+{ #category : 'qualification' }
+CIInventoryGatewayQualificationApplication >> renameReplyFor: body owner: identity [
+	| identifier nameBytes name bytes |
+	(body size between: 37 and: 228) ifFalse: [ ^ self replyWith: #[] status: 400 ].
+	identifier := body copyFrom: 1 to: 36.
+	(self validSavedSetIdentifierBytes: identifier)
+		ifFalse: [ ^ self replyWith: #[] status: 400 ].
+	nameBytes := body copyFrom: 37 to: body size.
+	name := [ nameBytes utf8Decoded ]
+			on: Error
+			do: [ :error | ^ self replyWith: #[] status: 400 ].
+	name utf8Encoded = nameBytes ifFalse: [ ^ self replyWith: #[] status: 400 ].
+	bytes := InventoryService
+			renameSavedSet: identifier utf8Decoded
+			to: name
+			forVerifiedUser: identity.
+	bytes ifNil: [ ^ self replyWith: #[] status: 422 ].
+	^ self replyWith: bytes status: 0
+]
+
+{ #category : 'qualification' }
+CIInventoryGatewayQualificationApplication >> validSavedSetIdentifierBytes: bytes [
+	^ bytes size = 36
+		and: [ bytes
+				allSatisfy: [ :byte | byte = 45 or: [ (byte between: 48 and: 57) or: [ byte between: 97 and: 102 ] ] ] ]
 ]
 
 { #category : 'qualification' }

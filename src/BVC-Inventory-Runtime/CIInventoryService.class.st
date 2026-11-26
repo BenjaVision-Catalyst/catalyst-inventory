@@ -128,6 +128,36 @@ CIInventoryService >> profileGraphForVerifiedUser: identity [
 				savedSets: (savedSetsByOwner at: identity ifAbsent: [ Dictionary new ]) ]
 ]
 
+{ #category : 'writing' }
+CIInventoryService >> renameSavedSet: setIdentifier to: proposedName forVerifiedUser: identity [
+	| name units |
+	name := proposedName trimBoth.
+	units := name size + (name count: [ :character | character codePoint > 65535 ]).
+	((units between: 1 and: 48)
+		and: [ name noneSatisfy: [ :character | #(0 10 13) includes: character codePoint ] ])
+		ifFalse: [ ^ nil ].
+	^ self
+		withSavedSet: setIdentifier
+		forVerifiedUser: identity
+		do: [ :entry :section :sets |
+			| entries |
+			entries := sets at: section.
+			(entries
+				anySatisfy: [ :each | each ~~ entry and: [ (each at: 'displayName') sameAs: name ] ])
+				ifTrue: [ ^ nil ].
+			entries := entries copy.
+			entries
+				at: (entries indexOf: entry)
+				put: (entry copy
+						at: 'displayName' put: name;
+						yourself).
+			self
+				replaceSavedSets: entries
+				in: section
+				of: sets
+				forOwner: identity ]
+]
+
 { #category : 'reading' }
 CIInventoryService >> replaceReadRows: rows forOwner: identity [
 	savedSetsLock critical: [ readStore replaceRows: rows forOwner: identity ]
