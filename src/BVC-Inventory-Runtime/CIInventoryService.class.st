@@ -28,7 +28,8 @@ CIInventoryService >> applySavedSet: savedSet forOwner: identity outfit: isOutfi
 					forVerifiedUser: identity
 					rows: rows
 					savedSets: ownerSets
-					catalog: itemTypeCatalog).
+					catalog: itemTypeCatalog
+					modStorageAllowance: (readStore modStorageAllowanceForOwner: identity)).
 	reply ifNotNil: [ readStore replaceRows: rows forOwner: identity ].
 	^ reply
 ]
@@ -76,6 +77,12 @@ CIInventoryService >> grantItem: itemIdentifier type: typeIdentifier values: val
 				forOwner: identity ]
 ]
 
+{ #category : 'writing' }
+CIInventoryService >> modStorageAllowance: allowance forVerifiedUser: identity [
+	^ savedSetsLock
+		critical: [ readStore modStorageAllowance: allowance forOwner: identity ]
+]
+
 { #category : 'private' }
 CIInventoryService >> newSavedSetReplyFor: identity outfit: isOutfit [
 	| section ownerSets entries name prefix number entry reply |
@@ -100,7 +107,8 @@ CIInventoryService >> newSavedSetReplyFor: identity outfit: isOutfit [
 					forVerifiedUser: identity
 					rows: (readStore allRowsForOwner: identity)
 					savedSets: ownerSets
-					catalog: itemTypeCatalog).
+					catalog: itemTypeCatalog
+					modStorageAllowance: (readStore modStorageAllowanceForOwner: identity)).
 	reply ifNotNil: [ savedSetsByOwner at: identity copy put: ownerSets ].
 	^ reply
 ]
@@ -133,7 +141,8 @@ CIInventoryService >> profileGraphForVerifiedUser: identity [
 				forVerifiedUser: identity
 				rows: (readStore allRowsForOwner: identity)
 				savedSets: (savedSetsByOwner at: identity ifAbsent: [ Dictionary new ])
-				catalog: itemTypeCatalog ]
+				catalog: itemTypeCatalog
+				modStorageAllowance: (readStore modStorageAllowanceForOwner: identity) ]
 ]
 
 { #category : 'writing' }
@@ -188,7 +197,8 @@ CIInventoryService >> replaceSavedSets: entries in: section of: sets forOwner: i
 					forVerifiedUser: identity
 					rows: (readStore allRowsForOwner: identity)
 					savedSets: updated
-					catalog: itemTypeCatalog).
+					catalog: itemTypeCatalog
+					modStorageAllowance: (readStore modStorageAllowanceForOwner: identity)).
 	reply ifNotNil: [ savedSetsByOwner at: identity copy put: updated ].
 	^ reply
 ]

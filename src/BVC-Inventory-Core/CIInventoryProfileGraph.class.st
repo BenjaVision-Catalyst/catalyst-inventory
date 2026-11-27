@@ -87,6 +87,43 @@ CIInventoryProfileGraph class >> addItemInspector: sections forCard: card descri
 ]
 
 { #category : 'projection' }
+CIInventoryProfileGraph class >> addModStorageAllowanceFieldTo: descriptionId in: descriptions [
+	| container |
+	container := descriptions detect: [ :node | (node at: 'id') = descriptionId ].
+	container
+		at: 'children'
+		put: ((container at: 'children') copyWith: 'modStorageAllowance')
+]
+
+{ #category : 'projection' }
+CIInventoryProfileGraph class >> addModStorageTo: graph for: identity count: count allowance: allowance [
+	| objects inventory storage descriptions |
+	objects := graph at: 'objects'.
+	inventory := objects
+			detect: [ :row | (row at: 'id') = (identity , ':inventory') ].
+	storage := objects
+			detect: [ :row | (row at: 'id') = (identity , ':inventory:gear:equippedGear:ModStorage') ].
+	(inventory at: 'values')
+		at: 'modStorageAllowance'
+		put: (self atomFor: allowance).
+	(storage at: 'values')
+		at: 'inventoryTypeCount' put: (self atomFor: count);
+		at: 'modStorageAllowance' put: (self atomFor: allowance).
+	descriptions := graph at: 'descriptions'.
+	self addModStorageAllowanceFieldTo: 'inventoryModel' in: descriptions.
+	self addModStorageAllowanceFieldTo: 'equipmentCard' in: descriptions.
+	graph
+		at: 'descriptions'
+		put: (descriptions
+				copyWith: (self
+						field: 'modStorageAllowance'
+						from: (MANumberDescription new
+								label: 'Mod allowance';
+								min: 0;
+								yourself)))
+]
+
+{ #category : 'projection' }
 CIInventoryProfileGraph class >> addRecord: id kind: kind values: values to: objects [
 	| encoded |
 	encoded := Dictionary new.
@@ -422,11 +459,26 @@ CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets
 
 { #category : 'projection' }
 CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets: savedSets catalog: catalog [
+	^ self
+		forVerifiedUser: identity
+		rows: items
+		savedSets: savedSets
+		catalog: catalog
+		modStorageAllowance: CIInventoryReadStore defaultModStorageAllowance
+]
+
+{ #category : 'projection' }
+CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets: savedSets catalog: catalog modStorageAllowance: allowance [
 	| graph descriptions objects cards itemsById tier |
 	graph := self
 			forVerifiedUser: identity
 			rows: (items first: (items size min: 32))
 			savedSets: savedSets.
+	self
+		addModStorageTo: graph
+		for: identity
+		count: (items count: [ :row | row isKindOf: CIInventoryModItemSummary ])
+		allowance: allowance.
 	descriptions := (graph at: 'descriptions') asOrderedCollection.
 	objects := (graph at: 'objects') asOrderedCollection.
 	cards := objects

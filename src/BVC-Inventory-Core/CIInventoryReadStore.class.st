@@ -2,11 +2,17 @@ Class {
 	#name : 'CIInventoryReadStore',
 	#superclass : 'Object',
 	#instVars : [
-		'rowsByOwner'
+		'rowsByOwner',
+		'modStorageAllowancesByOwner'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
 }
+
+{ #category : 'accessing' }
+CIInventoryReadStore class >> defaultModStorageAllowance [
+	^ 100
+]
 
 { #category : 'reading' }
 CIInventoryReadStore >> allRowsForOwner: identity [
@@ -101,6 +107,25 @@ CIInventoryReadStore >> isEquipmentRow: row outfit: isOutfit [
 	^ isOutfit
 		ifTrue: [ row isKindOf: CIInventoryApparelItemSummary ]
 		ifFalse: [ row isKindOf: CIInventoryEquipmentSummary ]
+]
+
+{ #category : 'writing' }
+CIInventoryReadStore >> modStorageAllowance: allowance forOwner: identity [
+	self validateOwner: identity.
+	(allowance isInteger and: [ allowance >= 0 ])
+		ifFalse: [ self error: 'Invalid mod storage allowance' ].
+	modStorageAllowancesByOwner
+		ifNil: [ modStorageAllowancesByOwner := Dictionary new ].
+	modStorageAllowancesByOwner at: identity copy put: allowance
+]
+
+{ #category : 'reading' }
+CIInventoryReadStore >> modStorageAllowanceForOwner: identity [
+	self validateOwner: identity.
+	modStorageAllowancesByOwner ifNil: [ ^ self class defaultModStorageAllowance ].
+	^ modStorageAllowancesByOwner
+		at: identity
+		ifAbsent: [ self class defaultModStorageAllowance ]
 ]
 
 { #category : 'writing' }
