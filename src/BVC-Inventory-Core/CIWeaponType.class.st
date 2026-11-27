@@ -27,10 +27,11 @@ CIWeaponType class >> id: id name: name slot: slot core: core handling: handling
 { #category : 'initialization' }
 CIWeaponType >> damageFalloff: points [
 	| lastDistance lastDamage |
-	lastDistance := -1.
+	lastDistance := self optimalRangeMetres.
+	(lastDistance notNil
+		and: [ lastDistance isInteger and: [ lastDistance > 0 and: [ points notEmpty ] ] ])
+		ifFalse: [ self error: 'Falloff requires a positive optimal range and at least one point' ].
 	lastDamage := 100.
-	(points size >= 2 and: [ points first = #(0 100) ])
-		ifFalse: [ self error: 'Falloff must start at full damage at zero range' ].
 	points
 		do: [ :point |
 			(point size = 2
@@ -53,6 +54,20 @@ CIWeaponType >> initializeSlot: slot core: core handling: handling sockets: sock
 ]
 
 { #category : 'descriptions' }
+CIWeaponType >> inspectorFalloffRows [
+	| points |
+	damageFalloff ifNil: [ ^ #() ].
+	points := {#(0 100).
+			{self optimalRangeMetres.
+				100}} , damageFalloff.
+	^ points
+		collect: [ :point |
+			{point first asString.
+				point second.
+				point first} ]
+]
+
+{ #category : 'descriptions' }
 CIWeaponType >> inspectorSectionsAtUtilityTier: tier item: item [
 	| roll modifier damage rows |
 	(item isKindOf: CIInventoryWeaponToolSummary) ifFalse: [ ^ #() ].
@@ -62,7 +77,13 @@ CIWeaponType >> inspectorSectionsAtUtilityTier: tier item: item [
 	modifier := '+' , (roll value * 100 printShowingDecimalPlaces: 2) , '%'.
 	damage := coreStats first second * (1 + roll value).
 	rows := {{'Damage per hit'.
-				damage printShowingDecimalPlaces: 1}} , coreStats allButFirst.
+				damage printShowingDecimalPlaces: 1}}
+			, (coreStats allButFirst
+					collect: [ :stat |
+						stat first = 'Optimal range'
+							ifTrue: [ {stat first.
+									stat second asString , ' m'} ]
+							ifFalse: [ stat ] ]).
 	^ {{'stats'.
 			'Core stats'.
 			rows}.
@@ -75,11 +96,7 @@ CIWeaponType >> inspectorSectionsAtUtilityTier: tier item: item [
 			handlingStats}.
 		{'falloff'.
 			'Damage falloff'.
-			(damageFalloff ifNil: [ #() ])
-				collect: [ :point |
-					{point first asString.
-						point second.
-						point first} ]}.
+			self inspectorFalloffRows}.
 		{'slots'.
 			'Attachments'.
 			item modSlots
@@ -130,4 +147,10 @@ CIWeaponType >> inventoryItemDescription [
 								accessor: (MADictionaryAccessor key: socket);
 								label: socket;
 								yourself ])
+]
+
+{ #category : 'private' }
+CIWeaponType >> optimalRangeMetres [
+	^ (coreStats detect: [ :stat | stat first = 'Optimal range' ] ifNone: [ ^ nil ])
+		second
 ]

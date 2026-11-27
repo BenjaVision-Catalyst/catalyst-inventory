@@ -47,10 +47,10 @@ CIGameItemTypes class >> pathfinderCarbine [
 		id: 'weapon.ranged.pathfinder'
 		name: 'Pathfinder Carbine'
 		slot: 'RangedWeapon'
-		core: #(#('Damage per hit' 25) #('Fire rate' '600 RPM') #('Magazine' '30 rounds') #('Optimal range' '32 m') #('Reload time' '2.1 s'))
+		core: #(#('Damage per hit' 25) #('Fire rate' '600 RPM') #('Magazine' '30 rounds') #('Optimal range' 32) #('Reload time' '2.1 s'))
 		handling: #(#('Accuracy' 82) #('Stability' 68))
 		sockets: #('optic' 'magazine' 'muzzle'))
-		damageFalloff: #(#(0 100) #(32 100) #(72 65) #(100 65));
+		damageFalloff: #(#(72 65) #(100 65));
 		yourself
 ]
 
@@ -60,10 +60,10 @@ CIGameItemTypes class >> relaySidearm [
 		id: 'weapon.sidearm.relay'
 		name: 'Relay Sidearm'
 		slot: 'LeftHandWeapon'
-		core: #(#('Damage per hit' 32) #('Fire rate' '360 RPM') #('Magazine' '12 rounds') #('Optimal range' '18 m') #('Reload time' '1.5 s'))
+		core: #(#('Damage per hit' 32) #('Fire rate' '360 RPM') #('Magazine' '12 rounds') #('Optimal range' 18) #('Reload time' '1.5 s'))
 		handling: #(#('Accuracy' 72) #('Stability' 76))
 		sockets: #('magazine' 'muzzle'))
-		damageFalloff: #(#(0 100) #(18 100) #(42 55) #(60 55));
+		damageFalloff: #(#(42 55) #(60 55));
 		yourself
 ]
 
