@@ -12,6 +12,10 @@ BaselineOfCatalystInventory >> baseline: spec [
 		for: #common
 		do: [ spec package: 'BVC-Inventory-Core'.
 			spec
+				package: 'BVC-Inventory-TypeCatalog'
+				with: [ spec requires: #('BVC-Inventory-Core') ].
+			spec group: 'TypeCatalog' with: #('BVC-Inventory-TypeCatalog').
+			spec
 				package: 'BVC-Inventory-GearSimulation'
 				with: [ spec requires: #('BVC-Inventory-Core') ].
 			spec
