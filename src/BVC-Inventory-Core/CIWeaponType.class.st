@@ -5,7 +5,8 @@ Class {
 		'slotIdentifier',
 		'coreStats',
 		'handlingStats',
-		'socketIdentifiers'
+		'socketIdentifiers',
+		'damageFalloff'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -21,6 +22,25 @@ CIWeaponType class >> id: id name: name slot: slot core: core handling: handling
 		core: core
 		handling: handling
 		sockets: sockets
+]
+
+{ #category : 'initialization' }
+CIWeaponType >> damageFalloff: points [
+	| lastDistance lastDamage |
+	lastDistance := -1.
+	lastDamage := 100.
+	(points size >= 2 and: [ points first = #(0 100) ])
+		ifFalse: [ self error: 'Falloff must start at full damage at zero range' ].
+	points
+		do: [ :point |
+			(point size = 2
+				and: [ point first isInteger
+						and: [ point first > lastDistance
+								and: [ point second isInteger and: [ point second between: 0 and: lastDamage ] ] ] ])
+				ifFalse: [ self error: 'Invalid damage falloff point' ].
+			lastDistance := point first.
+			lastDamage := point second ].
+	damageFalloff := points collect: #copy as: Array
 ]
 
 { #category : 'initialization' }
@@ -53,6 +73,13 @@ CIWeaponType >> inspectorSectionsAtUtilityTier: tier item: item [
 		{'meters'.
 			'Weapon handling'.
 			handlingStats}.
+		{'falloff'.
+			'Damage falloff'.
+			(damageFalloff ifNil: [ #() ])
+				collect: [ :point |
+					{point first asString.
+						point second.
+						point first} ]}.
 		{'slots'.
 			'Attachments'.
 			item modSlots

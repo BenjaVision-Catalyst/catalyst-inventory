@@ -23,6 +23,10 @@ CIInventoryProfileGraph class >> addInspectorRows: rows in: id descriptions: des
 					priority: index.
 				field := self field: fieldId from: description.
 				field at: 'accessor' put: self inspectorAccessor.
+				row size > 2
+					ifTrue: [ (field at: 'properties')
+							at: 'metadata:ciDistanceMetres'
+							put: (self atomFor: row third) ].
 				descriptions add: field.
 				atom := row second isSymbol
 						ifTrue: [ self atom: 'symbol' value: row second asString ]

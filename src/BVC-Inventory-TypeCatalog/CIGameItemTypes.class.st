@@ -43,24 +43,28 @@ CIGameItemTypes class >> fieldKneePads [
 
 { #category : 'catalog' }
 CIGameItemTypes class >> pathfinderCarbine [
-	^ CIWeaponType
+	^ (CIWeaponType
 		id: 'weapon.ranged.pathfinder'
 		name: 'Pathfinder Carbine'
 		slot: 'RangedWeapon'
 		core: #(#('Damage per hit' 25) #('Fire rate' '600 RPM') #('Magazine' '30 rounds') #('Optimal range' '32 m') #('Reload time' '2.1 s'))
 		handling: #(#('Accuracy' 82) #('Stability' 68))
-		sockets: #('optic' 'magazine' 'muzzle')
+		sockets: #('optic' 'magazine' 'muzzle'))
+		damageFalloff: #(#(0 100) #(32 100) #(72 65) #(100 65));
+		yourself
 ]
 
 { #category : 'catalog' }
 CIGameItemTypes class >> relaySidearm [
-	^ CIWeaponType
+	^ (CIWeaponType
 		id: 'weapon.sidearm.relay'
 		name: 'Relay Sidearm'
 		slot: 'LeftHandWeapon'
 		core: #(#('Damage per hit' 32) #('Fire rate' '360 RPM') #('Magazine' '12 rounds') #('Optimal range' '18 m') #('Reload time' '1.5 s'))
 		handling: #(#('Accuracy' 72) #('Stability' 76))
-		sockets: #('magazine' 'muzzle')
+		sockets: #('magazine' 'muzzle'))
+		damageFalloff: #(#(0 100) #(18 100) #(42 55) #(60 55));
+		yourself
 ]
 
 { #category : 'catalog' }
