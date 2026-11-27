@@ -90,7 +90,9 @@ CIWeaponType >> inspectorSectionsAtUtilityTier: tier item: item [
 		{'primary'.
 			'Core attribute'.
 			{{roll displayName.
-					modifier}}}.
+					modifier.
+					roll value.
+					self weaponDamageMaximum}}}.
 		{'meters'.
 			'Weapon handling'.
 			handlingStats}.
@@ -138,7 +140,7 @@ CIWeaponType >> inventoryItemDescription [
 					accessor: (MADictionaryAccessor key: 'weaponDamage');
 					label: 'Weapon damage';
 					min: 0.0;
-					max: 0.15;
+					max: self weaponDamageMaximum;
 					beRequired;
 					yourself}
 				, (socketIdentifiers
@@ -153,4 +155,9 @@ CIWeaponType >> inventoryItemDescription [
 CIWeaponType >> optimalRangeMetres [
 	^ (coreStats detect: [ :stat | stat first = 'Optimal range' ] ifNone: [ ^ nil ])
 		second
+]
+
+{ #category : 'private' }
+CIWeaponType >> weaponDamageMaximum [
+	^ 0.15
 ]

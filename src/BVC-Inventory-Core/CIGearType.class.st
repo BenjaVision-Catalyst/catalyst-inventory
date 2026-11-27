@@ -31,14 +31,20 @@ CIGearType >> initializeSlot: slot attributes: attributes sockets: sockets [
 
 { #category : 'private' }
 CIGearType >> inspectorRowFor: attribute [
-	| amount text |
+	| amount text maximum |
 	amount := attribute value.
 	text := attribute valueFormat = 'signedPercent'
 			ifTrue: [ (amount * 100 printShowingDecimalPlaces: 1) , '%' ]
 			ifFalse: [ amount asString ].
 	amount > 0 ifTrue: [ text := '+' , text ].
+	maximum := (attributeSpecs
+			detect: [ :spec | spec first = attribute attributeIdentifier ]
+			ifNone: [ ^ {attribute displayName.
+					text} ]) at: 6.
 	^ {attribute displayName.
-		text}
+		text.
+		amount.
+		maximum}
 ]
 
 { #category : 'descriptions' }
