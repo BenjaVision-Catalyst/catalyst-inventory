@@ -22,23 +22,29 @@ CIGameItemTypes class >> buildCatalog [
 
 { #category : 'catalog' }
 CIGameItemTypes class >> fieldBlade [
-	^ CIWeaponType
+	^ (CIWeaponType
 		id: 'weapon.melee.fieldBlade'
 		name: 'Field Blade'
 		slot: 'MeleeWeapon'
 		core: #(#('Damage per hit' 48) #('Reach' '2 m'))
 		handling: #()
-		sockets: #()
+		sockets: #())
+		inspectorIdentity: {'inspectorManufacturer' -> 'Bastion Fabrication'.
+				'inspectorCategory' -> 'Melee weapon'} asDictionary;
+		yourself
 ]
 
 { #category : 'catalog' }
 CIGameItemTypes class >> fieldKneePads [
-	^ CIGearType
+	^ (CIGearType
 		id: 'gear.field.kneePads'
 		name: 'Field Knee Pads'
 		slot: 'KneePads'
 		attributes: #(#('armor' 'Armor' 'defensive' 'signedNumber' 30 60) #('hazard' 'Hazard resistance' 'defensive' 'signedPercent' 0.02 0.08))
-		sockets: #()
+		sockets: #())
+		inspectorIdentity: {'inspectorManufacturer' -> 'Bastion Fabrication'.
+				'inspectorArmour' -> 30} asDictionary;
+		yourself
 ]
 
 { #category : 'catalog' }
@@ -50,6 +56,10 @@ CIGameItemTypes class >> pathfinderCarbine [
 		core: #(#('Damage per hit' 25) #('Fire rate' '600 RPM') #('Magazine' '30 rounds') #('Optimal range' 32) #('Reload time' '2.1 s'))
 		handling: #(#('Accuracy' 82) #('Stability' 68))
 		sockets: #('optic' 'magazine' 'muzzle'))
+		inspectorIdentity: {'inspectorManufacturer' -> 'Meridian Range'.
+				'inspectorCategory' -> 'Carbine'.
+				'inspectorConsumable' -> 'Carbine ammunition'.
+				'inspectorConsumableIcon' -> 'cartridge'} asDictionary;
 		damageFalloff: #(#(72 65) #(100 65));
 		yourself
 ]
@@ -63,18 +73,25 @@ CIGameItemTypes class >> relaySidearm [
 		core: #(#('Damage per hit' 32) #('Fire rate' '360 RPM') #('Magazine' '12 rounds') #('Optimal range' 18) #('Reload time' '1.5 s'))
 		handling: #(#('Accuracy' 72) #('Stability' 76))
 		sockets: #('magazine' 'muzzle'))
+		inspectorIdentity: {'inspectorManufacturer' -> 'Relay Works'.
+				'inspectorCategory' -> 'Sidearm'.
+				'inspectorConsumable' -> 'Sidearm ammunition'.
+				'inspectorConsumableIcon' -> 'cartridge'} asDictionary;
 		damageFalloff: #(#(42 55) #(60 55));
 		yourself
 ]
 
 { #category : 'catalog' }
 CIGameItemTypes class >> responseAidVest [
-	^ CIGearType
+	^ (CIGearType
 		id: 'gear.response.aidVest'
 		name: 'Response Aid Vest'
 		slot: 'Chest'
 		attributes: #(#('utilityTier' 'Utility Tier' 'utility' 'signedNumber' 1 1) #('repair' 'Repair strength' 'utility' 'signedPercent' 0.04 0.12) #('haste' 'Gadget haste' 'utility' 'signedPercent' 0.03 0.10))
-		sockets: #('utility')
+		sockets: #('utility'))
+		inspectorIdentity: {'inspectorManufacturer' -> 'Sable Instruments'.
+				'inspectorArmour' -> 100} asDictionary;
+		yourself
 ]
 
 { #category : 'catalog' }
@@ -95,10 +112,13 @@ CIGameItemTypes class >> scoutDrone [
 
 { #category : 'catalog' }
 CIGameItemTypes class >> traversalPack [
-	^ CIGearType
+	^ (CIGearType
 		id: 'gear.traversal.pack'
 		name: 'Traversal Pack'
 		slot: 'Backpack'
 		attributes: #(#('armor' 'Armor' 'defensive' 'signedNumber' 60 100) #('hazard' 'Hazard resistance' 'defensive' 'signedPercent' 0.04 0.12) #('reload' 'Reload speed' 'offensive' 'signedPercent' 0.03 0.10))
-		sockets: #('defensive' 'utility')
+		sockets: #('defensive' 'utility'))
+		inspectorIdentity: {'inspectorManufacturer' -> 'Crosswind Systems'.
+				'inspectorArmour' -> 40} asDictionary;
+		yourself
 ]

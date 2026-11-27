@@ -6,6 +6,31 @@ Class {
 }
 
 { #category : 'projection' }
+CIInventoryProfileGraph class >> addInspectorIdentity: fields to: card descriptions: descriptions [
+	| equipment children |
+	fields ifEmpty: [ ^ self ].
+	equipment := descriptions detect: [ :node | (node at: 'id') = 'equipmentCard' ].
+	children := equipment at: 'children'.
+	fields keys sorted
+		do: [ :key |
+			| amount description |
+			amount := fields at: key.
+			(children includes: key)
+				ifFalse: [ description := amount isInteger
+							ifTrue: [ MANumberDescription new ]
+							ifFalse: [ MAStringDescription new ].
+					descriptions
+						add: (self
+								field: key
+								from: (description
+										label: key;
+										yourself)).
+					children := children copyWith: key ].
+			(card at: 'values') at: key put: (self atomFor: amount) ].
+	equipment at: 'children' put: children
+]
+
+{ #category : 'projection' }
 CIInventoryProfileGraph class >> addInspectorRows: rows in: id descriptions: descriptions objects: objects [
 	| values fields |
 	values := Dictionary new.
@@ -504,14 +529,20 @@ CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets
 				ifFalse: [ item := itemsById at: ((values at: 'itemIdentifier') at: 'value').
 					type := catalog typeAt: item definitionIdentifier ifAbsent: [ nil ].
 					type
-						ifNotNil: [ sections := type inspectorSectionsAtUtilityTier: tier item: item.
+						ifNotNil: [ self
+								addInspectorIdentity: (type inspectorIdentityFor: item)
+								to: card
+								descriptions: descriptions.
+							sections := type inspectorSectionsAtUtilityTier: tier item: item.
 							sections
 								ifNotEmpty: [ self
 										addItemInspector: sections
 										forCard: card
 										descriptions: descriptions
 										objects: objects ] ] ] ].
-	objects size = (graph at: 'objects') size ifTrue: [ ^ graph ].
+	objects size = (graph at: 'objects') size
+		ifTrue: [ graph at: 'descriptions' put: descriptions asArray.
+			^ graph ].
 	descriptions
 		detect: [ :each | (each at: 'id') = 'equipmentCard' ]
 		ifFound: [ :description |

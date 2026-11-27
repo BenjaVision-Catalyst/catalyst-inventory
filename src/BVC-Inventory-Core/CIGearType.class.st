@@ -29,6 +29,20 @@ CIGearType >> initializeSlot: slot attributes: attributes sockets: sockets [
 	^ self
 ]
 
+{ #category : 'descriptions' }
+CIGearType >> inspectorIdentityFor: item [
+	| fields armour |
+	fields := super inspectorIdentityFor: item.
+	(item isKindOf: CIInventoryCatalogGear) ifFalse: [ ^ fields ].
+	armour := fields at: 'inspectorArmour' ifAbsent: [ 0 ].
+	{item primaryAttribute} , item rolledAttributes
+		do: [ :attribute |
+			attribute attributeIdentifier = 'armor'
+				ifTrue: [ armour := armour + attribute value ] ].
+	armour > 0 ifTrue: [ fields at: 'inspectorArmour' put: armour ].
+	^ fields
+]
+
 { #category : 'private' }
 CIGearType >> inspectorRowFor: attribute [
 	| amount text maximum |
