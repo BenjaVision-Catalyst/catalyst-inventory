@@ -15,7 +15,9 @@ CIInventoryProfileGraph class >> addInspectorRows: rows in: id descriptions: des
 				fieldId := id , ':' , index asString.
 				description := row second isSymbol
 						ifTrue: [ MASymbolDescription new ]
-						ifFalse: [ MAStringDescription new ].
+						ifFalse: [ row second isInteger
+								ifTrue: [ MANumberDescription new ]
+								ifFalse: [ MAStringDescription new ] ].
 				description
 					label: row first;
 					priority: index.
