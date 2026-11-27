@@ -5,6 +5,11 @@ Class {
 	#package : 'BVC-Inventory-Core'
 }
 
+{ #category : 'descriptions' }
+CIItemType >> inspectorSectionsAtUtilityTier: tier item: item [
+	^ #()
+]
+
 { #category : 'instance creation' }
 CIItemType >> inventoryItem: itemIdentifier values: values [
 	self subclassResponsibility
