@@ -51,7 +51,7 @@ CIGearType >> inspectorRowFor: attribute [
 CIGearType >> inspectorSectionsAtUtilityTier: tier item: item [
 	(item isKindOf: CIInventoryCatalogGear) ifFalse: [ ^ #() ].
 	^ {{'primary'.
-			'Core attribute'.
+			'Core Attribute'.
 			{self inspectorRowFor: item primaryAttribute}}.
 		{'modifiers'.
 			'Attributes'.

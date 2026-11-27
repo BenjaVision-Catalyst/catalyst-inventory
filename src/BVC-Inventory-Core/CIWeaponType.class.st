@@ -76,28 +76,28 @@ CIWeaponType >> inspectorSectionsAtUtilityTier: tier item: item [
 			ifNone: [ ^ #() ].
 	modifier := '+' , (roll value * 100 printShowingDecimalPlaces: 2) , '%'.
 	damage := coreStats first second * (1 + roll value).
-	rows := {{'Damage per hit'.
+	rows := {{'Damage'.
 				damage printShowingDecimalPlaces: 1}}
 			, (coreStats allButFirst
 					collect: [ :stat |
 						stat first = 'Optimal range'
-							ifTrue: [ {stat first.
+							ifTrue: [ {'Optimal Range'.
 									stat second asString , ' m'} ]
 							ifFalse: [ stat ] ]).
 	^ {{'stats'.
-			'Core stats'.
+			'Core Stats'.
 			rows}.
 		{'primary'.
-			'Core attribute'.
+			'Core Attribute'.
 			{{roll displayName.
 					modifier.
 					roll value.
 					self weaponDamageMaximum}}}.
 		{'meters'.
-			'Weapon handling'.
+			'Weapon Handling'.
 			handlingStats}.
 		{'falloff'.
-			'Damage falloff'.
+			'Damage Falloff'.
 			self inspectorFalloffRows}.
 		{'slots'.
 			'Attachments'.
