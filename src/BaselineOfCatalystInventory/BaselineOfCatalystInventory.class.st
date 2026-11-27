@@ -29,7 +29,8 @@ BaselineOfCatalystInventory >> baseline: spec [
 				with: [ spec repository: 'github://BenjaVisionPro/CatalystRuntime:main/src' ].
 			spec
 				package: 'BVC-Inventory-Runtime'
-				with: [ spec requires: #('BVC-Inventory-Core' 'CatalystRuntime') ].
+				with: [ spec
+						requires: #('BVC-Inventory-Core' 'BVC-Inventory-TypeCatalog' 'CatalystRuntime') ].
 			spec
 				baseline: 'CatalystUsers'
 				with: [ spec repository: 'github://BenjaVision-Catalyst/catalyst-users:main/src'.

@@ -112,6 +112,11 @@ CIInventoryEquipmentSummary >> inventoryTypeCount [
 	^ inventoryTypeCount
 ]
 
+{ #category : 'accessing' }
+CIInventoryEquipmentSummary >> inventoryTypeCount: aCount [
+	inventoryTypeCount := aCount
+]
+
 { #category : 'descriptions' }
 CIInventoryEquipmentSummary >> magritteDescription [
 	| fields |

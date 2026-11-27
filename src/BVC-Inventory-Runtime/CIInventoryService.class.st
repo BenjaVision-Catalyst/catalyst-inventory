@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'readStore',
 		'savedSetsByOwner',
-		'savedSetsLock'
+		'savedSetsLock',
+		'itemTypeCatalog'
 	],
 	#category : 'BVC-Inventory-Runtime',
 	#package : 'BVC-Inventory-Runtime'
@@ -61,6 +62,17 @@ CIInventoryService >> equipSavedSet: setIdentifier forVerifiedUser: identity [
 				forOwner: identity
 				outfit: section = 'apparel'
 				sets: sets ]
+]
+
+{ #category : 'writing' }
+CIInventoryService >> grantItem: itemIdentifier type: typeIdentifier values: values forVerifiedUser: identity [
+	^ savedSetsLock
+		critical: [ readStore
+				grantItem: itemIdentifier
+				type: typeIdentifier
+				values: values
+				from: itemTypeCatalog
+				forOwner: identity ]
 ]
 
 { #category : 'private' }
@@ -192,6 +204,7 @@ CIInventoryService >> rowsForVerifiedUser: anIdentifier offset: anOffset limit: 
 { #category : 'lifecycle' }
 CIInventoryService >> start [
 	super start.
+	itemTypeCatalog := CIGameItemTypes buildCatalog.
 	readStore := CIInventoryReadStore new.
 	savedSetsByOwner := Dictionary new.
 	savedSetsLock := Semaphore forMutualExclusion
@@ -202,6 +215,7 @@ CIInventoryService >> stop [
 	savedSetsByOwner := nil.
 	savedSetsLock := nil.
 	readStore := nil.
+	itemTypeCatalog := nil.
 	super stop
 ]
 

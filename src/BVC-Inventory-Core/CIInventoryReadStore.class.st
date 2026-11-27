@@ -57,6 +57,33 @@ CIInventoryReadStore >> gearSetSlotFor: row [
 	^ nil
 ]
 
+{ #category : 'writing' }
+CIInventoryReadStore >> grantItem: itemIdentifier type: typeIdentifier values: values from: catalog forOwner: identity [
+	| rows item matches count updated |
+	self validateOwner: identity.
+	(itemIdentifier isString and: [ itemIdentifier isNotEmpty ])
+		ifFalse: [ self error: 'Inventory item identifier required' ].
+	item := (catalog typeAt: typeIdentifier)
+			inventoryItem: itemIdentifier
+			values: values.
+	rows := rowsByOwner at: identity ifAbsent: [ #() ].
+	(item isKindOf: CIInventoryEquipmentSummary)
+		ifTrue: [ matches := [ :row |
+				(row isKindOf: CIInventoryEquipmentSummary)
+					and: [ row definitionIdentifier = typeIdentifier ] ].
+			count := (rows count: matches) + 1.
+			item inventoryTypeCount: count.
+			rows := rows
+					collect: [ :row |
+						(matches value: row)
+							ifTrue: [ updated := row copy.
+								updated inventoryTypeCount: count.
+								updated ]
+							ifFalse: [ row ] ] ].
+	self replaceRows: (rows copyWith: item) forOwner: identity.
+	^ item copy
+]
+
 { #category : 'initialization' }
 CIInventoryReadStore >> initialize [
 	super initialize.
