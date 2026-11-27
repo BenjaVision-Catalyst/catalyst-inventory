@@ -92,7 +92,8 @@ CIWeaponType >> inspectorSectionsAtUtilityTier: tier item: item [
 			{{roll displayName.
 					modifier.
 					roll value.
-					self weaponDamageMaximum}}}.
+					self weaponDamageMaximum.
+					'offensive'}}}.
 		{'meters'.
 			'Weapon Handling'.
 			handlingStats}.

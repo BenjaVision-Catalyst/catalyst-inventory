@@ -52,7 +52,11 @@ CIInventoryProfileGraph class >> addInspectorRows: rows in: id descriptions: des
 					ifTrue: [ (field at: 'properties')
 							at: 'metadata:ciDistanceMetres'
 							put: (self atomFor: row third) ].
-				(row size = 4 and: [ row fourth > 0 ])
+				row size = 5
+					ifTrue: [ (field at: 'properties')
+							at: 'metadata:ciAttributeType'
+							put: (self atomFor: row fifth) ].
+				(row size >= 4 and: [ row fourth notNil and: [ row fourth > 0 ] ])
 					ifTrue: [ (field at: 'properties')
 							at: 'metadata:ciMeterMillionths'
 							put: (self atomFor: (row third / row fourth * 1000000) rounded) ].

@@ -45,20 +45,22 @@ CIGearType >> inspectorIdentityFor: item [
 
 { #category : 'private' }
 CIGearType >> inspectorRowFor: attribute [
-	| amount text maximum |
+	| amount text spec maximum |
 	amount := attribute value.
 	text := attribute valueFormat = 'signedPercent'
 			ifTrue: [ (amount * 100 printShowingDecimalPlaces: 1) , '%' ]
 			ifFalse: [ amount asString ].
 	amount > 0 ifTrue: [ text := '+' , text ].
-	maximum := (attributeSpecs
-			detect: [ :spec | spec first = attribute attributeIdentifier ]
-			ifNone: [ ^ {attribute displayName.
-					text} ]) at: 6.
+	spec := attributeSpecs
+			detect: [ :each | each first = attribute attributeIdentifier ]
+			ifNone: [ nil ].
+	maximum := (spec notNil and: [ (spec at: 5) < (spec at: 6) ])
+			ifTrue: [ spec at: 6 ].
 	^ {attribute displayName.
 		text.
 		amount.
-		maximum}
+		maximum.
+		attribute attributeType}
 ]
 
 { #category : 'descriptions' }
