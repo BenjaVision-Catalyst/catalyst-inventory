@@ -8,6 +8,12 @@ Class {
 	#package : 'BVC-Inventory-Core'
 }
 
+{ #category : 'reading' }
+CIInventoryReadStore >> allRowsForOwner: identity [
+	self validateOwner: identity.
+	^ (rowsByOwner at: identity ifAbsent: [ #() ]) copy
+]
+
 { #category : 'private' }
 CIInventoryReadStore >> copyRow: row inSlot: slot outfit: isOutfit [
 	| candidate |

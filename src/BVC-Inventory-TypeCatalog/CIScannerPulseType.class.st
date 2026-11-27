@@ -6,6 +6,11 @@ Class {
 }
 
 { #category : 'accessing' }
+CIScannerPulseType >> activationLabel [
+	^ 'Scan'
+]
+
+{ #category : 'accessing' }
 CIScannerPulseType >> baseStats [
 	^ Dictionary
 		newFrom: {#cooldownSeconds -> 20.

@@ -6,6 +6,83 @@ Class {
 }
 
 { #category : 'projection' }
+CIInventoryProfileGraph class >> addGadgetInspector: sections forCard: card descriptions: descriptions objects: objects [
+	| id children values |
+	id := (card at: 'id') , ':inspector'.
+	children := OrderedCollection new.
+	values := Dictionary new.
+	sections
+		withIndexDo: [ :section :index |
+			| sectionId relation relationId rows fieldIds |
+			rows := section third.
+			rows
+				ifNotEmpty: [ sectionId := id , ':' , section first.
+					relationId := sectionId , ':section'.
+					relation := self
+							relation: relationId
+							from: (MAToOneRelationDescription new
+									label: section second;
+									priority: index * 10;
+									yourself)
+							to: sectionId.
+					(relation at: 'properties')
+						at: 'metadata:ciCard'
+						put: (self atom: 'string' value: section first).
+					descriptions add: relation.
+					children add: relationId.
+					values at: relationId put: (self atom: 'reference' value: sectionId).
+					fieldIds := self
+							addInspectorRows: rows
+							in: sectionId
+							descriptions: descriptions
+							objects: objects.
+					descriptions
+						add: (self
+								container: sectionId
+								children: fieldIds
+								properties: Dictionary new) ] ].
+	descriptions
+		add: (self
+				container: id
+				children: children asArray
+				properties: Dictionary new).
+	objects
+		add: (self
+				object: id
+				description: id
+				values: values).
+	(card at: 'values') at: 'inspector' put: (self atom: 'reference' value: id)
+]
+
+{ #category : 'projection' }
+CIInventoryProfileGraph class >> addInspectorRows: rows in: id descriptions: descriptions objects: objects [
+	| values fields |
+	values := Dictionary new.
+	fields := rows
+			withIndexCollect: [ :row :index |
+				| fieldId description atom |
+				fieldId := id , ':' , index asString.
+				description := row second isSymbol
+						ifTrue: [ MASymbolDescription new ]
+						ifFalse: [ MAStringDescription new ].
+				description
+					label: row first;
+					priority: index.
+				descriptions add: (self field: fieldId from: description).
+				atom := row second isSymbol
+						ifTrue: [ self atom: 'symbol' value: row second asString ]
+						ifFalse: [ self atomFor: row second ].
+				values at: fieldId put: atom.
+				fieldId ].
+	objects
+		add: (self
+				object: id
+				description: id
+				values: values).
+	^ fields asArray
+]
+
+{ #category : 'projection' }
 CIInventoryProfileGraph class >> addRecord: id kind: kind values: values to: objects [
 	| encoded |
 	encoded := Dictionary new.
@@ -340,6 +417,58 @@ CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets
 ]
 
 { #category : 'projection' }
+CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets: savedSets catalog: catalog [
+	| graph descriptions objects cards itemsById tier |
+	graph := self
+			forVerifiedUser: identity
+			rows: (items first: (items size min: 32))
+			savedSets: savedSets.
+	descriptions := (graph at: 'descriptions') asOrderedCollection.
+	objects := (graph at: 'objects') asOrderedCollection.
+	cards := objects
+			select: [ :record | (record at: 'description') = 'equipmentCard' ].
+	itemsById := Dictionary new.
+	items do: [ :item | itemsById at: item itemIdentifier put: item ].
+	tier := self utilityTierForRows: items.
+	cards
+		do: [ :card |
+			| values kind item type |
+			values := card at: 'values'.
+			kind := (values at: 'presentationKind') at: 'value'.
+			(kind = 'gadget' and: [ (values includesKey: 'isEmptySlot') not ])
+				ifTrue: [ item := itemsById at: ((values at: 'itemIdentifier') at: 'value').
+					type := catalog typeAt: item definitionIdentifier ifAbsent: [ nil ].
+					(type isKindOf: CIGadgetType)
+						ifTrue: [ self
+								addGadgetInspector: (type
+										inspectorSectionsAtUtilityTier: tier
+										item: item)
+								forCard: card
+								descriptions: descriptions
+								objects: objects ] ] ].
+	objects size = (graph at: 'objects') size ifTrue: [ ^ graph ].
+	descriptions
+		detect: [ :each | (each at: 'id') = 'equipmentCard' ]
+		ifFound: [ :description |
+			description
+				at: 'children'
+				put: ((description at: 'children') copyWith: 'inspector') ].
+	descriptions
+		add: (self
+				relation: 'inspector'
+				from: (MAToOneRelationDescription new label: 'Inspector')
+				to: 'gadgetInspector').
+	descriptions
+		add: (self
+				container: 'gadgetInspector'
+				children: #()
+				properties: Dictionary new).
+	graph at: 'descriptions' put: descriptions asArray.
+	graph at: 'objects' put: objects asArray.
+	^ graph
+]
+
+{ #category : 'projection' }
 CIInventoryProfileGraph class >> groupsFor: section owned: items [
 	| gear |
 	section = 'apparel'
@@ -468,6 +597,17 @@ CIInventoryProfileGraph class >> savedSetValuesFor: entry [
 		at: 'itemIdentifier' put: (entry at: 'itemIdentifier');
 		at: 'displayName' put: (entry at: 'displayName');
 		yourself
+]
+
+{ #category : 'projection' }
+CIInventoryProfileGraph class >> utilityTierForRows: rows [
+	^ rows
+		count: [ :row |
+			(row isKindOf: CIInventoryGearSummary)
+				and: [ row equippedSlotIdentifier notNil
+						and: [ row primaryAttribute
+								ifNil: [ false ]
+								ifNotNil: [ :attribute | attribute attributeIdentifier = 'utilityTier' and: [ attribute value = 1 ] ] ] ] ]
 ]
 
 { #category : 'projection' }

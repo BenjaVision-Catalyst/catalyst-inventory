@@ -32,3 +32,8 @@ CIItemTypeCatalog >> typeAt: anIdentifier [
 		at: anIdentifier
 		ifAbsent: [ self error: 'Unknown item type: ' , anIdentifier ]
 ]
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> typeAt: anIdentifier ifAbsent: aBlock [
+	^ typesById at: anIdentifier ifAbsent: aBlock
+]

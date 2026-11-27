@@ -6,6 +6,11 @@ Class {
 }
 
 { #category : 'accessing' }
+CIScoutDroneType >> activationLabel [
+	^ 'Deploy'
+]
+
+{ #category : 'accessing' }
 CIScoutDroneType >> baseStats [
 	^ Dictionary
 		newFrom: {#cooldownSeconds -> 20.

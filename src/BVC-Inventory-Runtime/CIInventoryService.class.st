@@ -26,8 +26,9 @@ CIInventoryService >> applySavedSet: savedSet forOwner: identity outfit: isOutfi
 	reply := CIInventoryProfileGraph
 			encodeReply: (CIInventoryProfileGraph
 					forVerifiedUser: identity
-					rows: (rows first: (rows size min: 32))
-					savedSets: ownerSets).
+					rows: rows
+					savedSets: ownerSets
+					catalog: itemTypeCatalog).
 	reply ifNotNil: [ readStore replaceRows: rows forOwner: identity ].
 	^ reply
 ]
@@ -77,11 +78,7 @@ CIInventoryService >> grantItem: itemIdentifier type: typeIdentifier values: val
 
 { #category : 'private' }
 CIInventoryService >> newSavedSetReplyFor: identity outfit: isOutfit [
-	| rows section ownerSets entries name prefix number entry reply |
-	rows := self
-			rowsForVerifiedUser: identity
-			offset: 0
-			limit: 32.
+	| section ownerSets entries name prefix number entry reply |
 	section := isOutfit ifTrue: [ 'apparel' ] ifFalse: [ 'gear' ].
 	ownerSets := (savedSetsByOwner at: identity ifAbsent: [ Dictionary new ]) copy.
 	entries := ownerSets at: section ifAbsent: [ #() ].
@@ -101,8 +98,9 @@ CIInventoryService >> newSavedSetReplyFor: identity outfit: isOutfit [
 	reply := CIInventoryProfileGraph
 			encodeReply: (CIInventoryProfileGraph
 					forVerifiedUser: identity
-					rows: rows
-					savedSets: ownerSets).
+					rows: (readStore allRowsForOwner: identity)
+					savedSets: ownerSets
+					catalog: itemTypeCatalog).
 	reply ifNotNil: [ savedSetsByOwner at: identity copy put: ownerSets ].
 	^ reply
 ]
@@ -133,11 +131,9 @@ CIInventoryService >> profileGraphForVerifiedUser: identity [
 	^ savedSetsLock
 		critical: [ CIInventoryProfileGraph
 				forVerifiedUser: identity
-				rows: (self
-						rowsForVerifiedUser: identity
-						offset: 0
-						limit: 32)
-				savedSets: (savedSetsByOwner at: identity ifAbsent: [ Dictionary new ]) ]
+				rows: (readStore allRowsForOwner: identity)
+				savedSets: (savedSetsByOwner at: identity ifAbsent: [ Dictionary new ])
+				catalog: itemTypeCatalog ]
 ]
 
 { #category : 'writing' }
@@ -184,11 +180,9 @@ CIInventoryService >> replaceSavedSets: entries in: section of: sets forOwner: i
 	reply := CIInventoryProfileGraph
 			encodeReply: (CIInventoryProfileGraph
 					forVerifiedUser: identity
-					rows: (self
-							rowsForVerifiedUser: identity
-							offset: 0
-							limit: 32)
-					savedSets: updated).
+					rows: (readStore allRowsForOwner: identity)
+					savedSets: updated
+					catalog: itemTypeCatalog).
 	reply ifNotNil: [ savedSetsByOwner at: identity copy put: updated ].
 	^ reply
 ]
