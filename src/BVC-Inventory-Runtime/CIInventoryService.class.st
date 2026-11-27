@@ -137,6 +137,12 @@ CIInventoryService >> profileGraphForVerifiedUser: identity [
 ]
 
 { #category : 'writing' }
+CIInventoryService >> provisionStarterGadgetsForVerifiedUser: identity [
+	^ savedSetsLock
+		critical: [ readStore provisionStarterGadgetsFrom: itemTypeCatalog forOwner: identity ]
+]
+
+{ #category : 'writing' }
 CIInventoryService >> renameSavedSet: setIdentifier to: proposedName forVerifiedUser: identity [
 	| name units |
 	name := proposedName trimBoth.

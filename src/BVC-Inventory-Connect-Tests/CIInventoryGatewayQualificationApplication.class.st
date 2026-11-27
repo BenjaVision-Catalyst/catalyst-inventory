@@ -166,7 +166,14 @@ CIInventoryGatewayQualificationApplication class >> qualifyIn: directory [
 	CUUsers allUsers
 		add: alice;
 		add: bob.
-	inventory replaceReadRows: self starterItems forOwner: alice userIdentifier.
+	inventory
+		replaceReadRows: ((directory / 'gadget-qualification') exists
+				ifTrue: [ self starterItems first: 5 ]
+				ifFalse: [ self starterItems ])
+		forOwner: alice userIdentifier.
+	(directory / 'gadget-qualification') exists
+		ifTrue: [ inventory provisionStarterGadgetsForVerifiedUser: alice userIdentifier.
+			inventory provisionStarterGadgetsForVerifiedUser: alice userIdentifier ].
 	inventory
 		replaceReadRows: {CIInventoryGearSummary
 					item: 'bob-item'
@@ -204,10 +211,17 @@ CIInventoryGatewayQualificationApplication class >> qualifyIn: directory [
 				yourself)
 		to: (directory / 'isolation-ready.json') fullName.
 	equipmentPhase := 0.
-	deadline := CRPlatform current currentMillis + 60000.
+	deadline := CRPlatform current currentMillis
+			+ ((directory / 'gadget-qualification') exists
+					ifTrue: [ 150000 ]
+					ifFalse: [ 60000 ]).
 	[ (directory / 'isolation-stop') exists
 		or: [ CRPlatform current currentMillis >= deadline ] ]
-		whileFalse: [ (equipmentPhase = 0 and: [ (directory / 'fixture-equipment-seed') exists ])
+		whileFalse: [ ((directory / 'gadget-qualification-swap') exists
+				and: [ (directory / 'gadget-qualification-swap-ready') exists not ])
+				ifTrue: [ self swapStarterGadgetsFor: alice userIdentifier in: inventory.
+					(directory / 'gadget-qualification-swap-ready') ensureCreateFile ].
+			(equipmentPhase = 0 and: [ (directory / 'fixture-equipment-seed') exists ])
 				ifTrue: [ inventory
 						replaceReadRows: (self equipFixtureRowsAfterChange: false)
 						forOwner: alice userIdentifier.
@@ -283,6 +297,46 @@ CIInventoryGatewayQualificationApplication class >> starterItems [
 						name: spec second
 						count: spec third) ].
 	^ items asArray
+]
+
+{ #category : 'qualification' }
+CIInventoryGatewayQualificationApplication class >> swapStarterGadgetsFor: identity in: inventory [
+	| rows gear |
+	rows := (inventory
+			rowsForVerifiedUser: identity
+			offset: 0
+			limit: 32)
+			collect: [ :row |
+				| copy |
+				copy := row copy.
+				row itemIdentifier = 'starter-scout-drone'
+					ifTrue: [ copy equippedSlotIdentifier: 'GadgetRight' ].
+				row itemIdentifier = 'starter-scanner-pulse'
+					ifTrue: [ copy equippedSlotIdentifier: 'GadgetLeft' ].
+				row itemIdentifier = 'responseChest'
+					ifTrue: [ copy equippedSlotIdentifier: nil ].
+				copy ].
+	gear := CIInventoryGearSummary
+			item: 'qualification-utility-core'
+			fromDefinition: (CIInventoryItemDefinition
+					id: 'qualification-utility-vest'
+					name: 'Utility Vest'
+					icon: nil)
+			metadata: (Dictionary new
+					at: #presentationKind put: 'gear';
+					at: #inventoryTypeCount put: 1;
+					at: #gearSlotIdentifier put: 'Chest';
+					at: #primaryAttribute
+						put: (CIInventoryGearAttributeSummary
+								identifier: 'utilityTier'
+								label: 'Utility Tier'
+								type: 'utility'
+								value: 1
+								format: 'signedNumber'
+								hasMaximum: true);
+					yourself).
+	inventory replaceReadRows: (rows copyWith: gear) forOwner: identity.
+	inventory provisionStarterGadgetsForVerifiedUser: identity
 ]
 
 { #category : 'qualification' }

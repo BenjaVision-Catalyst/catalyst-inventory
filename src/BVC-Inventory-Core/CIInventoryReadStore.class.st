@@ -104,6 +104,29 @@ CIInventoryReadStore >> isEquipmentRow: row outfit: isOutfit [
 ]
 
 { #category : 'writing' }
+CIInventoryReadStore >> provisionStarterGadgetsFrom: catalog forOwner: identity [
+	| rows updated |
+	self validateOwner: identity.
+	rows := rowsByOwner at: identity ifAbsent: [ #() ].
+	updated := rows asOrderedCollection.
+	#(#('gadget.drone.scout' 'starter-scout-drone' 'GadgetLeft') #('gadget.pulse.scanner' 'starter-scanner-pulse' 'GadgetRight'))
+		do: [ :spec |
+			(updated anySatisfy: [ :row | row definitionIdentifier = spec first ])
+				ifFalse: [ | item |
+					item := (catalog typeAt: spec first)
+							inventoryItem: spec second
+							values: Dictionary new.
+					(updated
+						anySatisfy: [ :row |
+							(row isKindOf: CIInventoryEquipmentSummary)
+								and: [ row equippedSlotIdentifier = spec third ] ])
+						ifFalse: [ item equippedSlotIdentifier: spec third ].
+					updated add: item ] ].
+	updated size = rows size
+		ifFalse: [ self replaceRows: updated forOwner: identity ]
+]
+
+{ #category : 'writing' }
 CIInventoryReadStore >> replaceRows: aCollection forOwner: anOwnerIdentifier [
 	| rows identifiers |
 	self validateOwner: anOwnerIdentifier.
