@@ -146,7 +146,7 @@ CIWorkbookWeaponData class >> registerFixedNamedWeaponItemsIn: catalog [
 					ifTrue: [ CIWorkbookNamedWeaponType
 							statistics: statistics
 							named: named
-							slot: nil ]
+							slot: 'LeftHandWeapon' ]
 					ifFalse: [ CIWorkbookNamedWeaponType statistics: statistics named: named ].
 			weapon
 				fixedAttributes: {CIWeaponFixedAttribute

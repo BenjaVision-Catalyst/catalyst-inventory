@@ -313,6 +313,24 @@ CIThatGameLaunchInventoryTest >> testAttributeCataloguePreservesScopeMissingValu
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testBackupBoomstickGeneratesAsShotgunInSidearmSlot [
+	| catalog weapon item |
+	catalog := CIGameItemTypes buildCatalog.
+	weapon := catalog typeAt: 'weapon.workbook.backupBoomstick'.
+	self assert: weapon statisticsReference weaponClass equals: #shotgun.
+	item := CIItemGenerator new
+			generate: 'backupBoomstick'
+			type: weapon id
+			values: Dictionary new
+			from: catalog
+			using: [ 0 ].
+	self assert: (item permitsCapturedEquipmentSlot: 'LeftHandWeapon').
+	self deny: (item permitsCapturedEquipmentSlot: 'RangedWeapon').
+	self assert: item comparisonStats first statIdentifier equals: 'weaponDamage'.
+	self assert: item comparisonStats first value equals: 0.17
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testBluescreenStackBandsShieldGateAndMarkedKill [
 	| catalog bluescreen result nearby |
 	catalog := CIGameItemTypes buildCatalog.
