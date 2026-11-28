@@ -1185,6 +1185,52 @@ CIThatGameLaunchInventoryTest >> testWeaponAttachmentUnlocksAndOwnedGearModsPers
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testWeaponReferencesAndNamedTalentsKeepWorkbookLinks [
+	| catalog references splash type store award source archivist |
+	catalog := CIGameItemTypes buildCatalog.
+	references := catalog weaponReferences.
+	self
+		assert: (references count: [ :entry | entry kind = #statistics ])
+		equals: 316.
+	self
+		assert: (references count: [ :entry | entry kind ~= #statistics ])
+		equals: 141.
+	splash := catalog weaponReferenceAt: 'Weapons Named + Exotics!C131'.
+	self assert: splash name equals: 'The Chatterbox'.
+	self
+		assert: (splash evidenceForField: #talentOrAttribute)
+		equals: 'Weapons Named + Exotics!E130'.
+	self assert: splash itemDefinitionIdentifier equals: 'weapon.launch.chatterbox'.
+	self
+		assert: (catalog weaponReferencesNamed: 'Shield Splinterer') size
+		equals: 2.
+	archivist := (catalog weaponReferencesNamed: 'The Archivist') first.
+	self assert: archivist itemDefinitionIdentifier isNil.
+	type := catalog typeAt: 'weapon.workbook.shieldSplinterer'.
+	self assert: type baseMagazineCapacity equals: 30.
+	self assert: (type statisticsReference fieldAt: #socketNotation) equals: '3#'.
+	self
+		assert: (type namedReference evidenceForField: #acquisition)
+		equals: 'Weapons Named + Exotics!I8'.
+	store := CIInventoryReadStore new.
+	award := store
+			grantItem: 'named-weapon'
+			type: type id
+			values: (Dictionary new
+					at: 'weaponDamage' put: 0.15;
+					yourself)
+			from: catalog
+			forOwner: 'named-owner'
+			using: [ self error: 'Fixed talent must not draw' ].
+	self assert: award talentIdentifier equals: 'perfectOptimist'.
+	self assertEmpty: award modSlots.
+	source := (catalog lootCatalogue poolsForItem: type id) first.
+	self assert: source source name equals: 'Ivory Cache / then Cassie Mendoza'.
+	self deny: source isComplete.
+	self assert: source entries first weight isNil
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testWeaponTalentBoundariesAndPerfectVariants [
 	| catalog make optimist perfect ranger repair reload |
 	catalog := CIGameItemTypes buildCatalog.

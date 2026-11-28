@@ -10,7 +10,8 @@ Class {
 		'gearFamiliesById',
 		'gadgetFamiliesByName',
 		'attributeCatalogue',
-		'gearReferencesByName'
+		'gearReferencesByName',
+		'weaponReferencesById'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -126,6 +127,15 @@ CIItemTypeCatalog >> registerTalent: aTalent [
 	^ aTalent
 ]
 
+{ #category : 'registration' }
+CIItemTypeCatalog >> registerWeaponReference: reference [
+	weaponReferencesById ifNil: [ weaponReferencesById := Dictionary new ].
+	(weaponReferencesById includesKey: reference id)
+		ifTrue: [ self error: 'Duplicate weapon reference' ].
+	weaponReferencesById at: reference id put: reference.
+	^ reference
+]
+
 { #category : 'spawning' }
 CIItemTypeCatalog >> rollTalentFor: aTypeIdentifier using: randomSample [
 	| pool |
@@ -180,4 +190,21 @@ CIItemTypeCatalog >> typeAt: anIdentifier [
 { #category : 'accessing' }
 CIItemTypeCatalog >> typeAt: anIdentifier ifAbsent: aBlock [
 	^ typesById at: anIdentifier ifAbsent: aBlock
+]
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> weaponReferenceAt: identifier [
+	weaponReferencesById ifNil: [ self error: 'No weapon references registered' ].
+	^ weaponReferencesById at: identifier
+]
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> weaponReferences [
+	weaponReferencesById ifNil: [ ^ #() ].
+	^ (weaponReferencesById values sorted: [ :a :b | a id < b id ]) asArray
+]
+
+{ #category : 'querying' }
+CIItemTypeCatalog >> weaponReferencesNamed: label [
+	^ self weaponReferences select: [ :reference | reference name sameAs: label ]
 ]
