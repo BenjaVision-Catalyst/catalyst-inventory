@@ -82,6 +82,35 @@ CIInventoryService >> familyEvaluationForVerifiedUser: identity mode: mode [
 ]
 
 { #category : 'reading' }
+CIInventoryService >> gadgetEncounterFor: gadgetId weapon: weaponId forVerifiedUser: identity [
+	^ savedSetsLock
+		critical: [ | rows gadget weapon type activeTalent tier |
+			rows := readStore allRowsForOwner: identity.
+			gadget := rows
+					detect: [ :row | row itemIdentifier = gadgetId ]
+					ifNone: [ self error: 'Gadget is not owned' ].
+			weapon := rows
+					detect: [ :row | row itemIdentifier = weaponId ]
+					ifNone: [ self error: 'Weapon is not owned' ].
+			type := itemTypeCatalog typeAt: gadget definitionIdentifier.
+			((type respondsTo: #workbookVariantDefinition)
+				and: [ gadget equippedSlotIdentifier notNil ])
+				ifFalse: [ self error: 'A workbook gadget must be equipped' ].
+			((weapon isKindOf: CIInventoryWeaponToolSummary)
+				and: [ weapon equippedSlotIdentifier notNil ])
+				ifFalse: [ self error: 'An eligible weapon must be equipped' ].
+			activeTalent := weapon talentIdentifier
+					ifNil: [ self error: 'The equipped weapon has no talent' ]
+					ifNotNil: [ :id | itemTypeCatalog talentAt: id ].
+			tier := CIInventoryProfileGraph workbookGadgetTierForRows: rows.
+			CIGadgetEncounter
+				variant: type workbookVariantDefinition
+				baseTier: tier
+				weapon: weapon itemIdentifier
+				talent: activeTalent ]
+]
+
+{ #category : 'reading' }
 CIInventoryService >> gadgetStatsForFamily: familyName variant: variantName tier: tier [
 	| variant |
 	variant := (itemTypeCatalog gadgetFamilyNamed: familyName)

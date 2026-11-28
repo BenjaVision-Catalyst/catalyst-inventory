@@ -118,6 +118,69 @@ CIThatGameLaunchInventoryTest >> testClassifiedUpgradesFollowEquippedSlots [
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testFuturePerfectionUsesItsOwnStackCapAndDuration [
+	| catalog scanner encounter |
+	catalog := CIGameItemTypes buildCatalog.
+	scanner := (catalog gadgetFamilyNamed: 'Pulse') variantNamed: 'Scanner'.
+	encounter := CIGadgetEncounter
+			variant: scanner
+			baseTier: 0
+			weapon: 'weapon'
+			talent: (catalog talentAt: 'futurePerfection').
+	4
+		timesRepeat: [ self assert: (encounter recordWeaponKillFrom: 'weapon' at: 0) ].
+	self deny: (encounter recordWeaponKillFrom: 'weapon' at: 1).
+	self assert: (encounter effectiveTierAt: 18) equals: 4.
+	self assert: (encounter effectiveTierAt: 19) equals: 0.
+	self should: [ encounter effectiveTierAt: 18 ] raise: Error
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testGadgetEncounterOverchargeExpiresAndHonorsCooldown [
+	| catalog owner type gadget weapon gear encounter |
+	self startInventory.
+	catalog := CIGameItemTypes buildCatalog.
+	owner := 'overcharge-test-owner'.
+	type := catalog typeAt: 'gadget.workbook.pulse.scanner'.
+	gadget := type inventoryItem: 'scanner' values: Dictionary new.
+	gadget equippedSlotIdentifier: 'GadgetLeft'.
+	weapon := (catalog typeAt: 'weapon.launch.akM')
+			inventoryItem: 'weapon'
+			values: (Dictionary new
+					at: 'weaponDamage' put: 0.1;
+					yourself)
+			talentIdentifier: 'futurePerfect'.
+	weapon equippedSlotIdentifier: 'RangedWeapon'.
+	gear := self
+			gearRowsForFamily: 'morrowWorks'
+			slots: #('Mask' 'Chest' 'Backpack' 'Gloves' 'KneePads')
+			catalogue: catalog.
+	service
+		replaceReadRows: {gadget.
+				weapon} , gear
+		forOwner: owner.
+	encounter := service
+			gadgetEncounterFor: 'scanner'
+			weapon: 'weapon'
+			forVerifiedUser: owner.
+	self assert: (encounter effectiveTierAt: 0) equals: 5.
+	self deny: (encounter recordWeaponKillFrom: 'another' at: 0).
+	self assert: (encounter recordWeaponKillFrom: 'weapon' at: 0).
+	self assert: (encounter effectiveTierAt: 0) equals: 6.
+	self assert: (encounter recordWeaponKillFrom: 'weapon' at: 1).
+	self assert: (encounter effectiveTierAt: 1) equals: #overcharge.
+	self assert: ((encounter statsAt: 1) at: 'Duration') equals: 24.
+	self assert: (encounter overchargeEffectsAt: 1) notEmpty.
+	self deny: (encounter recordWeaponKillFrom: 'weapon' at: 14).
+	self assert: (encounter effectiveTierAt: 16) equals: 5.
+	self assertEmpty: (encounter overchargeEffectsAt: 16).
+	self assert: (encounter recordWeaponKillFrom: 'weapon' at: 90).
+	self deny: (encounter recordWeaponKillFrom: 'weapon' at: 90).
+	self assert: (encounter recordWeaponKillFrom: 'weapon' at: 91).
+	self assert: (encounter effectiveTierAt: 91) equals: #overcharge
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testGearFamilyThresholdsAndModeValues [
 	| catalog evaluator rows pve pvp rook |
 	catalog := CIGameItemTypes buildCatalog.

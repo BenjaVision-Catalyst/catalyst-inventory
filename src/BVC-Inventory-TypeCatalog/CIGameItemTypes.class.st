@@ -150,6 +150,27 @@ CIGameItemTypes class >> registerClassifiedFamilyEffectsIn: catalog [
 						yourself) ]
 ]
 
+{ #category : 'talents' }
+CIGameItemTypes class >> registerGadgetOverchargeTalentsIn: catalog [
+	#(#('futurePerfect' 'Future Perfect' 15 3 'Weapon kills grant +1 Skill Tier for 15 seconds, up to three stacks. A weapon kill at Skill Tier 6 grants Overcharge for 15 seconds with a 90-second cooldown.') #('futurePerfection' 'Future Perfection' 19 4 'Weapon kills grant +1 Skill Tier for 19 seconds, up to four stacks. A weapon kill at Skill Tier 6 grants Overcharge for 15 seconds with a 90-second cooldown.'))
+		do: [ :spec | 
+			catalog
+				registerTalent: (CIItemTalent
+						id: spec first
+						name: spec second
+						eligibility: #weapon
+						parameters: (Dictionary new
+								at: #evidence put: 'Weapon Talents!B18:D18';
+								at: #trigger put: #weaponKill;
+								at: #tierDurationSeconds put: spec third;
+								at: #maxTierStacks put: spec fourth;
+								at: #overchargeRequiredTier put: 6;
+								at: #overchargeSeconds put: 15;
+								at: #overchargeCooldownSeconds put: 90;
+								yourself)
+						comment: spec fifth) ]
+]
+
 { #category : 'families' }
 CIGameItemTypes class >> registerLaunchGearFamiliesIn: catalog [
 	#(#('vossAndVale' 'Voss & Vale' #(#(1 #(#(headshotDamage 0.13)) #(#(headshotDamage 0.13)) 'Brandsets!E33,K33') #(2 #(#(criticalHitChance 0.08)) #(#(criticalHitChance 0.08)) 'Brandsets!F33,L33') #(3 #(#(criticalHitDamage 0.13)) #(#(criticalHitDamage 0.13)) 'Brandsets!G33,M33'))) #('rookStandard' 'Rook Standard' #(#(1 #(#(totalArmor 0.05)) #(#(totalArmor 0.05)) 'Brandsets!E6,K6') #(2 #(#(hazardProtection 0.20)) #(#(hazardProtection 0.15)) 'Brandsets!F6,L6') #(3 #(#(armorRegeneration 0.02)) #(#(armorRegeneration 0.02)) 'Brandsets!G6,M6'))) #('morrowWorks' 'Morrow Works' #(#(1 #(#(skillHaste 0.10)) #(#(skillHaste 0.10)) 'Brandsets!E17,K17') #(2 #(#(skillDamage 0.13)) #(#(skillDamage 0.13)) 'Brandsets!F17,L17') #(3 #(#(weaponDamage 0.18)) #(#(weaponDamage 0.18)) 'Brandsets!G17,M17'))) #('redLotusAssault' 'Red Lotus Assault' #(#(2 #(#(weaponHandling 0.15)) nil 'Gearsets!C45') #(3 #(#(rateOfFire 0.15)) nil 'Gearsets!D45') #(4 #() nil 'Gearsets!E45:H45'))) #('jupiterTechnologies' 'Jupiter Technologies' #(#(2 #(#(statusEffects 0.15)) nil 'Gearsets!C15') #(3 #(#(skillHaste 0.15) #(hazardProtection 0.30)) nil 'Gearsets!D15') #(4 #() nil 'Gearsets!E15:H15'))))
@@ -258,7 +279,8 @@ CIGameItemTypes class >> registerTalentDefinitionsIn: catalog [
 						name: spec third
 						eligibility: base eligibility
 						parameters: parameters
-						comment: spec fifth) ]
+						comment: spec fifth) ].
+	self registerGadgetOverchargeTalentsIn: catalog
 ]
 
 { #category : 'catalog' }
