@@ -33,14 +33,18 @@ CIWorkbookSpecializationData class >> registerArmorKitEffectsIn: catalog [
 CIWorkbookSpecializationData class >> registerEquipmentRewardsIn: catalog [
 	#(#('Sharpshooter' 'sharpshooter.flashbanggrenade' grenade nil nil #(blind)) #('Sharpshooter' 'sharpshooter.sharpshooters93r' sidearm 'Weapons!C278' 'Weapons Named + Exotics!C90' #()) #('Sharpshooter' 'sharpshooter.tac50crifle' signatureWeapon nil nil #()) #('Survivalist' 'survivalist.incendiarygrenade' grenade nil nil #(burn)) #('Survivalist' 'survivalist.survivalistd50' sidearm 'Weapons!C281' 'Weapons Named + Exotics!C91' #()) #('Survivalist' 'survivalist.crossbow' signatureWeapon nil nil #()) #('Technician' 'technician.empgrenade' grenade nil nil #(disrupt)) #('Technician' 'technician.maxim9' sidearm 'Weapons!C289' 'Weapons Named + Exotics!C94' #()) #('Technician' 'technician.p017launcher' signatureWeapon nil nil #()) #('Gunner' 'gunner.riotfoamgrenade' grenade nil nil #(ensnare)) #('Gunner' 'gunner.p320xcompact' sidearm 'Weapons!C294' 'Weapons Named + Exotics!C95' #()) #('Gunner' 'gunner.minigun' signatureWeapon nil nil #()) #('Demolitionist' 'demolitionist.fragmentationgrenade' grenade nil nil #(bleed)) #('Demolitionist' 'demolitionist.dicerosspecial' sidearm 'Weapons!C305' 'Weapons Named + Exotics!C99' #()) #('Demolitionist' 'demolitionist.m32a1multishotgrenadelauncher' signatureWeapon nil nil #()) #('Firewall' 'firewall.clustergrenade' grenade nil nil #()) #('Firewall' 'firewall.firestartersawedoffshotgun' sidearm 'Weapons!C164' 'Weapons Named + Exotics!C60' #()) #('Firewall' 'firewall.k8jetstreamflamethrower' signatureWeapon nil nil #()))
 		do: [ :row | 
-			| perk reward |
+			| perk reward type |
 			perk := (catalog specializationNamed: row first) perkAt: row second.
 			reward := CISpecializationEquipmentReward
 					kind: row third
 					statistics: (row fourth ifNotNil: [ :id | catalog weaponReferenceAt: id ])
 					namedWeapon: (row fifth ifNotNil: [ :id | catalog weaponReferenceAt: id ])
 					statuses: row sixth.
-			perk eventParameters: {#equipmentReward -> reward} asDictionary ]
+			perk eventParameters: {#equipmentReward -> reward} asDictionary.
+			reward kind = #grenade
+				ifTrue: [ type := CIWorkbookGrenadeType forSpecializationPerk: perk.
+					catalog register: type.
+					perk rewardIdentifier: type id ] ]
 ]
 
 { #category : 'registration' }

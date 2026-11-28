@@ -91,6 +91,32 @@ CIThatGameLaunchInventoryTest >> tearDown [
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testAllSpecializationGrenadesClaimWithWorkbookStatusAndSource [
+	| catalog store owner cases |
+	catalog := CIGameItemTypes buildCatalog.
+	store := CIInventoryReadStore new.
+	owner := 'specialization-grenade-types'.
+	cases := #(#('Sharpshooter' 'sharpshooter.flashbanggrenade' #(blind) 'Specializations!G16:H16') #('Survivalist' 'survivalist.incendiarygrenade' #(burn) 'Specializations!K16:L16') #('Technician' 'technician.empgrenade' #(disrupt) 'Specializations!G36:H36') #('Gunner' 'gunner.riotfoamgrenade' #(ensnare) 'Specializations!K35:L35') #('Demolitionist' 'demolitionist.fragmentationgrenade' #(bleed) 'Specializations!G55:H55') #('Firewall' 'firewall.clustergrenade' #() 'Specializations!K55:L55')).
+	cases
+		do: [ :row | 
+			| item type perk |
+			store
+				specialization: (CISpecializationSelection specialization: row first perks: {row second})
+				forOwner: owner.
+			item := store
+					claimSpecializationGrenadeForPerk: row second
+					from: catalog
+					forOwner: owner.
+			type := catalog typeAt: item definitionIdentifier.
+			perk := type rewardPerk.
+			self assert: perk id equals: row second.
+			self assert: perk equipmentReward appliedStatuses equals: row third.
+			self assert: perk evidence equals: row fourth.
+			self assert: item displayName equals: perk name ].
+	self assert: (store allRowsForOwner: owner) size equals: 6
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testAllWorkbookSpecializationGadgetRewardsResolveToTheirRegisteredItemTypes [
 	| catalog store owner rows |
 	catalog := CIGameItemTypes buildCatalog.
@@ -1783,6 +1809,47 @@ CIThatGameLaunchInventoryTest >> testSpecializationGadgetUpgradesResolveNineTrac
 	self assert: mortar reportedMagnitude equals: 1.
 	self assert: mortar unit equals: #count.
 	self assert: mortar resolvedTrack label equals: 'Ammo'
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSpecializationGrenadeClaimsRequireSelectedPerkAndSurviveRestart [
+	| owner perk item retry |
+	self startInventory.
+	owner := 'specialization-grenade-claim-owner'.
+	perk := 'technician.empgrenade'.
+	self
+		should: [ service claimSpecializationGrenadeForPerk: perk forVerifiedUser: owner ]
+		raise: Error.
+	service
+		selectSpecialization: 'Technician'
+		perks: {perk.
+				'technician.artificer'}
+		forVerifiedUser: owner.
+	self
+		should: [ service
+				claimSpecializationGrenadeForPerk: 'technician.artificer'
+				forVerifiedUser: owner ]
+		raise: Error.
+	self
+		should: [ service claimSpecializationGrenadeForPerk: perk forVerifiedUser: 'other-owner' ]
+		raise: Error.
+	item := service claimSpecializationGrenadeForPerk: perk forVerifiedUser: owner.
+	self
+		assert: item definitionIdentifier
+		equals: 'grenade.specialization.technician.empgrenade'.
+	retry := service claimSpecializationGrenadeForPerk: perk forVerifiedUser: owner.
+	self assert: retry itemIdentifier equals: item itemIdentifier.
+	service stop.
+	service := nil.
+	self startInventory.
+	retry := service claimSpecializationGrenadeForPerk: perk forVerifiedUser: owner.
+	self assert: retry itemIdentifier equals: item itemIdentifier.
+	self
+		assert: (service
+				rowsForVerifiedUser: owner
+				offset: 0
+				limit: 32) size
+		equals: 1
 ]
 
 { #category : 'tests' }

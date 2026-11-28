@@ -45,6 +45,15 @@ CIInventoryService >> claimSpecializationGadgetForPerk: perkIdentifier forVerifi
 ]
 
 { #category : 'specializations' }
+CIInventoryService >> claimSpecializationGrenadeForPerk: perkIdentifier forVerifiedUser: identity [
+	^ savedSetsLock
+		critical: [ readStore
+				claimSpecializationGrenadeForPerk: perkIdentifier
+				from: itemTypeCatalog
+				forOwner: identity ]
+]
+
+{ #category : 'specializations' }
 CIInventoryService >> claimSpecializationSidearmForPerk: perkIdentifier values: values forVerifiedUser: identity [
 	^ savedSetsLock
 		critical: [ readStore

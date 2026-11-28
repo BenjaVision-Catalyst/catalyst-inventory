@@ -40,6 +40,23 @@ CIInventoryReadStore >> claimSpecializationGadgetForPerk: perkIdentifier from: c
 		forOwner: identity
 ]
 
+{ #category : 'specializations' }
+CIInventoryReadStore >> claimSpecializationGrenadeForPerk: perkIdentifier from: catalog forOwner: identity [
+	| perk reward |
+	perk := self
+			selectedSpecializationRewardPerk: perkIdentifier
+			from: catalog
+			forOwner: identity.
+	reward := perk equipmentReward.
+	(reward notNil and: [ reward kind = #grenade ])
+		ifFalse: [ self error: 'This perk does not grant a specialization grenade' ].
+	^ self
+		claimSpecializationRewardType: perk rewardIdentifier
+		values: Dictionary new
+		from: catalog
+		forOwner: identity
+]
+
 { #category : 'private' }
 CIInventoryReadStore >> claimSpecializationRewardType: typeIdentifier values: values from: catalog forOwner: identity [
 	| owned |
