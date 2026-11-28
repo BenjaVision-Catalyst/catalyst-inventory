@@ -82,3 +82,22 @@ CIThatGameLaunchInventoryTest >> testLaunchInventoryAndTalentsSurviveRestart [
 	self assert: (service provisionLaunchInventoryForVerifiedUser: owner) equals: 0.
 	self assertEmpty: (self rowsFor: 'another-owner')
 ]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testWorkbookLootSourcesKeepUnknownOdds [
+	| catalog loot pools entry |
+	catalog := CIGameItemTypes buildCatalog.
+	loot := catalog lootCatalogue.
+	pools := loot poolsForItem: 'weapon.launch.chatterbox'.
+	self
+		assert: (pools collect: #id)
+		equals: #('chatterbox' 'exoticCaches' 'targetedLoot').
+	entry := ((loot poolAt: 'exoticCaches')
+			entriesForItem: 'weapon.launch.chatterbox') first.
+	self assert: entry requirement equals: #blueprintAcquired.
+	self assert: entry evidence equals: 'Weapons Named + Exotics!I130'.
+	self assert: entry weight isNil.
+	self
+		should: [ (loot poolAt: 'exoticCaches') selectUsing: 0.5 satisfying: [ :each | true ] ]
+		raise: Error
+]

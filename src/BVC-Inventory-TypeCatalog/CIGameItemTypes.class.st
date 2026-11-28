@@ -35,6 +35,7 @@ CIGameItemTypes class >> buildCatalog [
 		profile: #assaultRifle
 		in: catalog.
 	CIThatGameLaunchCatalog registerIn: catalog.
+	self registerLootIn: catalog.
 	^ catalog
 ]
 
@@ -94,6 +95,61 @@ CIGameItemTypes class >> pathfinderCarbine [
 { #category : 'talents' }
 CIGameItemTypes class >> perfectTalentDefinitions [
 	^ #(#('optimist' 'perfectOptimist' 'Perfect Optimist' #(#(damagePerStep 0.045)) 'Gain 4.5% weapon damage for every 10% ammo missing from the magazine.') #('fastHands' 'perfectFastHands' 'Perfect Fast Hands' #(#(reloadSpeedPerCriticalHit 0.05)) 'Each critical hit adds a 5% reload speed stack, up to 40 stacks.') #('ranger' 'perfectRanger' 'Perfect Ranger' #(#(distanceStepMetres 3)) 'Amplifies weapon damage by 2% per 3 m between you and the target.') #('preservation' 'perfectPreservation' 'Perfect Preservation' #(#(armorRepairOnKill 0.15) #(extraArmorRepairOnHeadshotKill 0.15)) 'A kill repairs 15% armor over 5 seconds. A headshot kill adds another 15% repair.') #('inSync' 'perfectInSync' 'Perfectly In Sync' #(#(skillDamageOnWeaponHit 0.20) #(weaponDamageOnSkillUseOrHit 0.20)) 'Weapon hits grant +20% skill damage for 5 seconds. Using a skill or hitting with one grants +20% weapon damage for 5 seconds. Both bonuses double while active together.') #('obliterate' 'perfectObliterate' 'Perfect Obliterate' #(#(maxStacks 24)) 'Each critical hit grants 1% total weapon damage for 10 seconds, up to 24 stacks.') #('unbreakable' 'perfectUnbreakable' 'Perfect Unbreakable' #(#(armorRepairOnDepletion 1.0) #(cooldownSeconds 55)) 'When armor is depleted, restore 100% armor. Cooldown is 55 seconds.') #('overwatch' 'perfectOverwatch' 'Perfect Overwatch' #(#(coverSeconds 8) #(squadWeaponDamage 0.14) #(squadSkillDamage 0.14)) 'After 8 seconds in cover, you and your squad gain 14% total weapon and skill damage while in cover or moving from cover to cover.') #('composure' 'perfectComposure' 'Perfect Composure' #(#(inCoverWeaponDamage 0.20)) 'While in cover, gain 20% total weapon damage.') #('combinedArms' 'perfectCombinedArms' 'Perfect Combined Arms' #(#(skillDamageOnWeaponHit 0.30)) 'Hitting an enemy with a weapon grants 30% total skill damage for 3 seconds.') #('creepingDeath' 'perfectCreepingDeath' 'Perfect Creeping Death' #(#(statusSpreadRadiusMetres 10) #(cooldownSeconds 10)) 'Applying a status effect also applies it to enemies within 10 m of the target. Cooldown is 10 seconds.'))
+]
+
+{ #category : 'loot' }
+CIGameItemTypes class >> registerLootIn: catalog [
+	| targeted caches |
+	targeted := OrderedCollection new.
+	caches := OrderedCollection new.
+	#(#('capacitor' 'The Summit challenges' challenge 'I112' blueprintAcquired) #('bluescreen' 'Season 9 Track' season 'I120') #('chatterbox' 'Hyena Cache questline' questline 'I130' blueprintAcquired) #('scorpio' 'Season 4 track' season 'I148') #('doctorHome' 'Season 10 Manhunt Reward' manhunt 'I156') #('nemesis' 'Invaded strongholds questline' questline 'I167' blueprintAcquired) #('liberty' 'True Sons missions questline' questline 'I173' blueprintAcquired))
+		do: [ :spec | 
+			| item entry evidence |
+			item := catalog typeAt: 'weapon.launch.' , spec first.
+			evidence := 'Weapons Named + Exotics!' , spec fourth.
+			entry := CILootPoolEntry
+					item: item
+					weight: nil
+					requiring: nil
+					evidence: evidence.
+			self
+				registerLootPool: spec first
+				name: spec second
+				kind: spec third
+				entries: {entry}
+				in: catalog.
+			entry := CILootPoolEntry
+					item: item
+					weight: nil
+					requiring: (spec at: 5 ifAbsent: [ nil ])
+					evidence: evidence.
+			targeted add: entry.
+			caches add: entry ].
+	self
+		registerLootPool: 'targetedLoot'
+		name: 'Targeted loot'
+		kind: #targetedLoot
+		entries: targeted
+		in: catalog.
+	self
+		registerLootPool: 'exoticCaches'
+		name: 'Exotic Caches'
+		kind: #cache
+		entries: caches
+		in: catalog
+]
+
+{ #category : 'loot' }
+CIGameItemTypes class >> registerLootPool: identifier name: sourceName kind: kind entries: entries in: catalog [
+	catalog lootCatalogue
+		register: (CILootPool
+				id: identifier
+				source: (CILootSource
+						id: identifier
+						name: sourceName
+						kind: kind)
+				entries: entries
+				complete: nil)
 ]
 
 { #category : 'talents' }

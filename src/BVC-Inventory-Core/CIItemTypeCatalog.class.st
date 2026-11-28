@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'typesById',
 		'talentsById',
-		'talentPoolsByTypeId'
+		'talentPoolsByTypeId',
+		'lootCatalogue'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -16,6 +17,11 @@ CIItemTypeCatalog >> initialize [
 	typesById := Dictionary new.
 	talentsById := Dictionary new.
 	talentPoolsByTypeId := Dictionary new
+]
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> lootCatalogue [
+	^ lootCatalogue ifNil: [ lootCatalogue := CILootCatalogue new ]
 ]
 
 { #category : 'accessing' }
