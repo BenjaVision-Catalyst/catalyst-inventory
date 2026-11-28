@@ -45,6 +45,35 @@ CISpecializationEncounter >> blocksExplosionAt: seconds [
 ]
 
 { #category : 'combat' }
+CISpecializationEncounter >> damageBonusForAlly: isAlly targetDistanceFromOwner: metres [
+	| parameters |
+	parameters := self parametersFor: 'firewall.firewalltacticallink'.
+	(parameters isNil or: [ isAlly not ]) ifTrue: [ ^ 0 ].
+	(self isValidDistance: metres)
+		ifFalse: [ self error: 'Invalid enemy distance' ].
+	metres <= (parameters at: #radiusMetres) ifFalse: [ ^ 0 ].
+	^ parameters at: #damage
+]
+
+{ #category : 'combat' }
+CISpecializationEncounter >> damageBonusForGroupMember: isGroupMember targetHasStatusEffect: hasStatusEffect [
+	| parameters |
+	parameters := self parametersFor: 'survivalist.survivalisttacticallink'.
+	(parameters isNil or: [ (isGroupMember and: [ hasStatusEffect ]) not ])
+		ifTrue: [ ^ 0 ].
+	^ parameters at: #damage
+]
+
+{ #category : 'combat' }
+CISpecializationEncounter >> damageBonusForGroupMember: isGroupMember targetOutOfCover: outOfCover [
+	| parameters |
+	parameters := self parametersFor: 'demolitionist.demolitionisttacticallink'.
+	(parameters isNil or: [ (isGroupMember and: [ outOfCover ]) not ])
+		ifTrue: [ ^ 0 ].
+	^ parameters at: #damage
+]
+
+{ #category : 'combat' }
 CISpecializationEncounter >> faradayImmunitiesAtDistance: metres deployed: deployed disrupted: disrupted [
 	| parameters |
 	parameters := self parametersFor: 'technician.faradayfield'.
@@ -81,6 +110,17 @@ CISpecializationEncounter >> fieryResponseBurnTargetsOnArmorBreak: enemyDistance
 	^ targets sorted asArray
 ]
 
+{ #category : 'combat' }
+CISpecializationEncounter >> headshotDamageBonusForGroupMember: isGroupMember attackerDistance: attackerMetres ownerDistance: ownerMetres [
+	| parameters |
+	parameters := self parametersFor: 'sharpshooter.sharpshootertacticallink'.
+	(parameters isNil or: [ isGroupMember not ]) ifTrue: [ ^ 0 ].
+	(self isValidDistance: attackerMetres) & (self isValidDistance: ownerMetres)
+		ifFalse: [ self error: 'Invalid enemy distance' ].
+	attackerMetres < ownerMetres ifFalse: [ ^ 0 ].
+	^ parameters at: #headshotDamage
+]
+
 { #category : 'initialization' }
 CISpecializationEncounter >> initializeLoadout: selectedLoadout mode: gameMode startedAt: seconds [
 	(#(pve pvp) includes: gameMode)
@@ -94,6 +134,11 @@ CISpecializationEncounter >> initializeLoadout: selectedLoadout mode: gameMode s
 	perksById := Dictionary new.
 	loadout selectedPerks do: [ :perk | perksById at: perk id put: perk ].
 	^ self
+]
+
+{ #category : 'private' }
+CISpecializationEncounter >> isValidDistance: metres [
+	^ metres isNumber and: [ metres >= 0 ]
 ]
 
 { #category : 'accessing' }

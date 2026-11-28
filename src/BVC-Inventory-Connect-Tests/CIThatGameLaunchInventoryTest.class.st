@@ -1240,6 +1240,81 @@ CIThatGameLaunchInventoryTest >> testSpecializationsPreserveWorkbookPerksAndVali
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testTacticalLinksUseSelectedPerksAndTargetConditions [
+	| catalog encounter sharpshooter survivalist demolitionist firewall inactive |
+	catalog := CIGameItemTypes buildCatalog.
+	encounter := [ :name :selected | 
+		CISpecializationEncounter
+			forLoadout: (catalog specializationLoadoutNamed: name selected: selected)
+			mode: #pve
+			startedAt: 0 ].
+	sharpshooter := encounter
+			value: 'Sharpshooter'
+			value: #('sharpshooter.sharpshootertacticallink').
+	survivalist := encounter
+			value: 'Survivalist'
+			value: #('survivalist.survivalisttacticallink').
+	demolitionist := encounter
+			value: 'Demolitionist'
+			value: #('demolitionist.demolitionisttacticallink').
+	firewall := encounter
+			value: 'Firewall'
+			value: #('firewall.firewalltacticallink').
+	inactive := encounter value: 'Firewall' value: #().
+	self
+		assert: (sharpshooter
+				headshotDamageBonusForGroupMember: true
+				attackerDistance: 9
+				ownerDistance: 10)
+		equals: 0.10.
+	self
+		assert: (sharpshooter
+				headshotDamageBonusForGroupMember: true
+				attackerDistance: 10
+				ownerDistance: 10)
+		equals: 0.
+	self
+		assert: (sharpshooter
+				headshotDamageBonusForGroupMember: false
+				attackerDistance: 9
+				ownerDistance: 10)
+		equals: 0.
+	self
+		assert: (survivalist damageBonusForGroupMember: true targetHasStatusEffect: true)
+		equals: 0.10.
+	self
+		assert: (survivalist damageBonusForGroupMember: true targetHasStatusEffect: false)
+		equals: 0.
+	self
+		assert: (survivalist damageBonusForGroupMember: false targetHasStatusEffect: true)
+		equals: 0.
+	self
+		assert: (demolitionist damageBonusForGroupMember: true targetOutOfCover: true)
+		equals: 0.05.
+	self
+		assert: (demolitionist damageBonusForGroupMember: true targetOutOfCover: false)
+		equals: 0.
+	self
+		assert: (demolitionist damageBonusForGroupMember: false targetOutOfCover: true)
+		equals: 0.
+	self
+		assert: (firewall damageBonusForAlly: true targetDistanceFromOwner: 10)
+		equals: 0.10.
+	self
+		assert: (firewall damageBonusForAlly: true targetDistanceFromOwner: 10.01)
+		equals: 0.
+	self
+		assert: (firewall damageBonusForAlly: false targetDistanceFromOwner: 10)
+		equals: 0.
+	self
+		assert: (inactive damageBonusForAlly: true targetDistanceFromOwner: 10)
+		equals: 0.
+	self
+		should: [ firewall damageBonusForAlly: true targetDistanceFromOwner: -1 ]
+		raise: Error
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testVersionOneInventorySnapshotCanStoreSpecialization [
 	| path owner item old new selection |
 	path := (directory / 'legacy-selection.ston') fullName.

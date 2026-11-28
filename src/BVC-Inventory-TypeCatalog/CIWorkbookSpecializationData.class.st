@@ -22,7 +22,7 @@ CIWorkbookSpecializationData class >> gunnerPerks [
 
 { #category : 'registration' }
 CIWorkbookSpecializationData class >> registerEventParametersIn: catalog [
-	#(#('Gunner' 'gunner.barrage' #(#(rateOfFire 0.05) #(durationSeconds 5))) #('Gunner' 'gunner.coupler' #(#(reloadInterval 3) #(reloadSpeed 0.50))) #('Gunner' 'gunner.supplyline' #(#(intervalSeconds 60) #(personalFraction 0.10) #(partyFraction 0.05))) #('Technician' 'technician.faradayfield' #(#(radiusMetres 5) #(immunities #(shock disrupt)))) #('Firewall' 'firewall.fieryresponse' #(#(radiusMetres 5) #(status burn) #(disabledInPvP true))) #('Demolitionist' 'demolitionist.bracedforimpact' #(#(cooldownSeconds 60))))
+	#(#('Gunner' 'gunner.barrage' #(#(rateOfFire 0.05) #(durationSeconds 5))) #('Gunner' 'gunner.coupler' #(#(reloadInterval 3) #(reloadSpeed 0.50))) #('Gunner' 'gunner.supplyline' #(#(intervalSeconds 60) #(personalFraction 0.10) #(partyFraction 0.05))) #('Technician' 'technician.faradayfield' #(#(radiusMetres 5) #(immunities #(shock disrupt)))) #('Firewall' 'firewall.fieryresponse' #(#(radiusMetres 5) #(status burn) #(disabledInPvP true))) #('Demolitionist' 'demolitionist.bracedforimpact' #(#(cooldownSeconds 60))) #('Sharpshooter' 'sharpshooter.sharpshootertacticallink' #(#(headshotDamage 0.10))) #('Survivalist' 'survivalist.survivalisttacticallink' #(#(damage 0.10))) #('Demolitionist' 'demolitionist.demolitionisttacticallink' #(#(damage 0.05))) #('Firewall' 'firewall.firewalltacticallink' #(#(damage 0.10) #(radiusMetres 10))))
 		do: [ :spec | 
 			| parameters |
 			parameters := Dictionary new.
