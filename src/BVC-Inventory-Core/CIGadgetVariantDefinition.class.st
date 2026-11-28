@@ -44,14 +44,18 @@ CIGadgetVariantDefinition >> initializeFamily: family variant: label tracks: sta
 
 { #category : 'evaluating' }
 CIGadgetVariantDefinition >> knownStatsAtTier: aTier [
+	^ self knownStatsAtTier: aTier withSpecializationUpgrades: #()
+]
+
+{ #category : 'accessing' }
+CIGadgetVariantDefinition >> knownStatsAtTier: aTier withSpecializationUpgrades: upgrades [
 	| result |
 	result := Dictionary new.
 	tracks
 		do: [ :track | 
-			| label |
-			label := track label.
-			label
-				ifNotNil: [ (track magnitudeAtTier: aTier)
+			track label
+				ifNotNil: [ :label | 
+					(track magnitudeAtTier: aTier withSpecializationUpgrades: upgrades)
 						ifNotNil: [ :value | result at: label put: value ] ] ].
 	^ result
 ]

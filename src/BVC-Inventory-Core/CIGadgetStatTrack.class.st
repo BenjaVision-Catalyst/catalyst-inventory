@@ -76,6 +76,22 @@ CIGadgetStatTrack >> magnitudeAtTier: aTier [
 ]
 
 { #category : 'accessing' }
+CIGadgetStatTrack >> magnitudeAtTier: aTier withSpecializationUpgrades: upgrades [
+	| value adjustment |
+	value := self magnitudeAtTier: aTier.
+	value ifNil: [ ^ nil ].
+	adjustment := 0.
+	upgrades
+		do: [ :upgrade | 
+			upgrade resolvedTrack == self
+				ifTrue: [ adjustment := adjustment
+							+ (upgrade unit = #fraction
+									ifTrue: [ value * upgrade reportedMagnitude ]
+									ifFalse: [ upgrade reportedMagnitude ]) ] ].
+	^ value + adjustment
+]
+
+{ #category : 'accessing' }
 CIGadgetStatTrack >> rawValueAtTier: aTier [
 	aTier == 0 ifTrue: [ ^ self baseText ].
 	^ (tierCells at: (self indexForTier: aTier)) ifNotNil: #copy

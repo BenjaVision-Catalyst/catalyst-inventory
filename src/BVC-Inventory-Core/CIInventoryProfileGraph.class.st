@@ -604,7 +604,8 @@ CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets
 									utilityTier: ((type respondsTo: #workbookVariantDefinition)
 											ifTrue: [ workbookTier ]
 											ifFalse: [ tier ])
-									catalog: catalog.
+									catalog: catalog
+									specialization: specialization.
 							sections := self
 									applyingMagazineEffectsTo: sections
 									type: type
@@ -719,8 +720,26 @@ CIInventoryProfileGraph class >> inspectorAccessor [
 
 { #category : 'projection' }
 CIInventoryProfileGraph class >> inspectorSectionsFor: type item: item utilityTier: tier catalog: catalog [
+	^ self
+		inspectorSectionsFor: type
+		item: item
+		utilityTier: tier
+		catalog: catalog
+		specialization: nil
+]
+
+{ #category : 'inspecting' }
+CIInventoryProfileGraph class >> inspectorSectionsFor: type item: item utilityTier: tier catalog: catalog specialization: specialization [
 	| sections talent |
-	sections := type inspectorSectionsAtUtilityTier: tier item: item.
+	sections := (specialization notNil
+			and: [ type
+					respondsTo: #inspectorSectionsAtUtilityTier:item:withSpecializationUpgrades: ])
+			ifTrue: [ type
+					inspectorSectionsAtUtilityTier: tier
+					item: item
+					withSpecializationUpgrades: (specialization
+							resolvedGadgetUpgradesForType: item definitionIdentifier) ]
+			ifFalse: [ type inspectorSectionsAtUtilityTier: tier item: item ].
 	(item respondsTo: #talentIdentifier) ifFalse: [ ^ sections ].
 	item talentIdentifier ifNil: [ ^ sections ].
 	talent := catalog talentAt: item talentIdentifier ifAbsent: [ ^ sections ].

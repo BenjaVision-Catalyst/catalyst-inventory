@@ -58,6 +58,12 @@ CISpecializationLoadout >> modifiersFor: weaponClass [
 		flatCollect: [ :perk | perk modifiers select: [ :each | each appliesTo: weaponClass ] ]
 ]
 
+{ #category : 'accessing' }
+CISpecializationLoadout >> resolvedGadgetUpgradesForType: typeIdentifier [
+	^ ((self gadgetUpgradePerksForType: typeIdentifier) collect: #gadgetUpgrade)
+		select: #isResolved
+]
+
 { #category : 'querying' }
 CISpecializationLoadout >> rewardIdentifiers [
 	^ (selectedPerks collect: #rewardIdentifier) reject: #isNil

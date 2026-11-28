@@ -9,7 +9,8 @@ Class {
 		'stackExpiries',
 		'overchargeUntil',
 		'cooldownUntil',
-		'lastTime'
+		'lastTime',
+		'specializationUpgrades'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -22,6 +23,17 @@ CIGadgetEncounter class >> variant: aVariant baseTier: aTier weapon: itemId tale
 		baseTier: aTier
 		weapon: itemId
 		talent: aTalent
+]
+
+{ #category : 'instance creation' }
+CIGadgetEncounter class >> variant: aVariant baseTier: aTier weapon: itemId talent: aTalent specializationUpgrades: upgrades [
+	^ (self
+		variant: aVariant
+		baseTier: aTier
+		weapon: itemId
+		talent: aTalent)
+		specializationUpgrades: upgrades;
+		yourself
 ]
 
 { #category : 'private' }
@@ -81,7 +93,14 @@ CIGadgetEncounter >> recordWeaponKillFrom: itemIdentifier at: seconds [
 	^ true
 ]
 
+{ #category : 'initialization' }
+CIGadgetEncounter >> specializationUpgrades: upgrades [
+	specializationUpgrades := upgrades asArray copy
+]
+
 { #category : 'accessing' }
 CIGadgetEncounter >> statsAt: seconds [
-	^ variant knownStatsAtTier: (self effectiveTierAt: seconds)
+	^ variant
+		knownStatsAtTier: (self effectiveTierAt: seconds)
+		withSpecializationUpgrades: (specializationUpgrades ifNil: [ #() ])
 ]

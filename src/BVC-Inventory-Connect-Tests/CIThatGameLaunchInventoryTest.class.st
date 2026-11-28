@@ -522,6 +522,30 @@ CIThatGameLaunchInventoryTest >> testGadgetEncounterOverchargeExpiresAndHonorsCo
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testGadgetUpgradeAddsCountAndPreservesUnspecifiedTierValues [
+	| catalog type loadout upgrades stats base |
+	catalog := CIGameItemTypes buildCatalog.
+	type := catalog typeAt: 'gadget.workbook.turret.artillery'.
+	loadout := catalog
+			specializationLoadoutNamed: 'Demolitionist'
+			selected: #('demolitionist.artilleryturret' 'demolitionist.cyclonemagazine' 'demolitionist.shdcpuv2').
+	upgrades := loadout resolvedGadgetUpgradesForType: type id.
+	base := type statsAtUtilityTier: 0.
+	stats := type workbookVariantDefinition
+			knownStatsAtTier: 0
+			withSpecializationUpgrades: upgrades.
+	self assert: (stats at: 'Ammo') equals: (base at: 'Ammo') + 1.
+	self assert: (stats at: 'Damage') closeTo: (base at: 'Damage') * 1.10.
+	self assert: (stats at: 'PvP Damage') equals: (base at: 'PvP Damage').
+	stats := type workbookVariantDefinition
+			knownStatsAtTier: 6
+			withSpecializationUpgrades: upgrades.
+	self deny: (stats includesKey: 'Ammo').
+	self deny: (stats includesKey: 'Damage').
+	self assert: stats equals: (type statsAtUtilityTier: 6)
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testGearFamilyThresholdsAndModeValues [
 	| catalog evaluator rows pve pvp rook |
 	catalog := CIGameItemTypes buildCatalog.
@@ -1283,6 +1307,66 @@ CIThatGameLaunchInventoryTest >> testScrapingByOnlyAccruesCurrentWeaponAmmoDurin
 		equals: {#currentWeapon -> 10} asDictionary.
 	self assertEmpty: (rule roundsAccruedFromActiveSeconds: 2.2 through: 2.9).
 	self should: [ rule roundsAccruedFromActiveSeconds: 1 through: 0 ] raise: Error
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSelectedGadgetUpgradesReachInventoryInspectorAndEncounter [
+	| owner catalog tactician scanner weapon stats graph encounter |
+	self startInventory.
+	owner := 'applied-gadget-upgrade-owner'.
+	catalog := CIGameItemTypes buildCatalog.
+	tactician := (catalog typeAt: 'gadget.workbook.drone.tactician')
+			inventoryItem: 'tactician'
+			values: Dictionary new.
+	tactician equippedSlotIdentifier: 'GadgetLeft'.
+	scanner := (catalog typeAt: 'gadget.workbook.pulse.scanner')
+			inventoryItem: 'scanner'
+			values: Dictionary new.
+	scanner equippedSlotIdentifier: 'GadgetRight'.
+	weapon := (catalog typeAt: 'weapon.launch.akM')
+			inventoryItem: 'weapon'
+			values: (Dictionary new
+					at: 'weaponDamage' put: 0.1;
+					yourself)
+			talentIdentifier: 'futurePerfect'.
+	weapon equippedSlotIdentifier: 'RangedWeapon'.
+	service
+		replaceReadRows: {tactician.
+				scanner.
+				weapon}
+		forOwner: owner.
+	self
+		assert: ((service workbookGadgetStatsFor: 'tactician' forVerifiedUser: owner)
+				at: 'Duration')
+		equals: 300.
+	service
+		selectSpecialization: 'Sharpshooter'
+		perks: #('sharpshooter.tactician' 'sharpshooter.graphenebattery' 'sharpshooter.carbonfiberframe')
+		forVerifiedUser: owner.
+	stats := service workbookGadgetStatsFor: 'tactician' forVerifiedUser: owner.
+	self assert: (stats at: 'Duration') closeTo: 345.
+	self assert: (stats at: 'Scan Range') equals: 50.
+	self assert: (stats at: 'Cooldown') equals: 20.
+	self
+		assert: ((service workbookGadgetStatsFor: 'scanner' forVerifiedUser: owner)
+				at: 'Duration')
+		equals: 8.
+	graph := service profileGraphForVerifiedUser: owner.
+	self assert: ((STON toString: graph) includesSubstring: '345 s').
+	encounter := service
+			gadgetEncounterFor: 'tactician'
+			weapon: 'weapon'
+			forVerifiedUser: owner.
+	self assert: ((encounter statsAt: 0) at: 'Duration') closeTo: 345.
+	self assert: (encounter recordWeaponKillFrom: 'weapon' at: 1).
+	stats := encounter statsAt: 1.
+	self assert: (stats at: 'Duration') closeTo: 345.
+	self assert: (stats at: 'Scan Range') closeTo: 55.
+	service clearSpecializationForVerifiedUser: owner.
+	self
+		assert: ((service workbookGadgetStatsFor: 'tactician' forVerifiedUser: owner)
+				at: 'Duration')
+		equals: 300
 ]
 
 { #category : 'tests' }

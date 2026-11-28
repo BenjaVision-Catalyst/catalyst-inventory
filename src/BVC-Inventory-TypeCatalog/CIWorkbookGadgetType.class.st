@@ -54,13 +54,21 @@ CIWorkbookGadgetType >> inspectorIdentityFor: item [
 
 { #category : 'descriptions' }
 CIWorkbookGadgetType >> inspectorSectionsAtUtilityTier: tier item: item [
+	^ self
+		inspectorSectionsAtUtilityTier: tier
+		item: item
+		withSpecializationUpgrades: #()
+]
+
+{ #category : 'inspecting' }
+CIWorkbookGadgetType >> inspectorSectionsAtUtilityTier: tier item: item withSpecializationUpgrades: upgrades [
 	| supported rows |
 	supported := tier isInteger and: [ tier between: 0 and: 6 ].
 	rows := supported
 			ifTrue: [ (variantDefinition tracks select: [ :track | track label notNil ])
 					collect: [ :track | 
 						| value |
-						value := track magnitudeAtTier: tier.
+						value := track magnitudeAtTier: tier withSpecializationUpgrades: upgrades.
 						{track label.
 							value
 								ifNil: [ (track rawValueAtTier: tier) ifNil: [ 'Unspecified' ] ]

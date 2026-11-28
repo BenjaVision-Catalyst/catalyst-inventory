@@ -116,7 +116,7 @@ CIInventoryService >> familyEvaluationForVerifiedUser: identity mode: mode [
 { #category : 'reading' }
 CIInventoryService >> gadgetEncounterFor: gadgetId weapon: weaponId forVerifiedUser: identity [
 	^ savedSetsLock
-		critical: [ | rows gadget weapon type activeTalent tier |
+		critical: [ | rows gadget weapon type activeTalent tier specialization upgrades |
 			rows := readStore allRowsForOwner: identity.
 			gadget := rows
 					detect: [ :row | row itemIdentifier = gadgetId ]
@@ -134,14 +134,19 @@ CIInventoryService >> gadgetEncounterFor: gadgetId weapon: weaponId forVerifiedU
 			activeTalent := weapon talentIdentifier
 					ifNil: [ self error: 'The equipped weapon has no talent' ]
 					ifNotNil: [ :id | itemTypeCatalog talentAt: id ].
+			specialization := self resolvedSpecializationFor: identity.
 			tier := CIInventoryProfileGraph
 					workbookGadgetTierForRows: rows
-					specialization: (self resolvedSpecializationFor: identity).
+					specialization: specialization.
+			upgrades := specialization
+					ifNil: [ #() ]
+					ifNotNil: [ specialization resolvedGadgetUpgradesForType: gadget definitionIdentifier ].
 			CIGadgetEncounter
 				variant: type workbookVariantDefinition
 				baseTier: tier
 				weapon: weapon itemIdentifier
-				talent: activeTalent ]
+				talent: activeTalent
+				specializationUpgrades: upgrades ]
 ]
 
 { #category : 'reading' }
@@ -532,7 +537,7 @@ CIInventoryService >> withSavedSet: setIdentifier forVerifiedUser: identity do: 
 { #category : 'reading' }
 CIInventoryService >> workbookGadgetStatsFor: itemIdentifier forVerifiedUser: identity [
 	^ savedSetsLock
-		critical: [ | rows gadget type tier |
+		critical: [ | rows gadget type tier specialization upgrades |
 			rows := readStore allRowsForOwner: identity.
 			gadget := rows
 					detect: [ :row | row itemIdentifier = itemIdentifier ]
@@ -540,8 +545,14 @@ CIInventoryService >> workbookGadgetStatsFor: itemIdentifier forVerifiedUser: id
 			type := itemTypeCatalog typeAt: gadget definitionIdentifier.
 			(type respondsTo: #workbookVariantDefinition)
 				ifFalse: [ self error: 'This item is not a workbook gadget' ].
+			specialization := self resolvedSpecializationFor: identity.
 			tier := CIInventoryProfileGraph
 					workbookGadgetTierForRows: rows
-					specialization: (self resolvedSpecializationFor: identity).
-			type statsAtUtilityTier: tier ]
+					specialization: specialization.
+			upgrades := specialization
+					ifNil: [ #() ]
+					ifNotNil: [ specialization resolvedGadgetUpgradesForType: gadget definitionIdentifier ].
+			type workbookVariantDefinition
+				knownStatsAtTier: tier
+				withSpecializationUpgrades: upgrades ]
 ]
