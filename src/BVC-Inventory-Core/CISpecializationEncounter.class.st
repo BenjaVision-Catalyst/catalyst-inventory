@@ -58,6 +58,37 @@ CISpecializationEncounter >> blocksExplosionAt: seconds [
 ]
 
 { #category : 'combat' }
+CISpecializationEncounter >> bonusArmorDuringCoverToCoverMove: moving [
+	moving ifFalse: [ ^ 0 ].
+	^ self numericParameter: #bonusArmor forPerk: 'firewall.bullrush'
+]
+
+{ #category : 'combat' }
+CISpecializationEncounter >> bonusArmorWhileAimingGadget: aiming [
+	aiming ifFalse: [ ^ 0 ].
+	^ self numericParameter: #bonusArmor forPerk: 'technician.technomancy'
+]
+
+{ #category : 'combat' }
+CISpecializationEncounter >> coverBonusArmorIsActiveWhileInCover: inCover [
+	| parameters |
+	parameters := self parametersFor: 'sharpshooter.myhomeismycastle'.
+	^ inCover and: [ parameters notNil and: [ parameters at: #grantsBonusArmor ] ]
+]
+
+{ #category : 'combat' }
+CISpecializationEncounter >> crisisResponseRefillsMainWeaponMagazinesFromArmor: previousArmor to: remainingArmor [
+	| parameters |
+	((previousArmor isNumber and: [ previousArmor >= 0 ])
+		and: [ remainingArmor isNumber and: [ remainingArmor >= 0 ] ])
+		ifFalse: [ self error: 'Invalid armor values' ].
+	parameters := self parametersFor: 'demolitionist.crisisresponse'.
+	^ parameters notNil
+		and: [ (parameters at: #refillsMainWeaponMagazines)
+				and: [ previousArmor > 0 and: [ remainingArmor = 0 ] ] ]
+]
+
+{ #category : 'combat' }
 CISpecializationEncounter >> damageBonusForAlly: isAlly targetDistanceFromOwner: metres [
 	| parameters |
 	parameters := self parametersFor: 'firewall.firewalltacticallink'.
@@ -84,6 +115,27 @@ CISpecializationEncounter >> damageBonusForGroupMember: isGroupMember targetOutO
 	(parameters isNil or: [ (isGroupMember and: [ outOfCover ]) not ])
 		ifTrue: [ ^ 0 ].
 	^ parameters at: #damage
+]
+
+{ #category : 'combat' }
+CISpecializationEncounter >> dismantlingDamageBonusAgainst: targetKind [
+	| parameters |
+	parameters := self parametersFor: 'technician.dismantling'.
+	(parameters isNil
+		or: [ ((parameters at: #targetKinds) includes: targetKind) not ])
+		ifTrue: [ ^ 0 ].
+	^ parameters at: #damage
+]
+
+{ #category : 'combat' }
+CISpecializationEncounter >> emplacementWeaponHandlingAfterStationarySeconds: seconds [
+	| parameters |
+	(seconds isNumber and: [ seconds >= 0 ])
+		ifFalse: [ self error: 'Invalid stationary duration' ].
+	parameters := self parametersFor: 'gunner.emplacement'.
+	(parameters isNil or: [ seconds < (parameters at: #stationarySeconds) ])
+		ifTrue: [ ^ 0 ].
+	^ parameters at: #weaponHandling
 ]
 
 { #category : 'combat' }
@@ -124,6 +176,12 @@ CISpecializationEncounter >> fieryResponseBurnTargetsOnArmorBreak: enemyDistance
 ]
 
 { #category : 'combat' }
+CISpecializationEncounter >> gadgetHasteBonusWhileInCover: inCover [
+	inCover ifFalse: [ ^ 0 ].
+	^ self numericParameter: #gadgetHaste forPerk: 'survivalist.crunchtime'
+]
+
+{ #category : 'combat' }
 CISpecializationEncounter >> headshotDamageBonusForGroupMember: isGroupMember attackerDistance: attackerMetres ownerDistance: ownerMetres [
 	| parameters |
 	parameters := self parametersFor: 'sharpshooter.sharpshootertacticallink'.
@@ -132,6 +190,11 @@ CISpecializationEncounter >> headshotDamageBonusForGroupMember: isGroupMember at
 		ifFalse: [ self error: 'Invalid enemy distance' ].
 	attackerMetres < ownerMetres ifFalse: [ ^ 0 ].
 	^ parameters at: #headshotDamage
+]
+
+{ #category : 'combat' }
+CISpecializationEncounter >> incessantArmorFractionOnEnemyKill [
+	^ self numericParameter: #armorFraction forPerk: 'gunner.incessant'
 ]
 
 { #category : 'initialization' }
@@ -157,6 +220,13 @@ CISpecializationEncounter >> isValidDistance: metres [
 { #category : 'accessing' }
 CISpecializationEncounter >> loadout [
 	^ loadout
+]
+
+{ #category : 'private' }
+CISpecializationEncounter >> numericParameter: parameter forPerk: perkId [
+	| parameters |
+	parameters := self parametersFor: perkId.
+	^ parameters ifNil: [ 0 ] ifNotNil: [ parameters at: parameter ]
 ]
 
 { #category : 'private' }

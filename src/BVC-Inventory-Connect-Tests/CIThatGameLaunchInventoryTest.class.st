@@ -1471,6 +1471,78 @@ CIThatGameLaunchInventoryTest >> testSpecializationConditionalPerksHonorRangeCoo
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSpecializationPassivesHonorCoverAimingAndStationaryConditions [
+	| catalog encounter sharpshooter survivalist technician gunner firewall inactive |
+	catalog := CIGameItemTypes buildCatalog.
+	encounter := [ :name :selections | 
+		CISpecializationEncounter
+			forLoadout: (catalog specializationLoadoutNamed: name selected: selections)
+			mode: #pve
+			startedAt: 0 ].
+	sharpshooter := encounter
+			value: 'Sharpshooter'
+			value: #('sharpshooter.myhomeismycastle').
+	survivalist := encounter
+			value: 'Survivalist'
+			value: #('survivalist.crunchtime').
+	technician := encounter value: 'Technician' value: #('technician.technomancy').
+	gunner := encounter value: 'Gunner' value: #('gunner.emplacement').
+	firewall := encounter value: 'Firewall' value: #('firewall.bullrush').
+	inactive := encounter value: 'Gunner' value: #().
+	self assert: (sharpshooter coverBonusArmorIsActiveWhileInCover: true).
+	self deny: (sharpshooter coverBonusArmorIsActiveWhileInCover: false).
+	self deny: (inactive coverBonusArmorIsActiveWhileInCover: true).
+	self assert: (survivalist gadgetHasteBonusWhileInCover: true) equals: 0.10.
+	self assert: (survivalist gadgetHasteBonusWhileInCover: false) equals: 0.
+	self assert: (technician bonusArmorWhileAimingGadget: true) equals: 0.15.
+	self assert: (technician bonusArmorWhileAimingGadget: false) equals: 0.
+	self
+		assert: (gunner emplacementWeaponHandlingAfterStationarySeconds: 0.99)
+		equals: 0.
+	self
+		assert: (gunner emplacementWeaponHandlingAfterStationarySeconds: 1)
+		equals: 0.10.
+	self
+		assert: (gunner emplacementWeaponHandlingAfterStationarySeconds: 0)
+		equals: 0.
+	self
+		assert: (inactive emplacementWeaponHandlingAfterStationarySeconds: 1)
+		equals: 0.
+	self assert: (firewall bonusArmorDuringCoverToCoverMove: true) equals: 0.30.
+	self assert: (firewall bonusArmorDuringCoverToCoverMove: false) equals: 0
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSpecializationPassivesHonorTargetKindKillAndArmorBreak [
+	| catalog encounter technician demolitionist gunner inactive |
+	catalog := CIGameItemTypes buildCatalog.
+	encounter := [ :name :selections | 
+		CISpecializationEncounter
+			forLoadout: (catalog specializationLoadoutNamed: name selected: selections)
+			mode: #pve
+			startedAt: 0 ].
+	technician := encounter value: 'Technician' value: #('technician.dismantling').
+	demolitionist := encounter
+			value: 'Demolitionist'
+			value: #('demolitionist.crisisresponse').
+	gunner := encounter value: 'Gunner' value: #('gunner.incessant').
+	inactive := encounter value: 'Demolitionist' value: #().
+	#(drone skillProxy robotics)
+		do: [ :target | self assert: (technician dismantlingDamageBonusAgainst: target) equals: 0.12 ].
+	self assert: (technician dismantlingDamageBonusAgainst: #human) equals: 0.
+	self assert: gunner incessantArmorFractionOnEnemyKill equals: 0.10.
+	self assert: inactive incessantArmorFractionOnEnemyKill equals: 0.
+	self
+		assert: (demolitionist crisisResponseRefillsMainWeaponMagazinesFromArmor: 1 to: 0).
+	self
+		deny: (demolitionist crisisResponseRefillsMainWeaponMagazinesFromArmor: 0 to: 0).
+	self
+		deny: (demolitionist crisisResponseRefillsMainWeaponMagazinesFromArmor: 5 to: 1).
+	self
+		deny: (inactive crisisResponseRefillsMainWeaponMagazinesFromArmor: 1 to: 0)
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testSpecializationsPreserveWorkbookPerksAndValidateSelections [
 	| catalog technician amped selected gear damage digital |
 	catalog := CIGameItemTypes buildCatalog.
