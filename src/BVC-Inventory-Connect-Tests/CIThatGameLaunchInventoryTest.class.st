@@ -2409,6 +2409,59 @@ CIThatGameLaunchInventoryTest >> testWorkbookFamiliesRetainModeColumnsMultiCoreA
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testWorkbookFixedMuzzlesPreserveReportedValueAndCarryForwardEvidence [
+	| catalog stoner quietRoar qdc bluescreen |
+	catalog := CIGameItemTypes buildCatalog.
+	stoner := (catalog weaponReferenceAt: 'Weapons!C63') mountLayout.
+	quietRoar := (catalog weaponReferenceAt: 'Weapons!C64') mountLayout.
+	{stoner.
+		quietRoar}
+		do: [ :layout | 
+			| mount |
+			self assert: layout fixedMounts size equals: 1.
+			self assert: (layout statusOfSlotKind: #muzzle) equals: #fixed.
+			self assert: (layout statusOfSlotKind: #magazine) equals: #unspecified.
+			mount := layout fixedMounts first.
+			self assert: mount effects equals: #(#(stability percent 0.30)).
+			self assert: mount evidence equals: 'Weapons!P63'.
+			self assert: mount attachment isNil ].
+	self assert: stoner fixedMounts first inheritedEvidence isNil.
+	self
+		assert: quietRoar fixedMounts first inheritedEvidence
+		equals: 'Weapons!P64'.
+	qdc := catalog modCatalogue definitionAt: 'attachment.workbook72'.
+	self assert: qdc effects equals: #(#(stability percent 0.20)).
+	bluescreen := catalog weaponMountLayoutForType: 'weapon.launch.bluescreen'.
+	self assertEmpty: bluescreen fixedMounts
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testWorkbookFixedOpticsRetainCatalogLinkAndInheritedRows [
+	| catalog gr9 dare cricket scope |
+	catalog := CIGameItemTypes buildCatalog.
+	gr9 := (catalog weaponReferenceAt: 'Weapons!C70') mountLayout.
+	dare := (catalog weaponReferenceAt: 'Weapons!C71') mountLayout.
+	cricket := (catalog weaponReferenceAt: 'Weapons!C72') mountLayout.
+	{gr9.
+		dare.
+		cricket}
+		do: [ :layout | 
+			| mount |
+			self assert: (layout statusOfSlotKind: #optics) equals: #fixed.
+			mount := layout fixedMounts first.
+			self assert: mount effects equals: #(#(criticalHitChance percent 0.05)).
+			self assert: mount evidence equals: 'Weapons!P70' ].
+	scope := gr9 fixedMounts first attachment.
+	self assert: scope id equals: 'attachment.workbook8'.
+	self assert: scope kind equals: #factoryAttachment.
+	self assert: scope effects equals: gr9 fixedMounts first effects.
+	self assert: dare fixedMounts first inheritedEvidence equals: 'Weapons!P71'.
+	self assert: cricket fixedMounts first inheritedEvidence equals: 'Weapons!P72'.
+	self
+		assertEmpty: (catalog weaponReferenceAt: 'Weapons!C158') mountLayout fixedMounts
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testWorkbookGadgetInventoryKeepsIdentityAndUsesEquippedSkillTier [
 	| catalog type store path owner gadget gear equipped restored rows graph |
 	catalog := CIGameItemTypes buildCatalog.

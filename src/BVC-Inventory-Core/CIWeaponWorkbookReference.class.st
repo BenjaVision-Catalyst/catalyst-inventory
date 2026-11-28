@@ -8,7 +8,8 @@ Class {
 		'kind',
 		'fields',
 		'fieldReferences',
-		'itemDefinitionIdentifier'
+		'itemDefinitionIdentifier',
+		'fixedMounts'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -17,6 +18,11 @@ Class {
 { #category : 'instance creation' }
 CIWeaponWorkbookReference class >> fromWorkbookRow: row sheet: title [
 	^ self new initializeWorkbookRow: row sheet: title
+]
+
+{ #category : 'initialization' }
+CIWeaponWorkbookReference >> addFixedMount: mount [
+	fixedMounts := (fixedMounts ifNil: [ #() ]) copyWith: mount
 ]
 
 { #category : 'accessing' }
@@ -65,6 +71,7 @@ CIWeaponWorkbookReference >> mountLayout [
 	^ CIWeaponMountLayout
 		fromNotation: (self fieldAt: #socketNotation)
 		evidence: (self evidenceForField: #socketNotation)
+		fixedMounts: (fixedMounts ifNil: [ #() ])
 ]
 
 { #category : 'accessing' }

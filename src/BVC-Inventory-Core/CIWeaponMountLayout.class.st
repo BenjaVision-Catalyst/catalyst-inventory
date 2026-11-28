@@ -11,7 +11,8 @@ Class {
 		'reportedSlotCount',
 		'missingSlotKinds',
 		'longRailReported',
-		'unresolvedMarkers'
+		'unresolvedMarkers',
+		'fixedMounts'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -22,9 +23,26 @@ CIWeaponMountLayout class >> fromNotation: text evidence: source [
 	^ self new initializeFromNotation: text evidence: source
 ]
 
+{ #category : 'instance creation' }
+CIWeaponMountLayout class >> fromNotation: text evidence: source fixedMounts: mounts [
+	^ (self fromNotation: text evidence: source)
+		fixedMounts: mounts;
+		yourself
+]
+
 { #category : 'accessing' }
 CIWeaponMountLayout >> evidence [
 	^ evidence ifNotNil: #copy
+]
+
+{ #category : 'accessing' }
+CIWeaponMountLayout >> fixedMounts [
+	^ fixedMounts ifNil: [ #() ] ifNotNil: #copy
+]
+
+{ #category : 'initialization' }
+CIWeaponMountLayout >> fixedMounts: mounts [
+	fixedMounts := mounts asArray copy
 ]
 
 { #category : 'initialization' }
@@ -88,6 +106,8 @@ CIWeaponMountLayout >> status [
 
 { #category : 'testing' }
 CIWeaponMountLayout >> statusOfSlotKind: aSlotKind [
+	(self fixedMounts anySatisfy: [ :mount | mount slotKind = aSlotKind ])
+		ifTrue: [ ^ #fixed ].
 	status = #notApplicable ifTrue: [ ^ #notApplicable ].
 	(reportedSlotCount = 0 or: [ missingSlotKinds includes: aSlotKind ])
 		ifTrue: [ ^ #absent ].

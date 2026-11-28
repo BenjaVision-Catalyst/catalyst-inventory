@@ -46,6 +46,25 @@ CIWorkbookWeaponData class >> namedPart8 [
 ]
 
 { #category : 'registration' }
+CIWorkbookWeaponData class >> registerFixedMountNotesIn: catalog [
+	#(#('C63' 'C63' muzzle #(#(stability percent 0.30)) nil) #('C64' 'C63' muzzle #(#(stability percent 0.30)) nil) #('C70' 'C70' optics #(#(criticalHitChance percent 0.05)) 'attachment.workbook8') #('C71' 'C70' optics #(#(criticalHitChance percent 0.05)) nil) #('C72' 'C70' optics #(#(criticalHitChance percent 0.05)) nil))
+		do: [ :row | 
+			| target original attachment |
+			target := catalog weaponReferenceAt: 'Weapons!' , row first.
+			original := catalog weaponReferenceAt: 'Weapons!' , row second.
+			attachment := row fifth
+					ifNotNil: [ :id | catalog modCatalogue definitionAt: id ].
+			target
+				addFixedMount: (CIWeaponFixedMount
+						slot: row third
+						effects: row fourth
+						evidence: (original evidenceForField: #columnP)
+						inheritedEvidence: (target == original
+								ifFalse: [ target evidenceForField: #columnP ])
+						attachment: attachment) ]
+]
+
+{ #category : 'registration' }
 CIWorkbookWeaponData class >> registerIn: catalog [
 	#(statsPart1 statsPart2 statsPart3 statsPart4 statsPart5 statsPart6 statsPart7 statsPart8 statsPart9 statsPart10 statsPart11 statsPart12 statsPart13 statsPart14 statsPart15 statsPart16)
 		do: [ :selector | 
@@ -59,7 +78,8 @@ CIWorkbookWeaponData class >> registerIn: catalog [
 				do: [ :row | 
 					catalog
 						registerWeaponReference: (CIWeaponWorkbookReference fromWorkbookRow: row sheet: 'Weapons Named + Exotics') ] ].
-	self registerSupportedNamedWeaponsIn: catalog
+	self registerSupportedNamedWeaponsIn: catalog.
+	self registerFixedMountNotesIn: catalog
 ]
 
 { #category : 'registration' }
