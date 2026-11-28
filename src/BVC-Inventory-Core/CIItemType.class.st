@@ -30,9 +30,21 @@ CIItemType >> inventoryItem: itemIdentifier values: values [
 	self subclassResponsibility
 ]
 
+{ #category : 'spawning' }
+CIItemType >> inventoryItem: itemIdentifier values: values talentIdentifier: aTalentIdentifier [
+	aTalentIdentifier
+		ifNotNil: [ self error: 'This item type cannot carry a talent' ].
+	^ self inventoryItem: itemIdentifier values: values
+]
+
 { #category : 'descriptions' }
 CIItemType >> inventoryItemDescription [
 	^ MAContainer new
+]
+
+{ #category : 'accessing' }
+CIItemType >> talentEligibility [
+	^ nil
 ]
 
 { #category : 'validation' }

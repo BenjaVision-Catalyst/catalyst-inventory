@@ -82,10 +82,18 @@ CIGearType >> inspectorSectionsAtUtilityTier: tier item: item [
 
 { #category : 'instance creation' }
 CIGearType >> inventoryItem: itemIdentifier values: values [
+	^ self
+		inventoryItem: itemIdentifier
+		values: values
+		talentIdentifier: nil
+]
+
+{ #category : 'spawning' }
+CIGearType >> inventoryItem: itemIdentifier values: values talentIdentifier: aTalentIdentifier [
 	| attributes item metadata |
 	self validateInventoryItemValues: values.
 	attributes := attributeSpecs
-			collect: [ :spec |
+			collect: [ :spec | 
 				| amount |
 				amount := values at: spec first.
 				CIInventoryGearAttributeSummary
@@ -98,12 +106,15 @@ CIGearType >> inventoryItem: itemIdentifier values: values [
 	metadata := Dictionary new
 			at: #presentationKind put: 'gear';
 			at: #inventoryTypeCount put: 1;
+			at: #talentIdentifier put: aTalentIdentifier;
+			at: #talentIdentifiers
+				put: (aTalentIdentifier ifNil: [ #() ] ifNotNil: [ {aTalentIdentifier} ]);
 			at: #gearSlotIdentifier put: slotIdentifier;
 			at: #primaryAttribute put: attributes first;
 			at: #rolledAttributes put: attributes allButFirst;
 			at: #modSlots
 				put: (socketIdentifiers
-						collect: [ :id |
+						collect: [ :id | 
 							CIInventoryModSlotSummary
 								slot: id
 								equippedMod: (values at: id ifAbsent: [ nil ]) ]);
@@ -135,4 +146,9 @@ CIGearType >> inventoryItemDescription [
 								accessor: (MADictionaryAccessor key: identifier);
 								label: identifier capitalized;
 								yourself ])
+]
+
+{ #category : 'accessing' }
+CIGearType >> talentEligibility [
+	^ slotIdentifier asSymbol
 ]

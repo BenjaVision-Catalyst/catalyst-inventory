@@ -71,22 +71,34 @@ CIInventoryReadStore >> gearSetSlotFor: row [
 
 { #category : 'writing' }
 CIInventoryReadStore >> grantItem: itemIdentifier type: typeIdentifier values: values from: catalog forOwner: identity [
+	^ self
+		grantItem: itemIdentifier
+		type: typeIdentifier
+		values: values
+		from: catalog
+		forOwner: identity
+		using: [ Random new next ]
+]
+
+{ #category : 'spawning' }
+CIInventoryReadStore >> grantItem: itemIdentifier type: typeIdentifier values: values from: catalog forOwner: identity using: random [
 	| rows item matches count updated |
 	self validateOwner: identity.
 	(itemIdentifier isString and: [ itemIdentifier isNotEmpty ])
 		ifFalse: [ self error: 'Inventory item identifier required' ].
 	item := (catalog typeAt: typeIdentifier)
 			inventoryItem: itemIdentifier
-			values: values.
+			values: values
+			talentIdentifier: (catalog rollTalentFor: typeIdentifier using: random).
 	rows := rowsByOwner at: identity ifAbsent: [ #() ].
 	(item isKindOf: CIInventoryEquipmentSummary)
-		ifTrue: [ matches := [ :row |
+		ifTrue: [ matches := [ :row | 
 				(row isKindOf: CIInventoryEquipmentSummary)
 					and: [ row definitionIdentifier = typeIdentifier ] ].
 			count := (rows count: matches) + 1.
 			item inventoryTypeCount: count.
 			rows := rows
-					collect: [ :row |
+					collect: [ :row | 
 						(matches value: row)
 							ifTrue: [ updated := row copy.
 								updated inventoryTypeCount: count.

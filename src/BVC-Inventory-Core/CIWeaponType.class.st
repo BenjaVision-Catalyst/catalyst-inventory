@@ -110,6 +110,14 @@ CIWeaponType >> inspectorSectionsAtUtilityTier: tier item: item [
 
 { #category : 'instance creation' }
 CIWeaponType >> inventoryItem: id values: values [
+	^ self
+		inventoryItem: id
+		values: values
+		talentIdentifier: nil
+]
+
+{ #category : 'spawning' }
+CIWeaponType >> inventoryItem: id values: values talentIdentifier: aTalentIdentifier [
 	| item |
 	self validateInventoryItemValues: values.
 	item := CIInventoryWeaponToolSummary
@@ -118,6 +126,9 @@ CIWeaponType >> inventoryItem: id values: values [
 			metadata: (Dictionary new
 					at: #presentationKind put: 'weapon';
 					at: #inventoryTypeCount put: 1;
+					at: #talentIdentifier put: aTalentIdentifier;
+					at: #talentIdentifiers
+						put: (aTalentIdentifier ifNil: [ #() ] ifNotNil: [ {aTalentIdentifier} ]);
 					at: #comparisonStats
 						put: {CIInventoryComparisonStat
 									identifier: 'weaponDamage'
@@ -125,7 +136,7 @@ CIWeaponType >> inventoryItem: id values: values [
 									value: (values at: 'weaponDamage')};
 					at: #modSlots
 						put: (socketIdentifiers
-								collect: [ :socket |
+								collect: [ :socket | 
 									CIInventoryModSlotSummary
 										slot: socket
 										equippedMod: (values at: socket ifAbsent: [ nil ]) ]);
@@ -156,6 +167,11 @@ CIWeaponType >> inventoryItemDescription [
 CIWeaponType >> optimalRangeMetres [
 	^ (coreStats detect: [ :stat | stat first = 'Optimal range' ] ifNone: [ ^ nil ])
 		second
+]
+
+{ #category : 'accessing' }
+CIWeaponType >> talentEligibility [
+	^ #weapon
 ]
 
 { #category : 'private' }
