@@ -98,6 +98,22 @@ CIWorkbookWeaponData class >> registerExoticMinorRulesIn: catalog [
 ]
 
 { #category : 'registration' }
+CIWorkbookWeaponData class >> registerFirstSightReloadIn: catalog [
+	| weapon statistics reload |
+	weapon := catalog typeAt: 'weapon.workbook.firstSight'.
+	statistics := weapon statisticsReference.
+	reload := CIWeaponFixedAttribute
+			fromWorkbookRow: {'emptyReloadSeconds'.
+					'Empty reload time (s)'.
+					(statistics fieldAt: #emptyReloadSeconds) asNumber.
+					#seconds.
+					#intrinsic.
+					#always}
+			evidence: (statistics evidenceForField: #emptyReloadSeconds).
+	weapon fixedAttributes: weapon fixedAttributes , {reload}
+]
+
+{ #category : 'registration' }
 CIWorkbookWeaponData class >> registerFixedMountNotesIn: catalog [
 	#(#('C63' 'C63' muzzle #(#(stability percent 0.30)) nil) #('C64' 'C63' muzzle #(#(stability percent 0.30)) nil) #('C70' 'C70' optics #(#(criticalHitChance percent 0.05)) 'attachment.workbook8') #('C71' 'C70' optics #(#(criticalHitChance percent 0.05)) nil) #('C72' 'C70' optics #(#(criticalHitChance percent 0.05)) nil))
 		do: [ :row | 
@@ -138,7 +154,8 @@ CIWorkbookWeaponData class >> registerFixedNamedWeaponItemsIn: catalog [
 							evidence: (row fourth fifth = #intrinsic
 									ifTrue: [ statistics evidenceForField: #headshotDamage ]
 									ifFalse: [ named evidenceForField: #talentOrAttribute ])}.
-			catalog register: weapon ]
+			catalog register: weapon ].
+	self registerFirstSightReloadIn: catalog
 ]
 
 { #category : 'registration' }

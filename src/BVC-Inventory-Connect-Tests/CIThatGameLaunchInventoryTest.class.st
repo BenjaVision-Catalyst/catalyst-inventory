@@ -780,15 +780,42 @@ CIThatGameLaunchInventoryTest >> testExpertiseProgressionRequiresProficiencyAndR
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testFirstSightUsesDocumentedEmptyReloadTime [
+	| catalog weapon reload item |
+	catalog := CIGameItemTypes buildCatalog.
+	weapon := catalog typeAt: 'weapon.workbook.firstSight'.
+	reload := weapon fixedAttributes
+			detect: [ :attribute | attribute statIdentifier = 'emptyReloadSeconds' ].
+	self assert: reload magnitude equals: 2.8.
+	self assert: reload unit equals: #seconds.
+	self assert: reload role equals: #intrinsic.
+	self assert: reload evidence equals: 'Weapons!G8'.
+	self
+		assert: (weapon namedReference fieldAt: #talentOrAttribute)
+		equals: '+30% HSD, +50% reload speed debuff'.
+	item := CIItemGenerator new
+			generate: 'firstSight'
+			type: weapon id
+			values: {'weaponDamage' -> 0.10} asDictionary
+			from: catalog
+			using: [ 0 ].
+	self
+		assert: (item comparisonStats collect: #statIdentifier)
+		equals: #('weaponDamage' 'innateHeadshotDamage' 'emptyReloadSeconds').
+	self assert: (item comparisonStats collect: #value) equals: #(0.10 0.85 2.8)
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testFixedNamedWeaponAttributesGenerateWithoutAReplacementRoll [
-	| catalog generator cases weapon roll fixed item |
+	| catalog generator cases weapon roll fixed item comparison |
 	catalog := CIGameItemTypes buildCatalog.
 	generator := CIItemGenerator new.
-	cases := #(#('firstSight' 'innateHeadshotDamage' 0.85 'Weapons!O8') #('backupBoomstick' 'weaponDamage' 0.17 'Weapons Named + Exotics!E59') #('theMop' 'armorOnKill' 0.10 'Weapons Named + Exotics!E64') #('theWhiteDeath' 'headshotDamage' 1.37 'Weapons Named + Exotics!E76') #('ohCarol' 'headshotDamage' 1.37 'Weapons Named + Exotics!E77') #('tdiKardCustom' 'skillTier' 1 'Weapons Named + Exotics!E97')).
+	cases := #(#('firstSight' 'innateHeadshotDamage' 0.85 'Weapons!O8') #('firstSight' 'emptyReloadSeconds' 2.8 'Weapons!G8') #('backupBoomstick' 'weaponDamage' 0.17 'Weapons Named + Exotics!E59') #('theMop' 'armorOnKill' 0.10 'Weapons Named + Exotics!E64') #('theWhiteDeath' 'headshotDamage' 1.37 'Weapons Named + Exotics!E76') #('ohCarol' 'headshotDamage' 1.37 'Weapons Named + Exotics!E77') #('tdiKardCustom' 'skillTier' 1 'Weapons Named + Exotics!E97')).
 	cases
 		do: [ :row | 
 			weapon := catalog typeAt: 'weapon.workbook.' , row first.
-			fixed := weapon fixedAttributes first.
+			fixed := weapon fixedAttributes
+					detect: [ :attribute | attribute statIdentifier = row second ].
 			self assert: fixed evidence equals: row fourth.
 			roll := row second = 'weaponDamage'
 					ifTrue: [ Dictionary new ]
@@ -799,8 +826,9 @@ CIThatGameLaunchInventoryTest >> testFixedNamedWeaponAttributesGenerateWithoutAR
 					values: roll
 					from: catalog
 					using: [ 0 ].
-			self assert: item comparisonStats last statIdentifier equals: row second.
-			self assert: item comparisonStats last value equals: row third.
+			comparison := item comparisonStats
+					detect: [ :stat | stat statIdentifier = row second ].
+			self assert: comparison value equals: row third.
 			self assert: item talentIdentifier isNil.
 			roll at: row second put: 0.05.
 			self
