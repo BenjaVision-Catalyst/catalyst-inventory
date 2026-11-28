@@ -5,7 +5,8 @@ Class {
 		'id',
 		'displayName',
 		'eligibility',
-		'parameters'
+		'parameters',
+		'comment'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -18,6 +19,22 @@ CIItemTalent class >> id: anId name: aName eligibility: aKind parameters: aDicti
 		name: aName
 		eligibility: aKind
 		parameters: aDictionary
+]
+
+{ #category : 'instance creation' }
+CIItemTalent class >> id: anId name: aName eligibility: aKind parameters: aDictionary comment: aString [
+	^ (self
+		id: anId
+		name: aName
+		eligibility: aKind
+		parameters: aDictionary)
+		initializeComment: aString;
+		yourself
+]
+
+{ #category : 'accessing' }
+CIItemTalent >> comment [
+	^ comment ifNil: [ '' ] ifNotNil: [ comment copy ]
 ]
 
 { #category : 'accessing' }
@@ -33,6 +50,11 @@ CIItemTalent >> eligibility [
 { #category : 'accessing' }
 CIItemTalent >> id [
 	^ id copy
+]
+
+{ #category : 'initialization' }
+CIItemTalent >> initializeComment: aString [
+	comment := aString copy
 ]
 
 { #category : 'initialization' }
