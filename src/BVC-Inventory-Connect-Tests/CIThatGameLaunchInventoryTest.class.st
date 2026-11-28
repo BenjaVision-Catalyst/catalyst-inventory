@@ -3312,6 +3312,24 @@ CIThatGameLaunchInventoryTest >> testStandardWeaponClassGenerationUsesOnlyDocume
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testStrikerShieldResolvesActiveRegenerationFromWorkbookTiers [
+	| catalog striker track stats |
+	catalog := CIGameItemTypes buildCatalog.
+	striker := (catalog gadgetFamilyNamed: 'Shield') variantNamed: 'Striker'.
+	track := striker trackNamed: 'Active / Regeneration'.
+	self assert: track evidence equals: 'Skill List!C283:M283'.
+	self assert: (track magnitudeAtTier: 0) equals: 39817.
+	#(43798.7 47780.4 51762.1 55743.8 59725.5 63707.2)
+		withIndexDo: [ :expected :tier | 
+			stats := striker knownStatsAtTier: tier.
+			self assert: (stats at: track label) closeTo: expected ].
+	stats := striker knownStatsAtTier: #overcharge.
+	self assert: (stats at: track label) closeTo: 63707.2.
+	self assert: (striker expertiseRule contributionAtGrade: 20) closeTo: 0.20.
+	self assert: striker expertiseRule operation isNil
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testStrikerShieldUsesWorkbookBuffRangeForAllies [
 	| catalog striker profile bonus tierZero tierOne overcharge track |
 	catalog := CIGameItemTypes buildCatalog.
