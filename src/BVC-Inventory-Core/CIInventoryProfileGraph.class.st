@@ -549,7 +549,7 @@ CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets
 
 { #category : 'projection' }
 CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets: savedSets catalog: catalog modStorageAllowance: allowance [
-	| graph descriptions objects cards itemsById tier visibleItems |
+	| graph descriptions objects cards itemsById tier visibleItems workbookTier |
 	visibleItems := items first: (items size min: 32).
 	(items allButFirst: visibleItems size)
 		do: [ :item | 
@@ -572,6 +572,7 @@ CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets
 	itemsById := Dictionary new.
 	items do: [ :item | itemsById at: item itemIdentifier put: item ].
 	tier := self utilityTierForRows: items.
+	workbookTier := self workbookGadgetTierForRows: items.
 	cards
 		do: [ :card | 
 			| values item type sections |
@@ -587,7 +588,9 @@ CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets
 							sections := self
 									inspectorSectionsFor: type
 									item: item
-									utilityTier: tier
+									utilityTier: ((type respondsTo: #workbookVariantDefinition)
+											ifTrue: [ workbookTier ]
+											ifFalse: [ tier ])
 									catalog: catalog.
 							sections := self
 									applyingMagazineEffectsTo: sections
@@ -808,4 +811,18 @@ CIInventoryProfileGraph class >> valuesFor: item fields: fields [
 				ifTrue: [ value := item perform: selector.
 					value ifNotNil: [ values at: selector asString put: value ] ] ].
 	^ values
+]
+
+{ #category : 'projection' }
+CIInventoryProfileGraph class >> workbookGadgetTierForRows: rows [
+	^ rows
+		inject: 0
+		into: [ :total :row | 
+			| core |
+			core := ((row isKindOf: CIInventoryGearSummary)
+					and: [ row equippedSlotIdentifier notNil ])
+					ifTrue: [ row primaryAttribute ].
+			(core notNil and: [ core attributeIdentifier = 'skillTier' ])
+				ifTrue: [ total + core value ]
+				ifFalse: [ total ] ]
 ]

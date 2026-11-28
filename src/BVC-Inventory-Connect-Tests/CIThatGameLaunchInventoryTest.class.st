@@ -521,6 +521,64 @@ CIThatGameLaunchInventoryTest >> testWorkbookFactoryAttachmentsAreLockedAndPersi
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testWorkbookGadgetInventoryKeepsIdentityAndUsesEquippedSkillTier [
+	| catalog type store path owner gadget gear equipped restored rows graph |
+	catalog := CIGameItemTypes buildCatalog.
+	catalog gadgetFamilies
+		do: [ :family | 
+			family variants
+				do: [ :variant | 
+					type := catalog typeAt: (CIWorkbookGadgetData identifierFor: variant).
+					self assert: type workbookVariantDefinition identicalTo: variant ] ].
+	type := catalog typeAt: 'gadget.workbook.pulse.scanner'.
+	self assert: (type baseStats at: 'Effect Radius') equals: 100.
+	self
+		assert: ((catalog typeAt: 'gadget.pulse.scanner') baseStats at: #scanRadiusMetres)
+		equals: 20.
+	path := (directory / 'gadget.ston') fullName.
+	store := CIInventorySnapshotStore at: path.
+	owner := 'workbook-gadget-owner'.
+	gadget := store
+			grantItem: 'scanner'
+			type: type id
+			values: Dictionary new
+			from: catalog
+			forOwner: owner.
+	gear := store
+			grantItem: 'vest'
+			type: 'gear.launch.morrowWorks.chest'
+			values: (Dictionary new
+					at: 'skillTier' put: 1;
+					yourself)
+			from: catalog
+			forOwner: owner.
+	self
+		assert: (CIInventoryProfileGraph
+				workbookGadgetTierForRows: {gadget.
+						gear})
+		equals: 0.
+	equipped := store
+			rowsAfterEquipping: #(#('GadgetLeft' 'scanner') #('Chest' 'vest'))
+			forOwner: owner
+			outfit: false.
+	store replaceRows: equipped forOwner: owner.
+	restored := CIInventorySnapshotStore at: path.
+	rows := restored allRowsForOwner: owner.
+	self assert: rows first definitionIdentifier equals: type id.
+	self assert: rows first equippedSlotIdentifier equals: 'GadgetLeft'.
+	self
+		assert: (CIInventoryProfileGraph workbookGadgetTierForRows: rows)
+		equals: 1.
+	graph := CIInventoryProfileGraph
+			forVerifiedUser: owner
+			rows: rows
+			savedSets: Dictionary new
+			catalog: catalog.
+	self assert: ((STON toString: graph) includesSubstring: '9.200 s').
+	self assert: ((STON toString: graph) includesSubstring: '100 m')
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testWorkbookGadgetTiersKeepMissingAndOverchargeSeparate [
 	| catalog pulse scanner tactician track repair cooldown |
 	catalog := CIGameItemTypes buildCatalog.

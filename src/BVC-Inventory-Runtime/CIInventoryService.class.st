@@ -364,3 +364,18 @@ CIInventoryService >> withSavedSet: setIdentifier forVerifiedUser: identity do: 
 								value: sets ] ].
 			nil ]
 ]
+
+{ #category : 'reading' }
+CIInventoryService >> workbookGadgetStatsFor: itemIdentifier forVerifiedUser: identity [
+	^ savedSetsLock
+		critical: [ | rows gadget type tier |
+			rows := readStore allRowsForOwner: identity.
+			gadget := rows
+					detect: [ :row | row itemIdentifier = itemIdentifier ]
+					ifNone: [ self error: 'Gadget is not owned' ].
+			type := itemTypeCatalog typeAt: gadget definitionIdentifier.
+			(type respondsTo: #workbookVariantDefinition)
+				ifFalse: [ self error: 'This item is not a workbook gadget' ].
+			tier := CIInventoryProfileGraph workbookGadgetTierForRows: rows.
+			type statsAtUtilityTier: tier ]
+]
