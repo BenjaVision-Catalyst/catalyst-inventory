@@ -67,6 +67,49 @@ CIThatGameLaunchInventoryTest >> tearDown [
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testBluescreenStackBandsShieldGateAndMarkedKill [
+	| catalog bluescreen result nearby |
+	catalog := CIGameItemTypes buildCatalog.
+	bluescreen := CIExoticWeaponEncounter
+			weapon: 'bluescreen'
+			talent: (catalog talentAt: 'disruptorRounds')
+			magazineCapacity: nil.
+	11
+		timesRepeat: [ bluescreen recordBluescreenHitFrom: 'bluescreen' on: 'marked' ].
+	self
+		assertEmpty: (bluescreen
+				bluescreenApplicationsOnDeployingShield: true
+				nearbyByMarkedTarget: Dictionary new).
+	result := bluescreen
+			bluescreenApplicationsOnDeployingShield: false
+			nearbyByMarkedTarget: Dictionary new.
+	self assert: (result collect: #statusIdentifier) equals: #(pulse disrupt).
+	self
+		assert: (result allSatisfy: [ :application | application durationSeconds = 5 ]).
+	self
+		assertEmpty: (bluescreen
+				bluescreenApplicationsOnDeployingShield: false
+				nearbyByMarkedTarget: Dictionary new).
+	52
+		timesRepeat: [ bluescreen recordBluescreenHitFrom: 'bluescreen' on: 'marked' ].
+	nearby := {'marked'
+				-> {'edge' -> 10.
+						'outside' -> 11} asDictionary} asDictionary.
+	self
+		assertEmpty: (bluescreen
+				bluescreenApplicationsOnKillOf: 'unmarked'
+				nearbyByMarkedTarget: nearby).
+	result := bluescreen
+			bluescreenApplicationsOnKillOf: 'marked'
+			nearbyByMarkedTarget: nearby.
+	self
+		assert: (result collect: #statusIdentifier)
+		equals: #(pulse disrupt disorient).
+	self
+		assert: (result allSatisfy: [ :application | application targetIdentifier = 'edge' ])
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testCapacitorAndLibertyHitStacksUseWorkbookParameters [
 	| catalog capacitor liberty |
 	catalog := CIGameItemTypes buildCatalog.
@@ -186,6 +229,47 @@ CIThatGameLaunchInventoryTest >> testClassifiedUpgradesFollowEquippedSlots [
 	self
 		assert: (jupiter effectiveSetParameters at: #damageAmplificationToStatusTargets)
 		equals: 0.30
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testDoctorHomeMarksExpireAndNemesisKeepsItsDocumentedBounds [
+	| catalog doctor nemesis pickup |
+	catalog := CIGameItemTypes buildCatalog.
+	doctor := CIExoticWeaponEncounter
+			weapon: 'doctor'
+			talent: (catalog talentAt: 'doctorHome')
+			magazineCapacity: 10.
+	self
+		deny: (doctor
+				recordDoctorHomeHitFrom: 'other'
+				on: 'target'
+				at: 0).
+	self assert: (doctor doctorHomePickupOnKillOf: 'target' at: 0) isNil.
+	self
+		assert: (doctor
+				recordDoctorHomeHitFrom: 'doctor'
+				on: 'target'
+				at: 1).
+	pickup := doctor doctorHomePickupOnKillOf: 'target' at: 5.
+	self assert: pickup fraction equals: 0.10.
+	self deny: pickup grantsBonusArmor.
+	self assert: (doctor doctorHomePickupOnKillOf: 'target' at: 5) isNil.
+	doctor
+		recordDoctorHomeHitFrom: 'doctor'
+		on: 'expired'
+		at: 5.
+	self assert: (doctor doctorHomePickupOnKillOf: 'expired' at: 10) isNil.
+	nemesis := CIExoticWeaponEncounter
+			weapon: 'nemesis'
+			talent: (catalog talentAt: 'electromagneticAccelerator')
+			magazineCapacity: nil.
+	self assert: nemesis nemesisChargeDamageBounds equals: #(0 1).
+	self
+		assert: (nemesis damageMultiplierForResolvedNemesisCharge: 0.5)
+		equals: 0.5.
+	self
+		should: [ nemesis damageMultiplierForResolvedNemesisCharge: 1.1 ]
+		raise: Error
 ]
 
 { #category : 'tests' }
@@ -728,6 +812,50 @@ CIThatGameLaunchInventoryTest >> testRedLotusCombatStacksDecayAndRefreshWithLoad
 		mode: #pve.
 	self assert: encounter recordWeaponHit equals: 0.
 	self assert: encounter redLotusDamageMultiplier equals: 1
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testScorpioVenomThresholdsAndStackNineRefresh [
+	| catalog scorpio outcome |
+	catalog := CIGameItemTypes buildCatalog.
+	scorpio := CIExoticWeaponEncounter
+			weapon: 'scorpio'
+			talent: (catalog talentAt: 'septicShock')
+			magazineCapacity: nil.
+	outcome := scorpio
+			recordScorpioHitFrom: 'scorpio'
+			on: 'target'
+			venomStacks: 6
+			pelletHitFraction: 0.5
+			at: 0.
+	self assert: outcome triggeredStatuses equals: #(poison disorient shock).
+	self assert: outcome pelletHitFraction equals: 0.5.
+	self assert: outcome damageMultiplier isNil.
+	outcome := scorpio
+			recordScorpioHitFrom: 'scorpio'
+			on: 'target'
+			venomStacks: 2
+			pelletHitFraction: 1
+			at: 0.
+	self assert: outcome stackCount equals: 8.
+	self assert: outcome damageMultiplier equals: 1.20.
+	self deny: outcome refreshesDamageDebuff.
+	outcome := scorpio
+			recordScorpioHitFrom: 'scorpio'
+			on: 'target'
+			venomStacks: 2
+			pelletHitFraction: 1
+			at: 0.
+	self assert: outcome stackCount equals: 9.
+	self assert: outcome refreshesDamageDebuff.
+	outcome := scorpio
+			recordScorpioHitFrom: 'scorpio'
+			on: 'target'
+			venomStacks: 1
+			pelletHitFraction: 1
+			at: 10.
+	self assert: outcome stackCount equals: 1.
+	self assertEmpty: outcome triggeredStatuses
 ]
 
 { #category : 'tests' }
