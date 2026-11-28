@@ -9,6 +9,12 @@ Class {
 	#package : 'BVC-Inventory-Connect-Tests'
 }
 
+{ #category : 'support' }
+CIThatGameLaunchInventoryTest >> assertSignatureAmmo: grant personal: personal group: group [
+	self assert: grant personalPoints equals: personal.
+	self assert: grant groupMemberPoints equals: group
+]
+
 { #category : 'helpers' }
 CIThatGameLaunchInventoryTest >> gearRowsForFamily: familyId slots: slots catalogue: catalog [
 	^ slots
@@ -44,6 +50,16 @@ CIThatGameLaunchInventoryTest >> setUp [
 	super setUp.
 	directory := FileLocator temp / ('thatgame-inventory-' , UUID new asString).
 	directory ensureCreateDirectory
+]
+
+{ #category : 'support' }
+CIThatGameLaunchInventoryTest >> signatureAmmoEncounterNamed: name selected: perkIds [
+	^ CISpecializationEncounter
+		forLoadout: (CIGameItemTypes buildCatalog
+				specializationLoadoutNamed: name
+				selected: perkIds)
+		mode: #pve
+		startedAt: 0
 ]
 
 { #category : 'running' }
@@ -1119,6 +1135,190 @@ CIThatGameLaunchInventoryTest >> testScorpioVenomThresholdsAndStackNineRefresh [
 			at: 10.
 	self assert: outcome stackCount equals: 1.
 	self assertEmpty: outcome triggeredStatuses
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSignatureAmmoDeviceDestructionAndMultikillsUseDistinctEvents [
+	| technician gunner demolitionist |
+	technician := self
+			signatureAmmoEncounterNamed: 'Technician'
+			selected: #('technician.micromissileammoacquisition' 'technician.groupsignatureammoacquisition').
+	gunner := self
+			signatureAmmoEncounterNamed: 'Gunner'
+			selected: #('gunner.762minigunammoacquisition' 'gunner.groupsignatureammoacquisition').
+	demolitionist := self
+			signatureAmmoEncounterNamed: 'Demolitionist'
+			selected: #('demolitionist.40mmammoacquisition' 'demolitionist.groupsignatureammosupply').
+	#(skillProxy drone robotics)
+		do: [ :target | 
+			self
+				assertSignatureAmmo: (technician
+						signatureAmmoForDestroyedHostileTarget: target
+						fromSignatureWeapon: true)
+				personal: 3
+				group: 1 ].
+	self
+		assertSignatureAmmo: (technician
+				signatureAmmoForDestroyedHostileTarget: #human
+				fromSignatureWeapon: false)
+		personal: 0
+		group: 0.
+	self
+		assertSignatureAmmo: (gunner
+				signatureAmmoForKillsWithoutReleasingTrigger: 1
+				fromSignatureWeapon: false)
+		personal: 0
+		group: 0.
+	self
+		assertSignatureAmmo: (gunner
+				signatureAmmoForKillsWithoutReleasingTrigger: 2
+				fromSignatureWeapon: false)
+		personal: 3
+		group: 1.
+	self
+		assertSignatureAmmo: (gunner
+				signatureAmmoForKillsWithoutReleasingTrigger: 2
+				fromSignatureWeapon: true)
+		personal: 0
+		group: 0.
+	self
+		assertSignatureAmmo: (demolitionist
+				signatureAmmoForEnemyKillWithHeadshot: false
+				targetHadStatusEffect: false
+				explosive: true
+				distance: nil
+				fromSignatureWeapon: false)
+		personal: 3
+		group: 0.
+	self
+		assertSignatureAmmo: (demolitionist
+				signatureAmmoForExplosiveMultikill: 1
+				fromSignatureWeapon: false)
+		personal: 0
+		group: 0.
+	self
+		assertSignatureAmmo: (demolitionist
+				signatureAmmoForExplosiveMultikill: 2
+				fromSignatureWeapon: false)
+		personal: 0
+		group: 2.
+	self
+		assertSignatureAmmo: (demolitionist
+				signatureAmmoForExplosiveMultikill: 2
+				fromSignatureWeapon: true)
+		personal: 0
+		group: 0.
+	gunner := self
+			signatureAmmoEncounterNamed: 'Gunner'
+			selected: #('gunner.groupsignatureammoacquisition').
+	self
+		assertSignatureAmmo: (gunner
+				signatureAmmoForKillsWithoutReleasingTrigger: 2
+				fromSignatureWeapon: false)
+		personal: 0
+		group: 1
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSignatureAmmoSingleKillsHonorQualificationAndWeaponExclusions [
+	| sharpshooter survivalist firewall kill |
+	sharpshooter := self
+			signatureAmmoEncounterNamed: 'Sharpshooter'
+			selected: #('sharpshooter.50caliberammoacquisition' 'sharpshooter.groupsigantureammosupply' 'sharpshooter.breathcontrol').
+	survivalist := self
+			signatureAmmoEncounterNamed: 'Survivalist'
+			selected: #('survivalist.explosiveboltaqusition' 'survivalist.groupsigantureammosupply').
+	firewall := self
+			signatureAmmoEncounterNamed: 'Firewall'
+			selected: #('firewall.firewallammoacquisition' 'firewall.groupsignatureammoacquisition').
+	kill := [ :encounter :headshot :status :metres :signature | 
+		encounter
+			signatureAmmoForEnemyKillWithHeadshot: headshot
+			targetHadStatusEffect: status
+			explosive: false
+			distance: metres
+			fromSignatureWeapon: signature ].
+	self
+		assertSignatureAmmo: (kill
+				valueWithArguments: {sharpshooter.
+						true.
+						false.
+						nil.
+						false})
+		personal: 2
+		group: 1.
+	self
+		assertSignatureAmmo: (kill
+				valueWithArguments: {sharpshooter.
+						true.
+						false.
+						nil.
+						true})
+		personal: 0
+		group: 0.
+	self
+		assertSignatureAmmo: (kill
+				valueWithArguments: {sharpshooter.
+						false.
+						true.
+						nil.
+						false})
+		personal: 0
+		group: 0.
+	self
+		assertSignatureAmmo: (kill
+				valueWithArguments: {survivalist.
+						false.
+						true.
+						nil.
+						false})
+		personal: 3
+		group: 3.
+	self
+		assertSignatureAmmo: (kill
+				valueWithArguments: {survivalist.
+						false.
+						true.
+						nil.
+						true})
+		personal: 0
+		group: 0.
+	self
+		assertSignatureAmmo: (kill
+				valueWithArguments: {survivalist.
+						true.
+						false.
+						nil.
+						false})
+		personal: 0
+		group: 0.
+	self
+		assertSignatureAmmo: (kill
+				valueWithArguments: {firewall.
+						false.
+						false.
+						10.
+						false})
+		personal: 3
+		group: 1.
+	self
+		assertSignatureAmmo: (kill
+				valueWithArguments: {firewall.
+						false.
+						false.
+						10.01.
+						false})
+		personal: 0
+		group: 0.
+	self
+		assertSignatureAmmo: (kill
+				valueWithArguments: {firewall.
+						false.
+						false.
+						10.
+						true})
+		personal: 0
+		group: 0
 ]
 
 { #category : 'tests' }

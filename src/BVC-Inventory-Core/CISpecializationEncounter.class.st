@@ -180,6 +180,87 @@ CISpecializationEncounter >> reloadSpeedBonusForNextReloadAt: seconds [
 ]
 
 { #category : 'combat' }
+CISpecializationEncounter >> signatureAmmoForDestroyedHostileTarget: targetKind fromSignatureWeapon: signatureWeapon [
+	| triggers |
+	triggers := (#(skillProxy drone robotics) includes: targetKind)
+			ifTrue: [ #(hostileDeviceDestroyed) ]
+			ifFalse: [ #() ].
+	^ self
+		signatureAmmoForTriggers: triggers
+		fromSignatureWeapon: signatureWeapon
+		distance: nil
+]
+
+{ #category : 'combat' }
+CISpecializationEncounter >> signatureAmmoForEnemyKillWithHeadshot: headshot targetHadStatusEffect: statusAffected explosive: explosive distance: metres fromSignatureWeapon: signatureWeapon [
+	| triggers |
+	(metres isNil or: [ self isValidDistance: metres ])
+		ifFalse: [ self error: 'Invalid enemy distance' ].
+	triggers := OrderedCollection with: #enemyKill.
+	headshot ifTrue: [ triggers add: #headshotKill ].
+	statusAffected ifTrue: [ triggers add: #statusAffectedKill ].
+	explosive ifTrue: [ triggers add: #explosiveKill ].
+	^ self
+		signatureAmmoForTriggers: triggers
+		fromSignatureWeapon: signatureWeapon
+		distance: metres
+]
+
+{ #category : 'combat' }
+CISpecializationEncounter >> signatureAmmoForExplosiveMultikill: killCount fromSignatureWeapon: signatureWeapon [
+	"Evaluate the group multikill separately from each individual enemy kill."
+
+	^ self
+		signatureAmmoForKillCount: killCount
+		trigger: #explosiveMultikill
+		fromSignatureWeapon: signatureWeapon
+]
+
+{ #category : 'private' }
+CISpecializationEncounter >> signatureAmmoForKillCount: killCount trigger: trigger fromSignatureWeapon: signatureWeapon [
+	| triggers |
+	(killCount isInteger and: [ killCount >= 0 ])
+		ifFalse: [ self error: 'Invalid enemy kill count' ].
+	triggers := killCount > 1 ifTrue: [ {trigger} ] ifFalse: [ #() ].
+	^ self
+		signatureAmmoForTriggers: triggers
+		fromSignatureWeapon: signatureWeapon
+		distance: nil
+]
+
+{ #category : 'combat' }
+CISpecializationEncounter >> signatureAmmoForKillsWithoutReleasingTrigger: killCount fromSignatureWeapon: signatureWeapon [
+	^ self
+		signatureAmmoForKillCount: killCount
+		trigger: #uninterruptedTriggerMultikill
+		fromSignatureWeapon: signatureWeapon
+]
+
+{ #category : 'private' }
+CISpecializationEncounter >> signatureAmmoForTriggers: triggers fromSignatureWeapon: signatureWeapon distance: metres [
+	| personal group |
+	personal := 0.
+	group := 0.
+	perksById
+		valuesDo: [ :perk | 
+			| parameters trigger radius points |
+			parameters := perk eventParameters.
+			trigger := parameters
+					ifNotNil: [ parameters at: #signatureAmmoTrigger ifAbsent: [ nil ] ].
+			(triggers includes: trigger)
+				ifTrue: [ radius := parameters at: #radiusMetres ifAbsent: [ nil ].
+					((signatureWeapon and: [ parameters at: #excludesSignatureWeapon ]) not
+						and: [ radius isNil or: [ metres notNil and: [ metres <= radius ] ] ])
+						ifTrue: [ points := parameters at: #signatureAmmoPoints.
+							(parameters at: #signatureAmmoRecipient) = #personal
+								ifTrue: [ personal := personal + points ]
+								ifFalse: [ group := group + points ] ] ] ].
+	^ CISpecializationSignatureAmmoGrant
+		personalPoints: personal
+		groupMemberPoints: group
+]
+
+{ #category : 'combat' }
 CISpecializationEncounter >> supplyLineGrantsThrough: seconds [
 	| parameters total newlyDue |
 	self advanceTo: seconds.

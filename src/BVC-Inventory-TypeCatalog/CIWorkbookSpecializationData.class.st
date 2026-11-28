@@ -67,7 +67,22 @@ CIWorkbookSpecializationData class >> registerIn: catalog [
 				name: 'Firewall'
 				perks: (self firewallPerks
 						collect: [ :row | CISpecializationPerk fromWorkbookRow: row ])).
-	self registerEventParametersIn: catalog
+	self registerEventParametersIn: catalog.
+	self registerSignatureAmmoParametersIn: catalog
+]
+
+{ #category : 'registration' }
+CIWorkbookSpecializationData class >> registerSignatureAmmoParametersIn: catalog [
+	#(#('Sharpshooter' 'sharpshooter.50caliberammoacquisition' headshotKill personal 2 true) #('Sharpshooter' 'sharpshooter.groupsigantureammosupply' headshotKill group 1 true) #('Survivalist' 'survivalist.explosiveboltaqusition' statusAffectedKill personal 3 true) #('Survivalist' 'survivalist.groupsigantureammosupply' statusAffectedKill group 3 true) #('Technician' 'technician.micromissileammoacquisition' hostileDeviceDestroyed personal 3 false) #('Technician' 'technician.groupsignatureammoacquisition' hostileDeviceDestroyed group 1 false) #('Gunner' 'gunner.762minigunammoacquisition' uninterruptedTriggerMultikill personal 3 true) #('Gunner' 'gunner.groupsignatureammoacquisition' uninterruptedTriggerMultikill group 1 true) #('Demolitionist' 'demolitionist.40mmammoacquisition' explosiveKill personal 3 true) #('Demolitionist' 'demolitionist.groupsignatureammosupply' explosiveMultikill group 2 true) #('Firewall' 'firewall.firewallammoacquisition' enemyKill personal 3 true 10) #('Firewall' 'firewall.groupsignatureammoacquisition' enemyKill group 1 true 10))
+		do: [ :row | 
+			| parameters |
+			parameters := {#signatureAmmoTrigger -> row third.
+					#signatureAmmoRecipient -> row fourth.
+					#signatureAmmoPoints -> row fifth.
+					#excludesSignatureWeapon -> row sixth} asDictionary.
+			row size = 7 ifTrue: [ parameters at: #radiusMetres put: row seventh ].
+			((catalog specializationNamed: row first) perkAt: row second)
+				eventParameters: parameters ]
 ]
 
 { #category : 'workbook data' }
