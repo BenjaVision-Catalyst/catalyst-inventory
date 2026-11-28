@@ -3971,7 +3971,7 @@ CIThatGameLaunchInventoryTest >> testWorkbookExpertiseScalesByGradeAndPreservesU
 	rules := variants collect: #expertiseRule.
 	self assert: rules size equals: 43.
 	self deny: (rules includes: nil).
-	self assert: (rules count: [ :rule | rule targetTrackLabel isNil ]) equals: 2.
+	self assert: (rules count: [ :rule | rule targetTrackLabel isNil ]) equals: 1.
 	rules do: [ :rule | self assert: (rule contributionAtGrade: 3) closeTo: 0.03 ].
 	pulse := catalog gadgetFamilyNamed: 'Pulse'.
 	scanner := (pulse variantNamed: 'Scanner') expertiseRule.
@@ -3990,7 +3990,11 @@ CIThatGameLaunchInventoryTest >> testWorkbookExpertiseScalesByGradeAndPreservesU
 	self assert: assault targetTrackLabel equals: 'Damage'.
 	striker := ((catalog gadgetFamilyNamed: 'Shield') variantNamed: 'Striker')
 			expertiseRule.
-	self assert: striker targetTrackLabel isNil.
+	self assert: striker targetTrackLabel equals: 'Active / Regeneration'.
+	self assert: striker reportedStat equals: 'Regeneration'.
+	self assert: striker evidence equals: 'Skill List!M277'.
+	self assert: striker operation isNil.
+	self assert: (striker contributionAtGrade: 20) closeTo: 0.20.
 	artificer := ((catalog gadgetFamilyNamed: 'Hive') variantNamed: 'Artificer')
 			expertiseRule.
 	self assert: artificer targetTrackLabel equals: 'Buff Amount'
