@@ -78,6 +78,19 @@ CIInventoryService >> grantItem: itemIdentifier type: typeIdentifier values: val
 ]
 
 { #category : 'writing' }
+CIInventoryService >> grantLoot: itemIdentifier pool: poolIdentifier valuesFrom: valuesProvider satisfying: eligibility forVerifiedUser: identity [
+	^ savedSetsLock
+		critical: [ readStore
+				grantLoot: itemIdentifier
+				pool: poolIdentifier
+				valuesFrom: valuesProvider
+				satisfying: eligibility
+				from: itemTypeCatalog
+				forOwner: identity
+				using: [ Random new next ] ]
+]
+
+{ #category : 'writing' }
 CIInventoryService >> modStorageAllowance: allowance forVerifiedUser: identity [
 	^ savedSetsLock
 		critical: [ readStore modStorageAllowance: allowance forOwner: identity ]

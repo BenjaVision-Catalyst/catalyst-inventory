@@ -82,30 +82,32 @@ CIInventoryReadStore >> grantItem: itemIdentifier type: typeIdentifier values: v
 
 { #category : 'spawning' }
 CIInventoryReadStore >> grantItem: itemIdentifier type: typeIdentifier values: values from: catalog forOwner: identity using: random [
-	| rows item matches count updated |
-	self validateOwner: identity.
-	(itemIdentifier isString and: [ itemIdentifier isNotEmpty ])
-		ifFalse: [ self error: 'Inventory item identifier required' ].
-	item := (catalog typeAt: typeIdentifier)
-			inventoryItem: itemIdentifier
+	| item |
+	self validateNewItem: itemIdentifier forOwner: identity.
+	item := CIItemGenerator new
+			generate: itemIdentifier
+			type: typeIdentifier
 			values: values
-			talentIdentifier: (catalog rollTalentFor: typeIdentifier using: random).
-	rows := rowsByOwner at: identity ifAbsent: [ #() ].
-	(item isKindOf: CIInventoryEquipmentSummary)
-		ifTrue: [ matches := [ :row | 
-				(row isKindOf: CIInventoryEquipmentSummary)
-					and: [ row definitionIdentifier = typeIdentifier ] ].
-			count := (rows count: matches) + 1.
-			item inventoryTypeCount: count.
-			rows := rows
-					collect: [ :row | 
-						(matches value: row)
-							ifTrue: [ updated := row copy.
-								updated inventoryTypeCount: count.
-								updated ]
-							ifFalse: [ row ] ] ].
-	self replaceRows: (rows copyWith: item) forOwner: identity.
-	^ item copy
+			from: catalog
+			using: random.
+	^ self storeGeneratedItem: item forOwner: identity
+]
+
+{ #category : 'writing' }
+CIInventoryReadStore >> grantLoot: itemIdentifier pool: poolIdentifier valuesFrom: valuesProvider satisfying: eligibility from: catalog forOwner: identity using: randomSample [
+	| pool entry generated |
+	self validateNewItem: itemIdentifier forOwner: identity.
+	pool := catalog lootCatalogue poolAt: poolIdentifier.
+	entry := pool selectWithRandom: randomSample satisfying: eligibility.
+	entry ifNil: [ ^ nil ].
+	generated := CIItemGenerator new
+			generate: itemIdentifier
+			type: entry itemDefinition id
+			values: (valuesProvider value: entry itemDefinition)
+			from: catalog
+			using: randomSample.
+	generated lootPoolIdentifier: pool id.
+	^ self storeGeneratedItem: generated forOwner: identity
 ]
 
 { #category : 'initialization' }
@@ -241,6 +243,37 @@ CIInventoryReadStore >> rowsForOwner: anOwnerIdentifier offset: anOffset limit: 
 	anOffset >= rows size ifTrue: [ ^ #() ].
 	end := anOffset + aLimit min: rows size.
 	^ rows copyFrom: anOffset + 1 to: end
+]
+
+{ #category : 'private' }
+CIInventoryReadStore >> storeGeneratedItem: item forOwner: identity [
+	| rows matches count updated |
+	rows := rowsByOwner at: identity ifAbsent: [ #() ].
+	(item isKindOf: CIInventoryEquipmentSummary)
+		ifTrue: [ matches := [ :row | 
+				(row isKindOf: CIInventoryEquipmentSummary)
+					and: [ row definitionIdentifier = item definitionIdentifier ] ].
+			count := (rows count: matches) + 1.
+			item inventoryTypeCount: count.
+			rows := rows
+					collect: [ :row | 
+						(matches value: row)
+							ifTrue: [ updated := row copy.
+								updated inventoryTypeCount: count.
+								updated ]
+							ifFalse: [ row ] ] ].
+	self replaceRows: (rows copyWith: item) forOwner: identity.
+	^ item copy
+]
+
+{ #category : 'private' }
+CIInventoryReadStore >> validateNewItem: itemIdentifier forOwner: identity [
+	self validateOwner: identity.
+	(itemIdentifier isString and: [ itemIdentifier isNotEmpty ])
+		ifFalse: [ self error: 'Inventory item identifier required' ].
+	((rowsByOwner at: identity ifAbsent: [ #() ])
+		anySatisfy: [ :row | row itemIdentifier = itemIdentifier ])
+		ifTrue: [ self error: 'Duplicate inventory item identifier' ]
 ]
 
 { #category : 'private' }

@@ -51,7 +51,12 @@ CILootPool >> isComplete [
 
 { #category : 'selection' }
 CILootPool >> selectUsing: sample satisfying: meetsRequirement [
-	| eligible total point cumulative |
+	^ self selectWithRandom: [ sample ] satisfying: meetsRequirement
+]
+
+{ #category : 'selection' }
+CILootPool >> selectWithRandom: randomSample satisfying: meetsRequirement [
+	| eligible total sample point cumulative |
 	self isComplete
 		ifFalse: [ self error: 'Loot pool completeness is unspecified' ].
 	eligible := entries
@@ -59,6 +64,7 @@ CILootPool >> selectUsing: sample satisfying: meetsRequirement [
 	eligible ifEmpty: [ ^ nil ].
 	(eligible anySatisfy: [ :entry | entry weight isNil ])
 		ifTrue: [ self error: 'Loot pool entry weight is unspecified' ].
+	sample := randomSample value.
 	(sample >= 0 and: [ sample < 1 ])
 		ifFalse: [ self error: 'Loot sample must be in [0, 1)' ].
 	total := eligible sum: #weight.

@@ -84,6 +84,65 @@ CIThatGameLaunchInventoryTest >> testLaunchInventoryAndTalentsSurviveRestart [
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testLootAwardPersistsSelectionAndGeneratedTalent [
+	| catalog loot pool entries owner store path award samples calls reloaded noValues values |
+	catalog := CIGameItemTypes buildCatalog.
+	loot := catalog lootCatalogue.
+	entries := #('weapon.launch.akM' 'weapon.launch.scorpio')
+			collect: [ :id | 
+				CILootPoolEntry
+					item: (catalog typeAt: id)
+					weight: 1
+					requiring: nil
+					evidence: 'Test fixture' ].
+	pool := CILootPool
+			id: 'testLoot'
+			source: (loot poolAt: 'exoticCaches') source
+			entries: entries
+			complete: true.
+	loot register: pool.
+	owner := 'loot-test-owner'.
+	path := (directory / 'loot.ston') fullName.
+	store := CIInventorySnapshotStore at: path.
+	noValues := [ :type | Dictionary new ].
+	self
+		should: [ store
+				grantLoot: 'failed'
+				pool: 'testLoot'
+				valuesFrom: noValues
+				satisfying: [ :entry | true ]
+				from: catalog
+				forOwner: owner
+				using: [ 0.0 ] ]
+		raise: Error.
+	self assertEmpty: (store allRowsForOwner: owner).
+	self assert: path asFileReference exists not.
+	values := [ :type | 
+		Dictionary new
+			at: 'weaponDamage' put: 0.1;
+			yourself ].
+	calls := 0.
+	samples := [ calls := calls + 1.
+		#(0.2 0.0) at: calls ].
+	award := store
+			grantLoot: 'loot-award'
+			pool: 'testLoot'
+			valuesFrom: values
+			satisfying: [ :entry | true ]
+			from: catalog
+			forOwner: owner
+			using: samples.
+	self assert: calls equals: 2.
+	self assert: award definitionIdentifier equals: 'weapon.launch.akM'.
+	self assert: award talentIdentifier equals: 'optimist'.
+	reloaded := ((CIInventorySnapshotStore at: path) allRowsForOwner: owner) first.
+	self assert: reloaded itemIdentifier equals: award itemIdentifier.
+	self assert: reloaded lootPoolIdentifier equals: 'testLoot'.
+	self assert: reloaded talentIdentifier equals: award talentIdentifier.
+	self assert: reloaded comparisonStats first value equals: 0.1
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testWorkbookLootSourcesKeepUnknownOdds [
 	| catalog loot pools entry |
 	catalog := CIGameItemTypes buildCatalog.

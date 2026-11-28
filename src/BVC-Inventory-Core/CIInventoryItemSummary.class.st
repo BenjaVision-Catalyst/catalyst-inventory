@@ -9,7 +9,8 @@ Class {
 		'definitionIdentifier',
 		'displayName',
 		'tierId',
-		'availableEquipmentSlotIdentifiers'
+		'availableEquipmentSlotIdentifiers',
+		'lootPoolIdentifier'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -65,6 +66,16 @@ CIInventoryItemSummary >> initializeTierFrom: aDefinition [
 { #category : 'accessing' }
 CIInventoryItemSummary >> itemIdentifier [
 	^ itemIdentifier copy
+]
+
+{ #category : 'accessing' }
+CIInventoryItemSummary >> lootPoolIdentifier [
+	^ lootPoolIdentifier ifNotNil: #copy
+]
+
+{ #category : 'initialization' }
+CIInventoryItemSummary >> lootPoolIdentifier: identifier [
+	lootPoolIdentifier := identifier ifNotNil: #copy
 ]
 
 { #category : 'descriptions' }
