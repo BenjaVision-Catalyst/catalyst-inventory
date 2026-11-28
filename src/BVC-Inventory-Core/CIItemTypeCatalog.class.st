@@ -11,7 +11,8 @@ Class {
 		'gadgetFamiliesByName',
 		'attributeCatalogue',
 		'gearReferencesByName',
-		'weaponReferencesById'
+		'weaponReferencesById',
+		'familyReferencesByName'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -43,6 +44,19 @@ CIItemTypeCatalog >> gearFamilies [
 { #category : 'accessing' }
 CIItemTypeCatalog >> gearFamilyAt: anId [
 	^ gearFamiliesById at: anId
+]
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> gearFamilyReferenceAt: name [
+	familyReferencesByName
+		ifNil: [ self error: 'No gear family references registered' ].
+	^ familyReferencesByName at: name
+]
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> gearFamilyReferences [
+	familyReferencesByName ifNil: [ ^ #() ].
+	^ (familyReferencesByName values sorted: [ :a :b | a name < b name ]) asArray
 ]
 
 { #category : 'initialization' }
@@ -105,6 +119,15 @@ CIItemTypeCatalog >> registerGearFamily: family [
 		ifTrue: [ self error: 'Duplicate gear family' ].
 	registry at: family id put: family.
 	^ family
+]
+
+{ #category : 'registration' }
+CIItemTypeCatalog >> registerGearFamilyReference: reference [
+	familyReferencesByName ifNil: [ familyReferencesByName := Dictionary new ].
+	(familyReferencesByName includesKey: reference name)
+		ifTrue: [ self error: 'Duplicate gear family reference' ].
+	familyReferencesByName at: reference name put: reference.
+	^ reference
 ]
 
 { #category : 'registration' }

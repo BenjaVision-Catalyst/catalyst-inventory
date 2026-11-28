@@ -6,7 +6,8 @@ Class {
 		'operation',
 		'magnitude',
 		'targetClass',
-		'duration'
+		'duration',
+		'unit'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -59,4 +60,14 @@ CIGearModifier >> stat [
 { #category : 'accessing' }
 CIGearModifier >> targetClass [
 	^ targetClass
+]
+
+{ #category : 'accessing' }
+CIGearModifier >> unit [
+	^ unit
+]
+
+{ #category : 'initialization' }
+CIGearModifier >> unit: measurement [
+	unit := measurement
 ]

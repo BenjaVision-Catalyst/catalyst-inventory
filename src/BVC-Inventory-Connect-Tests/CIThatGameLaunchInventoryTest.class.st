@@ -426,7 +426,10 @@ CIThatGameLaunchInventoryTest >> testGearFamilyThresholdsAndModeValues [
 	| catalog evaluator rows pve pvp rook |
 	catalog := CIGameItemTypes buildCatalog.
 	evaluator := CILoadoutFamilyEvaluator new.
-	self assert: catalog gearFamilies size equals: 5.
+	self
+		assert: (catalog gearFamilies
+				count: [ :family | (family id beginsWith: 'brand.workbook.') not ])
+		equals: 5.
 	rows := self
 			gearRowsForFamily: 'rookStandard'
 			slots: #('Mask' 'Gloves')
@@ -1340,6 +1343,63 @@ CIThatGameLaunchInventoryTest >> testWorkbookFactoryAttachmentsAreLockedAndPersi
 	self assert: reloaded itemIdentifier equals: 'legacy'.
 	self assert: reloaded modSlots size equals: 4.
 	self assert: (reloaded modSlots allSatisfy: #isLocked)
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testWorkbookFamiliesRetainModeColumnsMultiCoreAndNamedMembership [
+	| catalog references core eclipse gila brand store row values evaluated |
+	catalog := CIGameItemTypes buildCatalog.
+	references := catalog gearFamilyReferences.
+	self
+		assert: (references count: [ :reference | reference kind = #brand ])
+		equals: 37.
+	self
+		assert: (references count: [ :reference | reference kind = #gearSet ])
+		equals: 28.
+	core := catalog gearFamilyReferenceAt: 'Core Strength'.
+	self
+		assert: (core valuesFor: #coreOrSlotRule)
+		equals: #('Weapon Damage' 'Skill Tier' 'Armor').
+	self
+		assert: (core referencesFor: #coreOrSlotRule)
+		equals: #('Gearsets!B12' 'Gearsets!B13' 'Gearsets!B14').
+	self assert: core runtimeFamilyIdentifier isNil.
+	eclipse := catalog gearFamilyReferenceAt: 'Eclipse Protocol'.
+	self assert: eclipse runtimeFamilyIdentifier equals: 'jupiterTechnologies'.
+	self assert: (eclipse referencesFor: #vestTalent) equals: #('Gearsets!F15').
+	gila := catalog gearFamilyReferenceAt: 'Gila Guard'.
+	self assert: (gila valuesFor: #pveTwoPiece) equals: #('20% Hazard Protection').
+	self assert: (gila valuesFor: #pvpTwoPiece) equals: #('15% Hazard Protection').
+	brand := catalog gearFamilyAt: gila runtimeFamilyIdentifier.
+	self
+		assert: (brand tiers second modifiersForMode: #pvp) first magnitude
+		equals: 0.15.
+	self
+		assert: (brand tiers second modifiersForMode: #pvp) first unit
+		equals: #fraction.
+	store := CIInventoryReadStore new.
+	values := Dictionary new
+			at: 'core' put: 50000;
+			at: 'minor1'
+				put: (CIGearAttributeRoll attribute: 'gear.minor.criticalHitChance' value: 0.05);
+			at: 'minor2'
+				put: (CIGearAttributeRoll attribute: 'gear.minor.criticalHitDamage' value: 0.10);
+			yourself.
+	row := store
+			grantItem: 'courier'
+			type: 'gear.workbook.theCourier'
+			values: values
+			from: catalog
+			forOwner: 'owner'.
+	row equippedSlotIdentifier: 'Backpack'.
+	evaluated := (CILoadoutFamilyEvaluator new
+			evaluateRows: {row}
+			catalogue: catalog
+			mode: #pve)
+			detect: [ :activation | activation family manufacturer = 'Habsburg Guard' ].
+	self assert: evaluated equippedCount equals: 1.
+	self assert: evaluated modifiers first stat equals: #headshotDamage.
+	self assert: evaluated modifiers first magnitude equals: 0.13
 ]
 
 { #category : 'tests' }

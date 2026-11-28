@@ -30,6 +30,11 @@ CIWorkbookNamedGearType class >> id: anId name: aName slot: gearSlot layout: ite
 ]
 
 { #category : 'accessing' }
+CIWorkbookNamedGearType >> gearFamilyIdentifier [
+	^ CIWorkbookFamilyData brandIdentifierFor: (sourceInformation at: #brand)
+]
+
+{ #category : 'accessing' }
 CIWorkbookNamedGearType >> generationLayout [
 	^ layout
 ]
