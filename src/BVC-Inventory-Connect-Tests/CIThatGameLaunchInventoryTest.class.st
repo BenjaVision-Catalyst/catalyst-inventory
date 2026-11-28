@@ -118,6 +118,52 @@ CIThatGameLaunchInventoryTest >> testClassifiedUpgradesFollowEquippedSlots [
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testEquippedCreepingDeathSpreadsWithCooldown [
+	| owner catalog row encounter application distances targets |
+	self startInventory.
+	owner := 'gear-talent-owner'.
+	catalog := CIGameItemTypes buildCatalog.
+	row := (catalog typeAt: 'gear.launch.morrowWorks.backpack')
+			inventoryItem: 'pack'
+			values: (Dictionary new
+					at: 'skillTier' put: 1;
+					yourself)
+			talentIdentifier: 'perfectCreepingDeath'.
+	service replaceReadRows: {row} forOwner: owner.
+	self
+		should: [ service pveGearTalentEncounterFor: 'pack' forVerifiedUser: owner ]
+		raise: Error.
+	row := row copy.
+	row equippedSlotIdentifier: 'Backpack'.
+	service replaceReadRows: {row} forOwner: owner.
+	encounter := service pveGearTalentEncounterFor: 'pack' forVerifiedUser: owner.
+	application := CICombatStatusApplication
+			status: 'burn'
+			target: 'primary'
+			durationSeconds: 5.
+	distances := {'primary' -> 0.
+			'edge' -> 10.
+			'outside' -> 11} asDictionary.
+	targets := encounter
+			spreadStatus: application
+			targetsAtDistances: distances
+			at: 0.
+	self assert: (targets collect: #targetIdentifier) equals: #('edge').
+	self assert: targets first durationSeconds equals: 5.
+	self
+		assertEmpty: (encounter
+				spreadStatus: application
+				targetsAtDistances: distances
+				at: 9).
+	self
+		assert: (encounter
+				spreadStatus: application
+				targetsAtDistances: distances
+				at: 10) size
+		equals: 1
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testFuturePerfectionUsesItsOwnStackCapAndDuration [
 	| catalog scanner encounter |
 	catalog := CIGameItemTypes buildCatalog.
@@ -205,6 +251,48 @@ CIThatGameLaunchInventoryTest >> testGearFamilyThresholdsAndModeValues [
 		assert: (pvp modifiers detect: [ :effect | effect stat = #hazardProtection ]) magnitude
 		equals: 0.15.
 	self assert: pvp activeTiers last evidence equals: 'Brandsets!F6,L6'
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testGearTalentTimersAndThresholds [
+	| catalog make obliterate armor overwatch composure arms |
+	catalog := CIGameItemTypes buildCatalog.
+	make := [ :id | CIGearTalentEncounter talent: (catalog talentAt: id) ].
+	obliterate := make value: 'perfectObliterate'.
+	obliterate recordEnemyShotCritical: false at: 0.
+	self assert: (obliterate totalWeaponDamageBonusAt: 0) equals: 0.
+	25 timesRepeat: [ obliterate recordEnemyShotCritical: true at: 1 ].
+	self assert: (obliterate totalWeaponDamageBonusAt: 10) closeTo: 0.24.
+	self assert: (obliterate totalWeaponDamageBonusAt: 11) equals: 0.
+	armor := make value: 'unbreakable'.
+	self assert: (armor armorRepairFractionOnDepletionAt: 0) equals: 0.95.
+	self assert: (armor armorRepairFractionOnDepletionAt: 59) equals: 0.
+	self assert: (armor armorRepairFractionOnDepletionAt: 60) equals: 0.95.
+	self
+		assert: ((make value: 'perfectUnbreakable') armorRepairFractionOnDepletionAt: 0)
+		equals: 1.
+	overwatch := make value: 'perfectOverwatch'.
+	overwatch coverState: #inCover at: 0.
+	self assert: ((overwatch squadDamageBonusesAt: 7) at: #weaponDamage) equals: 0.
+	overwatch coverState: #coverMove at: 8.
+	self
+		assert: ((overwatch squadDamageBonusesAt: 18) at: #skillDamage)
+		equals: 0.14.
+	overwatch coverState: #inCover at: 19.
+	self
+		assert: ((overwatch squadDamageBonusesAt: 19) at: #weaponDamage)
+		equals: 0.14.
+	overwatch coverState: #exposed at: 20.
+	self assert: ((overwatch squadDamageBonusesAt: 20) at: #weaponDamage) equals: 0.
+	composure := make value: 'perfectComposure'.
+	composure coverState: #inCover at: 0.
+	self assert: (composure totalWeaponDamageBonusAt: 0) equals: 0.20.
+	composure coverState: #coverMove at: 1.
+	self assert: (composure totalWeaponDamageBonusAt: 1) equals: 0.
+	arms := make value: 'perfectCombinedArms'.
+	arms recordEnemyShotCritical: false at: 0.
+	self assert: (arms totalSkillDamageBonusAt: 2) equals: 0.30.
+	self assert: (arms totalSkillDamageBonusAt: 3) equals: 0
 ]
 
 { #category : 'tests' }
