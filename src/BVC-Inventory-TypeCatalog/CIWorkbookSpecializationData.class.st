@@ -21,6 +21,17 @@ CIWorkbookSpecializationData class >> gunnerPerks [
 ]
 
 { #category : 'registration' }
+CIWorkbookSpecializationData class >> registerEventParametersIn: catalog [
+	#(#('Gunner' 'gunner.barrage' #(#(rateOfFire 0.05) #(durationSeconds 5))) #('Gunner' 'gunner.coupler' #(#(reloadInterval 3) #(reloadSpeed 0.50))) #('Gunner' 'gunner.supplyline' #(#(intervalSeconds 60) #(personalFraction 0.10) #(partyFraction 0.05))) #('Technician' 'technician.faradayfield' #(#(radiusMetres 5) #(immunities #(shock disrupt)))) #('Firewall' 'firewall.fieryresponse' #(#(radiusMetres 5) #(status burn) #(disabledInPvP true))) #('Demolitionist' 'demolitionist.bracedforimpact' #(#(cooldownSeconds 60))))
+		do: [ :spec | 
+			| parameters |
+			parameters := Dictionary new.
+			spec third do: [ :entry | parameters at: entry first put: entry second ].
+			((catalog specializationNamed: spec first) perkAt: spec second)
+				eventParameters: parameters ]
+]
+
+{ #category : 'registration' }
 CIWorkbookSpecializationData class >> registerIn: catalog [
 	catalog
 		registerSpecialization: (CISpecializationDefinition
@@ -55,7 +66,8 @@ CIWorkbookSpecializationData class >> registerIn: catalog [
 		registerSpecialization: (CISpecializationDefinition
 				name: 'Firewall'
 				perks: (self firewallPerks
-						collect: [ :row | CISpecializationPerk fromWorkbookRow: row ]))
+						collect: [ :row | CISpecializationPerk fromWorkbookRow: row ])).
+	self registerEventParametersIn: catalog
 ]
 
 { #category : 'workbook data' }

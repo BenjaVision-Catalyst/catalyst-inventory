@@ -432,6 +432,18 @@ CIInventoryService >> selectSpecialization: label perks: identifiers forVerified
 ]
 
 { #category : 'reading' }
+CIInventoryService >> specializationEncounterForVerifiedUser: identity mode: mode startedAt: seconds [
+	^ savedSetsLock
+		critical: [ | loadout |
+			loadout := self resolvedSpecializationFor: identity.
+			loadout ifNil: [ self error: 'No specialization selected' ].
+			CISpecializationEncounter
+				forLoadout: loadout
+				mode: mode
+				startedAt: seconds ]
+]
+
+{ #category : 'reading' }
 CIInventoryService >> specializationLoadoutForVerifiedUser: identity [
 	^ savedSetsLock critical: [ self resolvedSpecializationFor: identity ]
 ]

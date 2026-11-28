@@ -494,6 +494,35 @@ CIThatGameLaunchInventoryTest >> testGearTalentTimersAndThresholds [
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testGunnerEncounterUsesSelectedPerksAndDocumentedTiming [
+	| owner encounter grant |
+	self startInventory.
+	owner := 'gunner-encounter-owner'.
+	service
+		selectSpecialization: 'Gunner'
+		perks: #('gunner.barrage' 'gunner.coupler' 'gunner.supplyline')
+		forVerifiedUser: owner.
+	encounter := service
+			specializationEncounterForVerifiedUser: owner
+			mode: #pve
+			startedAt: 10.
+	self assert: (encounter rateOfFireBonusAt: 10) equals: 0.
+	encounter recordEnemyKillAt: 11.
+	self assert: (encounter rateOfFireBonusAt: 15) equals: 0.05.
+	self assert: (encounter rateOfFireBonusAt: 16) equals: 0.
+	self assert: (encounter reloadSpeedBonusForNextReloadAt: 20) equals: 0.
+	self assert: (encounter reloadSpeedBonusForNextReloadAt: 21) equals: 0.
+	self assert: (encounter reloadSpeedBonusForNextReloadAt: 22) equals: 0.50.
+	self assert: (encounter supplyLineGrantsThrough: 69) isNil.
+	grant := encounter supplyLineGrantsThrough: 70.
+	self assert: grant ticks equals: 1.
+	self assert: grant personalFraction equals: 0.10.
+	self assert: grant partyFraction equals: 0.05.
+	self assert: (encounter supplyLineGrantsThrough: 70) isNil.
+	self assert: (encounter supplyLineGrantsThrough: 190) ticks equals: 2
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testInSyncEffectsOverlapAndExpireIndependently [
 	| owner catalog weapon encounter |
 	self startInventory.
@@ -1090,6 +1119,71 @@ CIThatGameLaunchInventoryTest >> testScorpioVenomThresholdsAndStackNineRefresh [
 			at: 10.
 	self assert: outcome stackCount equals: 1.
 	self assertEmpty: outcome triggeredStatuses
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSpecializationConditionalPerksHonorRangeCooldownAndPvP [
+	| catalog loadout field pve pvp demolitionist targets |
+	catalog := CIGameItemTypes buildCatalog.
+	loadout := catalog
+			specializationLoadoutNamed: 'Technician'
+			selected: #('technician.faradayfield').
+	field := CISpecializationEncounter
+			forLoadout: loadout
+			mode: #pve
+			startedAt: 0.
+	self
+		assert: (field
+				faradayImmunitiesForPartyMember: true
+				atDistance: 5
+				deployed: true
+				disrupted: false)
+		equals: #(shock disrupt).
+	self
+		assertEmpty: (field
+				faradayImmunitiesForPartyMember: true
+				atDistance: 5
+				deployed: true
+				disrupted: true).
+	self
+		assertEmpty: (field
+				faradayImmunitiesForPartyMember: true
+				atDistance: 6
+				deployed: true
+				disrupted: false).
+	self
+		assertEmpty: (field
+				faradayImmunitiesForPartyMember: false
+				atDistance: 5
+				deployed: true
+				disrupted: false).
+	loadout := catalog
+			specializationLoadoutNamed: 'Firewall'
+			selected: #('firewall.fieryresponse').
+	pve := CISpecializationEncounter
+			forLoadout: loadout
+			mode: #pve
+			startedAt: 0.
+	pvp := CISpecializationEncounter
+			forLoadout: loadout
+			mode: #pvp
+			startedAt: 0.
+	targets := {'edge' -> 5.
+			'out' -> 6} asDictionary.
+	self
+		assert: (pve fieryResponseBurnTargetsOnArmorBreak: targets at: 0)
+		equals: #('edge').
+	self assertEmpty: (pvp fieryResponseBurnTargetsOnArmorBreak: targets at: 0).
+	loadout := catalog
+			specializationLoadoutNamed: 'Demolitionist'
+			selected: #('demolitionist.bracedforimpact').
+	demolitionist := CISpecializationEncounter
+			forLoadout: loadout
+			mode: #pve
+			startedAt: 0.
+	self assert: (demolitionist blocksExplosionAt: 0).
+	self deny: (demolitionist blocksExplosionAt: 59).
+	self assert: (demolitionist blocksExplosionAt: 60)
 ]
 
 { #category : 'tests' }

@@ -10,7 +10,8 @@ Class {
 		'prerequisites',
 		'exclusions',
 		'rewardIdentifier',
-		'modifiers'
+		'modifiers',
+		'eventParameters'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -29,6 +30,16 @@ CISpecializationPerk >> category [
 { #category : 'accessing' }
 CISpecializationPerk >> description [
 	^ description ifNotNil: #copy
+]
+
+{ #category : 'accessing' }
+CISpecializationPerk >> eventParameters [
+	^ eventParameters ifNotNil: #copy
+]
+
+{ #category : 'initialization' }
+CISpecializationPerk >> eventParameters: values [
+	eventParameters := values copy
 ]
 
 { #category : 'accessing' }
