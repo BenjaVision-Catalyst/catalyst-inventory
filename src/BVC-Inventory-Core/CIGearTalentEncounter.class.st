@@ -12,7 +12,8 @@ Class {
 		'overwatchPrimed',
 		'buffUntil',
 		'cooldownUntil',
-		'markedEnemyIdentifier'
+		'markedEnemyIdentifier',
+		'bankedGadgetReset'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -87,6 +88,17 @@ CIGearTalentEncounter >> evidence [
 ]
 
 { #category : 'combat' }
+CIGearTalentEncounter >> gadgetCooldownOnStart: duration at: seconds [
+	"Apply a banked Skilled reset to the Gadget starting a cooldown."
+
+	self advanceTo: seconds.
+	(mechanic = #skilled and: [ bankedGadgetReset and: [ duration > 0 ] ])
+		ifFalse: [ ^ duration ].
+	bankedGadgetReset := false.
+	^ 0
+]
+
+{ #category : 'combat' }
 CIGearTalentEncounter >> gadgetCooldownReductionFractionOnEnemyKillAt: seconds [
 	"Answers the documented reduction fraction. The cooldown basis is unspecified."
 
@@ -99,7 +111,7 @@ CIGearTalentEncounter >> gadgetCooldownReductionFractionOnEnemyKillAt: seconds [
 { #category : 'initialization' }
 CIGearTalentEncounter >> initializeTalent: aTalent [
 	| rule |
-	rule := #(#(obliterate 'obliterate' 'perfectObliterate' 'Gear Talents!D7:F7') #(unbreakable 'unbreakable' 'perfectUnbreakable' 'Gear Talents!D14:F14') #(overwatch 'overwatch' 'perfectOverwatch' 'Gear Talents!D11:F11') #(composure 'composure' 'perfectComposure' 'Gear Talents!D33:F33, Gear Named + Exotics!F25:G25') #(combinedArms 'combinedArms' 'perfectCombinedArms' 'Gear Talents!D26:F26') #(calculated 'calculated' 'perfectlyCalculated' 'Gear Talents!D45:F45, Gear Named + Exotics!F19:G19') #(tagTeam 'tagTeam' 'tagTeam' 'Gear Talents!D22:F22') #(creepingDeath 'creepingDeath' 'perfectCreepingDeath' 'Gear Talents!D47:F47'))
+	rule := #(#(obliterate 'obliterate' 'perfectObliterate' 'Gear Talents!D7:F7') #(unbreakable 'unbreakable' 'perfectUnbreakable' 'Gear Talents!D14:F14') #(overwatch 'overwatch' 'perfectOverwatch' 'Gear Talents!D11:F11') #(composure 'composure' 'perfectComposure' 'Gear Talents!D33:F33, Gear Named + Exotics!F25:G25') #(combinedArms 'combinedArms' 'perfectCombinedArms' 'Gear Talents!D26:F26') #(calculated 'calculated' 'perfectlyCalculated' 'Gear Talents!D45:F45, Gear Named + Exotics!F19:G19') #(skilled 'skilled' 'perfectlySkilled' 'Gear Talents!D21:F21, Gear Named + Exotics!F38:G38') #(tagTeam 'tagTeam' 'tagTeam' 'Gear Talents!D22:F22') #(creepingDeath 'creepingDeath' 'perfectCreepingDeath' 'Gear Talents!D47:F47'))
 			detect: [ :spec | aTalent id = spec second or: [ aTalent id = spec third ] ]
 			ifNone: [ self error: 'Unsupported gear talent' ].
 	mechanic := rule first.
@@ -108,6 +120,7 @@ CIGearTalentEncounter >> initializeTalent: aTalent [
 	criticalExpiries := OrderedCollection new.
 	coverState := #exposed.
 	overwatchPrimed := false.
+	bankedGadgetReset := false.
 	^ self
 ]
 
@@ -139,6 +152,25 @@ CIGearTalentEncounter >> recordGadgetDamageToEnemy: enemyIdentifier at: seconds 
 	mechanic = #tagTeam ifFalse: [ ^ self ].
 	(cooldownUntil isNil or: [ seconds >= cooldownUntil ])
 		ifTrue: [ markedEnemyIdentifier := enemyIdentifier copy ]
+]
+
+{ #category : 'combat' }
+CIGearTalentEncounter >> recordGadgetKillAt: seconds roll: roll remainingGadgetCooldowns: remaining [
+	"Roll is a caller-supplied fraction in [0, 1). Remaining cooldowns are in seconds."
+
+	| result |
+	self advanceTo: seconds.
+	result := remaining copy.
+	mechanic = #skilled ifFalse: [ ^ result ].
+	(roll isNumber and: [ roll >= 0 and: [ roll < 1 ] ])
+		ifFalse: [ self error: 'Gadget cooldown reset roll must be in [0, 1)' ].
+	roll < (parameters at: #gadgetCooldownResetChance) ifFalse: [ ^ result ].
+	(remaining values anySatisfy: [ :duration | duration > 0 ])
+		ifFalse: [ bankedGadgetReset := true.
+			^ result ].
+	remaining
+		keysAndValuesDo: [ :gadget :duration | duration > 0 ifTrue: [ result at: gadget put: 0 ] ].
+	^ result
 ]
 
 { #category : 'combat' }

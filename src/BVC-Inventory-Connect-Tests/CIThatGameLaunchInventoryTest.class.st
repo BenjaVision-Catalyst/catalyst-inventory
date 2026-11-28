@@ -2715,6 +2715,83 @@ CIThatGameLaunchInventoryTest >> testSkillEfficiencyUsesActualHasteForCooldownAn
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSkilledGearTalentBanksOnlyOneResetForTheNextGadget [
+	| catalog encounter ready |
+	catalog := CIGameItemTypes buildCatalog.
+	encounter := CIGearTalentEncounter talent: (catalog talentAt: 'skilled').
+	ready := {#hive -> 0.
+			#pulse -> 0} asDictionary.
+	encounter
+		recordGadgetKillAt: 0
+		roll: 0.25
+		remainingGadgetCooldowns: ready.
+	self assert: (encounter gadgetCooldownOnStart: 10 at: 1) equals: 10.
+	self
+		assert: (encounter
+				recordGadgetKillAt: 2
+				roll: 0.1
+				remainingGadgetCooldowns: ready)
+		equals: ready.
+	encounter
+		recordGadgetKillAt: 3
+		roll: 0.1
+		remainingGadgetCooldowns: ready.
+	self assert: (encounter gadgetCooldownOnStart: 0 at: 4) equals: 0.
+	self assert: (encounter gadgetCooldownOnStart: 10 at: 5) equals: 0.
+	self assert: (encounter gadgetCooldownOnStart: 20 at: 5) equals: 20
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSkilledGearTalentResetsActiveCooldownsAtDocumentedChances [
+	| catalog reference remaining ready |
+	catalog := CIGameItemTypes buildCatalog.
+	reference := catalog talentReferenceAt: 'Gear Talents!D21'.
+	self assert: reference talentIdentifier equals: 'skilled'.
+	self assert: reference perfectTalentIdentifier equals: 'perfectlySkilled'.
+	remaining := {#hive -> 9.
+			#pulse -> 2.
+			#shield -> 0} asDictionary.
+	ready := {#hive -> 0.
+			#pulse -> 0.
+			#shield -> 0} asDictionary.
+	{{reference talentIdentifier.
+			#pve.
+			0.25.
+			0.24}.
+		{reference perfectTalentIdentifier.
+			#pve.
+			0.30.
+			0.29}.
+		{reference talentIdentifier.
+			#pvp.
+			0.20.
+			0.19}.
+		{reference perfectTalentIdentifier.
+			#pvp.
+			0.25.
+			0.24}}
+		do: [ :row | 
+			| talent encounter |
+			talent := catalog talentAt: row first.
+			self assert: talent eligibility equals: #Chest.
+			encounter := CIGearTalentEncounter talent: talent mode: row second.
+			self
+				assert: (encounter
+						recordGadgetKillAt: 0
+						roll: row third
+						remainingGadgetCooldowns: remaining)
+				equals: remaining.
+			self
+				assert: (encounter
+						recordGadgetKillAt: 1
+						roll: row fourth
+						remainingGadgetCooldowns: remaining)
+				equals: ready.
+			self assert: (encounter gadgetCooldownOnStart: 8 at: 2) equals: 8 ].
+	self assert: (remaining at: #hive) equals: 9
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testSlingshotGeneratesWithDocumentedTotalOptimalRange [
 	| catalog weapon range item comparison |
 	catalog := CIGameItemTypes buildCatalog.
