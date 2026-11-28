@@ -112,7 +112,7 @@ CIGearTalentEncounter >> gadgetCooldownReductionFractionOnEnemyKillAt: seconds [
 { #category : 'initialization' }
 CIGearTalentEncounter >> initializeTalent: aTalent [
 	| rule |
-	rule := #(#(obliterate 'obliterate' 'perfectObliterate' 'Gear Talents!D7:F7') #(unbreakable 'unbreakable' 'perfectUnbreakable' 'Gear Talents!D14:F14') #(overwatch 'overwatch' 'perfectOverwatch' 'Gear Talents!D11:F11') #(composure 'composure' 'perfectComposure' 'Gear Talents!D33:F33, Gear Named + Exotics!F25:G25') #(combinedArms 'combinedArms' 'perfectCombinedArms' 'Gear Talents!D26:F26') #(calculated 'calculated' 'perfectlyCalculated' 'Gear Talents!D45:F45, Gear Named + Exotics!F19:G19') #(techSupport 'techSupport' 'perfectTechSupport' 'Gear Talents!D27:F27, Gear Named + Exotics!F16:G16') #(skilled 'skilled' 'perfectlySkilled' 'Gear Talents!D21:F21, Gear Named + Exotics!F38:G38') #(tamperProof 'tamperProof' 'perfectlyTamperProof' 'Gear Talents!D24:I24, Gear Named + Exotics!F22:G22') #(tagTeam 'tagTeam' 'tagTeam' 'Gear Talents!D22:F22') #(creepingDeath 'creepingDeath' 'perfectCreepingDeath' 'Gear Talents!D47:F47'))
+	rule := #(#(obliterate 'obliterate' 'perfectObliterate' 'Gear Talents!D7:F7') #(unbreakable 'unbreakable' 'perfectUnbreakable' 'Gear Talents!D14:F14') #(overwatch 'overwatch' 'perfectOverwatch' 'Gear Talents!D11:F11') #(composure 'composure' 'perfectComposure' 'Gear Talents!D33:F33, Gear Named + Exotics!F25:G25') #(combinedArms 'combinedArms' 'perfectCombinedArms' 'Gear Talents!D26:F26') #(calculated 'calculated' 'perfectlyCalculated' 'Gear Talents!D45:F45, Gear Named + Exotics!F19:G19') #(techSupport 'techSupport' 'perfectTechSupport' 'Gear Talents!D27:F27, Gear Named + Exotics!F16:G16') #(overclock 'overclock' 'perfectOverclock' 'Gear Talents!D46:F46, Gear Named + Exotics!F8:G8') #(skilled 'skilled' 'perfectlySkilled' 'Gear Talents!D21:F21, Gear Named + Exotics!F38:G38') #(tamperProof 'tamperProof' 'perfectlyTamperProof' 'Gear Talents!D24:I24, Gear Named + Exotics!F22:G22') #(tagTeam 'tagTeam' 'tagTeam' 'Gear Talents!D22:F22') #(creepingDeath 'creepingDeath' 'perfectCreepingDeath' 'Gear Talents!D47:F47'))
 			detect: [ :spec | aTalent id = spec second or: [ aTalent id = spec third ] ]
 			ifNone: [ self error: 'Unsupported gear talent' ].
 	mechanic := rule first.
@@ -129,6 +129,39 @@ CIGearTalentEncounter >> initializeTalent: aTalent [
 { #category : 'accessing' }
 CIGearTalentEncounter >> markedEnemyIdentifier [
 	^ markedEnemyIdentifier ifNotNil: #copy
+]
+
+{ #category : 'private' }
+CIGearTalentEncounter >> overclockAppliesTo: recipient distanceFromDeployedGadgetMetres: distance [
+	"Distance is from the wearer's deployed Gadget. Nil means there is no deployment."
+
+	^ mechanic = #overclock
+		and: [ (#(self ally) includes: recipient)
+				and: [ distance notNil
+						and: [ distance >= 0 and: [ distance <= (parameters at: #radiusMetres) ] ] ] ]
+]
+
+{ #category : 'combat' }
+CIGearTalentEncounter >> overclockCooldownsAfterTickFor: recipient distanceFromDeployedGadgetMetres: distance remainingGadgetCooldowns: remaining [
+	"Apply one second's extra reduction to the recipient's remaining Gadget cooldowns."
+
+	| result reduction |
+	result := remaining copy.
+	(self overclockAppliesTo: recipient distanceFromDeployedGadgetMetres: distance)
+		ifFalse: [ ^ result ].
+	reduction := parameters at: #cooldownReductionPerSecond.
+	remaining
+		keysAndValuesDo: [ :gadget :duration | duration > 0 ifTrue: [ result at: gadget put: (duration - reduction max: 0) ] ].
+	^ result
+]
+
+{ #category : 'accessing' }
+CIGearTalentEncounter >> overclockReloadSpeedBonusFor: recipient distanceFromDeployedGadgetMetres: distance [
+	^ (self
+		overclockAppliesTo: recipient
+		distanceFromDeployedGadgetMetres: distance)
+		ifTrue: [ parameters at: #reloadSpeedBonus ]
+		ifFalse: [ 0 ]
 ]
 
 { #category : 'private' }

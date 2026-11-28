@@ -1773,7 +1773,7 @@ CIThatGameLaunchInventoryTest >> testNamedGearReferencesPreserveSplitRowsAndExpo
 	self assert: (rows count: [ :each | each kind = #exotic ]) equals: 32.
 	self
 		assert: (rows count: [ :each | each itemDefinitionIdentifier notNil ])
-		equals: 12.
+		equals: 13.
 	reference := catalog namedGearReferenceAt: 'Vile'.
 	self assert: (reference fieldAt: #talent) equals: 'Toxic Delivery'.
 	self
@@ -1823,6 +1823,81 @@ CIThatGameLaunchInventoryTest >> testNamedGearReferencesPreserveSplitRowsAndExpo
 	self assert: gloves gearSlotIdentifier equals: 'Gloves'.
 	self assert: gloves rolledAttributes first value equals: 0.16.
 	self assertEmpty: gloves modSlots
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testOverclockUsesWorkbookRangeAndReducesOnlyActiveCooldowns [
+	| catalog reference named remaining values item |
+	catalog := CIGameItemTypes buildCatalog.
+	reference := catalog talentReferenceAt: 'Gear Talents!D46'.
+	remaining := {#hive -> 1.
+			#pulse -> 0.1.
+			#shield -> 0} asDictionary.
+	{{reference talentIdentifier.
+			7.
+			0.25.
+			0.8}.
+		{reference perfectTalentIdentifier.
+			15.
+			0.30.
+			0.4}}
+		do: [ :row | 
+			| encounter radius result |
+			encounter := CIGearTalentEncounter talent: (catalog talentAt: row first).
+			radius := row second.
+			self
+				assert: (encounter
+						overclockReloadSpeedBonusFor: #self
+						distanceFromDeployedGadgetMetres: radius)
+				equals: row third.
+			self
+				assert: (encounter
+						overclockReloadSpeedBonusFor: #ally
+						distanceFromDeployedGadgetMetres: radius + 0.01)
+				equals: 0.
+			self
+				assert: (encounter
+						overclockReloadSpeedBonusFor: #enemy
+						distanceFromDeployedGadgetMetres: radius)
+				equals: 0.
+			self
+				assert: (encounter
+						overclockReloadSpeedBonusFor: #ally
+						distanceFromDeployedGadgetMetres: nil)
+				equals: 0.
+			result := encounter
+					overclockCooldownsAfterTickFor: #ally
+					distanceFromDeployedGadgetMetres: radius
+					remainingGadgetCooldowns: remaining.
+			self
+				assert: result
+				equals: {#hive -> row fourth.
+						#pulse -> 0.
+						#shield -> 0} asDictionary.
+			self
+				assert: (encounter
+						overclockCooldownsAfterTickFor: #ally
+						distanceFromDeployedGadgetMetres: radius + 1
+						remainingGadgetCooldowns: remaining)
+				equals: remaining ].
+	self assert: (remaining at: #hive) equals: 1.
+	named := catalog namedGearReferenceAt: 'Hermano'.
+	values := {'core' -> 50000.
+			'minor1'
+				-> (CIGearAttributeRoll attribute: 'gear.minor.criticalHitChance' value: 0.05).
+			'minor2'
+				-> (CIGearAttributeRoll attribute: 'gear.minor.criticalHitDamage' value: 0.10)}
+			asDictionary.
+	item := CIInventoryReadStore new
+			grantItem: 'hermano'
+			type: named itemDefinitionIdentifier
+			values: values
+			from: catalog
+			forOwner: 'owner'
+			using: [ self error: 'Fixed talent must not draw' ].
+	self assert: item talentIdentifier equals: reference perfectTalentIdentifier.
+	self assert: item gearSlotIdentifier equals: 'Backpack'.
+	self assert: item modSlots size equals: 1
 ]
 
 { #category : 'tests' }

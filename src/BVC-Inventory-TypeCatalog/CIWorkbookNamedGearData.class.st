@@ -55,7 +55,7 @@ CIWorkbookNamedGearData class >> register: identifier name: name in: catalog slo
 
 { #category : 'registration' }
 CIWorkbookNamedGearData class >> registerAdditionalIn: catalog [
-	#(#('The Courier' 'perfectCreepingDeath') #('Force Multiplier' 'perfectCombinedArms') #('Bulldog' 'perfectComposure') #('Zero F’s' 'perfectUnbreakable') #('Ferocious Calm' 'perfectOverwatch') #('Equalizer' 'perfectObliterate') #('Proxy' 'perfectlyTamperProof') #('Percussive Maintenance' 'perfectTechSupport'))
+	#(#('The Courier' 'perfectCreepingDeath') #('Force Multiplier' 'perfectCombinedArms') #('Bulldog' 'perfectComposure') #('Zero F’s' 'perfectUnbreakable') #('Ferocious Calm' 'perfectOverwatch') #('Equalizer' 'perfectObliterate') #('Proxy' 'perfectlyTamperProof') #('Percussive Maintenance' 'perfectTechSupport') #('Hermano' 'perfectOverclock'))
 		do: [ :spec | 
 			| reference |
 			reference := catalog namedGearReferenceAt: spec first.
