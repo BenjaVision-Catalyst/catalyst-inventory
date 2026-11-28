@@ -227,6 +227,76 @@ CIThatGameLaunchInventoryTest >> testInstalledModEffectsUseWorkbookMagazineAndOw
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testJupiterCombatSpreadUsesRangeAndDocumentedRefresh [
+	| owner catalog rows encounter statuses targets result |
+	self startInventory.
+	owner := 'jupiter-combat'.
+	catalog := CIGameItemTypes buildCatalog.
+	rows := self
+			gearRowsForFamily: 'jupiterTechnologies'
+			slots: #('Mask' 'Chest' 'Backpack' 'Gloves' 'KneePads')
+			catalogue: catalog.
+	rows second equippedSlotIdentifier: nil.
+	service replaceReadRows: rows forOwner: owner.
+	encounter := service classifiedEncounterForVerifiedUser: owner mode: #pve.
+	statuses := {CICombatStatusApplication
+				status: 'burn'
+				target: 'defeated'
+				durationSeconds: 8.
+			CICombatStatusApplication
+				status: 'shock'
+				target: 'another'
+				durationSeconds: 6}.
+	targets := {'defeated' -> 0.
+			'ten' -> 10.
+			'fifteen' -> 15.
+			'outside' -> 16} asDictionary.
+	result := encounter
+			spreadOnKillOf: 'defeated'
+			statuses: statuses
+			targetsAtDistances: targets.
+	self assert: (result collect: #targetIdentifier) equals: #('ten').
+	self assert: result first statusIdentifier equals: 'burn'.
+	self assert: result first durationSeconds equals: 4.
+	self
+		assert: (encounter jupiterDamageMultiplierForStatusAffected: true)
+		equals: 1.30.
+	self
+		assert: (encounter jupiterDamageMultiplierForStatusAffected: false)
+		equals: 1.
+	rows second equippedSlotIdentifier: 'Chest'.
+	rows third equippedSlotIdentifier: nil.
+	service replaceReadRows: rows forOwner: owner.
+	service
+		updateClassifiedEncounter: encounter
+		forVerifiedUser: owner
+		mode: #pve.
+	result := encounter
+			spreadOnKillOf: 'defeated'
+			statuses: statuses
+			targetsAtDistances: targets.
+	self
+		assert: (result collect: #targetIdentifier) asSet
+		equals: #('ten' 'fifteen') asSet.
+	self
+		assert: (result allSatisfy: [ :application | application durationSeconds = 6 ]).
+	self
+		assert: (encounter jupiterDamageMultiplierForStatusAffected: true)
+		equals: 1.
+	rows second equippedSlotIdentifier: nil.
+	service replaceReadRows: rows forOwner: owner.
+	service
+		updateClassifiedEncounter: encounter
+		forVerifiedUser: owner
+		mode: #pve.
+	self
+		assertEmpty: (encounter
+				spreadOnKillOf: 'defeated'
+				statuses: statuses
+				targetsAtDistances: targets)
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testLaunchInventoryAndTalentsSurviveRestart [
 	| owner catalog before after |
 	owner := 'launch-inventory-owner'.
@@ -318,6 +388,44 @@ CIThatGameLaunchInventoryTest >> testLootAwardPersistsSelectionAndGeneratedTalen
 	self assert: reloaded lootPoolIdentifier equals: 'testLoot'.
 	self assert: reloaded talentIdentifier equals: award talentIdentifier.
 	self assert: reloaded comparisonStats first value equals: 0.1
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testRedLotusCombatStacksDecayAndRefreshWithLoadout [
+	| owner catalog rows encounter |
+	self startInventory.
+	owner := 'red-lotus-combat'.
+	catalog := CIGameItemTypes buildCatalog.
+	rows := self
+			gearRowsForFamily: 'redLotusAssault'
+			slots: #('Mask' 'Chest' 'Backpack' 'Gloves' 'KneePads')
+			catalogue: catalog.
+	service replaceReadRows: rows forOwner: owner.
+	encounter := service classifiedEncounterForVerifiedUser: owner mode: #pve.
+	50 timesRepeat: [ encounter recordWeaponHit ].
+	self assert: encounter decayTick equals: 49.
+	2 timesRepeat: [ encounter recordWeaponHit ].
+	self assert: encounter decayTick equals: 49.
+	300 timesRepeat: [ encounter recordWeaponHit ].
+	self assert: encounter recordWeaponHit equals: 200.
+	self assert: (encounter redLotusDamageMultiplier - 2.8) abs < 0.0001.
+	self assert: encounter decayTick equals: 197.
+	rows second equippedSlotIdentifier: nil.
+	service replaceReadRows: rows forOwner: owner.
+	service
+		updateClassifiedEncounter: encounter
+		forVerifiedUser: owner
+		mode: #pve.
+	self assert: encounter recordWeaponHit equals: 100.
+	self assert: (encounter redLotusDamageMultiplier - 1.9) abs < 0.0001.
+	rows third equippedSlotIdentifier: nil.
+	service replaceReadRows: rows forOwner: owner.
+	service
+		updateClassifiedEncounter: encounter
+		forVerifiedUser: owner
+		mode: #pve.
+	self assert: encounter recordWeaponHit equals: 0.
+	self assert: encounter redLotusDamageMultiplier equals: 1
 ]
 
 { #category : 'tests' }

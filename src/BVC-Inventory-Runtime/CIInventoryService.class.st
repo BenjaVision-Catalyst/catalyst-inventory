@@ -34,6 +34,12 @@ CIInventoryService >> applySavedSet: savedSet forOwner: identity outfit: isOutfi
 	^ reply
 ]
 
+{ #category : 'reading' }
+CIInventoryService >> classifiedEncounterForVerifiedUser: identity mode: mode [
+	^ CIClassifiedEncounter
+		forActivations: (self familyEvaluationForVerifiedUser: identity mode: mode)
+]
+
 { #category : 'writing' }
 CIInventoryService >> createSavedSetFor: identity outfit: isOutfit [
 	^ savedSetsLock
@@ -344,6 +350,12 @@ CIInventoryService >> unlockWeaponMod: modId forVerifiedUser: identity [
 				unlockWeaponMod: modId
 				from: itemTypeCatalog
 				forOwner: identity ]
+]
+
+{ #category : 'reading' }
+CIInventoryService >> updateClassifiedEncounter: encounter forVerifiedUser: identity mode: mode [
+	^ encounter
+		updateFromActivations: (self familyEvaluationForVerifiedUser: identity mode: mode)
 ]
 
 { #category : 'private' }
