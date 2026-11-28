@@ -623,6 +623,24 @@ CIThatGameLaunchInventoryTest >> testEnergizeVariantsRespectCooldownAndPreserveU
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testEquipmentExpertiseContributesOnePercentOfItemBaseStatPerGrade [
+	| attributes weapon armor |
+	attributes := CIGameItemTypes buildCatalog attributeCatalogue.
+	weapon := attributes ruleAt: 'expertise.weapon'.
+	armor := attributes ruleAt: 'expertise.armor'.
+	self assert: (weapon parameters at: #operation) equals: #additive.
+	self assert: (weapon parameters at: #baseStat) equals: #baseWeaponDamage.
+	self assert: (armor parameters at: #operation) equals: #additive.
+	self assert: (armor parameters at: #baseStat) equals: #baseArmor.
+	self assert: (weapon contributionAtGrade: 0) equals: 0.
+	self assert: (weapon contributionAtGrade: 30) closeTo: 0.30.
+	self assert: (weapon bonusAtGrade: 15 onBase: 100000) closeTo: 15000.
+	self assert: (armor bonusAtGrade: 27 onBase: 157961) closeTo: 42649.47.
+	self should: [ armor contributionAtGrade: -1 ] raise: Error.
+	self should: [ weapon bonusAtGrade: 1 onBase: -1 ] raise: Error
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testEquippedCreepingDeathSpreadsWithCooldown [
 	| owner catalog row encounter application distances targets |
 	self startInventory.
