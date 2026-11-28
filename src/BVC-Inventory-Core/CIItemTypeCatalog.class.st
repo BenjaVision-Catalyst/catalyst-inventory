@@ -13,7 +13,8 @@ Class {
 		'gearReferencesByName',
 		'weaponReferencesById',
 		'familyReferencesByName',
-		'talentReferencesById'
+		'talentReferencesById',
+		'specializationsByName'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -141,6 +142,15 @@ CIItemTypeCatalog >> registerNamedGearReference: reference [
 ]
 
 { #category : 'registration' }
+CIItemTypeCatalog >> registerSpecialization: definition [
+	specializationsByName ifNil: [ specializationsByName := Dictionary new ].
+	(specializationsByName includesKey: definition name)
+		ifTrue: [ self error: 'Duplicate specialization' ].
+	specializationsByName at: definition name put: definition.
+	^ definition
+]
+
+{ #category : 'registration' }
 CIItemTypeCatalog >> registerTalent: aTalent [
 	| registry identifier |
 	registry := talentsById ifNil: [ talentsById := Dictionary new ].
@@ -176,6 +186,27 @@ CIItemTypeCatalog >> rollTalentFor: aTypeIdentifier using: randomSample [
 	pool isEmpty ifTrue: [ ^ nil ].
 	pool size = 1 ifTrue: [ ^ pool first ].
 	^ pool at: (randomSample value * pool size) floor + 1
+]
+
+{ #category : 'querying' }
+CIItemTypeCatalog >> specializationLoadoutNamed: label selected: identifiers [
+	label = 'Universal' ifTrue: [ self error: 'Select a concrete specialization' ].
+	^ CISpecializationLoadout
+		definition: (self specializationNamed: label)
+		universal: (self specializationNamed: 'Universal')
+		selected: identifiers
+]
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> specializationNamed: label [
+	specializationsByName ifNil: [ self error: 'No specializations registered' ].
+	^ specializationsByName at: label
+]
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> specializations [
+	specializationsByName ifNil: [ ^ #() ].
+	^ (specializationsByName values sorted: [ :a :b | a name < b name ]) asArray
 ]
 
 { #category : 'accessing' }

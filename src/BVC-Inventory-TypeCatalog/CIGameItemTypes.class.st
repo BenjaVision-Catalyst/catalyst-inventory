@@ -47,6 +47,7 @@ CIGameItemTypes class >> buildCatalog [
 	CIWorkbookWeaponData registerIn: catalog.
 	CIWorkbookFamilyData registerIn: catalog.
 	CIWorkbookTalentData registerIn: catalog.
+	CIWorkbookSpecializationData registerIn: catalog.
 	^ catalog
 ]
 

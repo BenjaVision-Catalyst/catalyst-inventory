@@ -1049,6 +1049,59 @@ CIThatGameLaunchInventoryTest >> testScorpioVenomThresholdsAndStackNineRefresh [
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSpecializationsPreserveWorkbookPerksAndValidateSelections [
+	| catalog technician amped selected gear damage digital |
+	catalog := CIGameItemTypes buildCatalog.
+	self assert: catalog specializations size equals: 7.
+	self
+		assert: (catalog specializations sum: [ :specialization | specialization perks size ])
+		equals: 100.
+	technician := catalog specializationNamed: 'Technician'.
+	amped := technician perkAt: 'technician.amped'.
+	self assert: amped evidence equals: 'Specializations!G28:H28'.
+	self assert: amped description equals: '+1 Skill Tier'.
+	self
+		should: [ catalog
+				specializationLoadoutNamed: 'Technician'
+				selected: #('technician.overclockedcpu' 'technician.enhanceddiagnostics') ]
+		raise: Error.
+	self
+		should: [ catalog
+				specializationLoadoutNamed: 'Technician'
+				selected: #('sharpshooter.tactician') ]
+		raise: Error.
+	self
+		should: [ catalog
+				specializationLoadoutNamed: 'Technician'
+				selected: #('technician.linkedlaserpointer') ]
+		raise: Error.
+	selected := catalog
+			specializationLoadoutNamed: 'Technician'
+			selected: #('technician.amped' 'technician.artificer' 'technician.linkedlaserpointer' 'universal.thisismyrifle' 'universal.emi').
+	self
+		assert: selected rewardIdentifiers asSet
+		equals: #('attachment.workbook87' 'gadget.workbook.hive.artificer') asSet.
+	gear := catalog typeAt: 'gadget.workbook.hive.artificer'.
+	self assert: gear workbookVariantDefinition name equals: 'Artificer'.
+	damage := (selected modifiersFor: #rifle)
+			select: [ :each | each stat = #weaponDamage ].
+	self assert: damage size equals: 1.
+	self assert: damage first magnitude equals: 0.15.
+	self
+		assert: ((selected modifiersFor: #pistol) select: [ :each | each stat = #weaponDamage ])
+				isEmpty.
+	self
+		assert: ((selected modifiersFor: #pistol) detect: [ :each | each stat = #skillTier ])
+				unit
+		equals: #skillTier.
+	digital := (catalog specializationNamed: 'Sharpshooter')
+			perkAt: 'sharpshooter.digitalscope'.
+	self
+		assert: (catalog modCatalogue definitionAt: digital rewardIdentifier) name
+		equals: 'Digital Scope'
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testWeaponAttachmentUnlocksAndOwnedGearModsPersist [
 	| catalogue mods owner path store vest gloves mod unlock reloaded rows values |
 	catalogue := CIGameItemTypes buildCatalog.
