@@ -67,6 +67,46 @@ CIThatGameLaunchInventoryTest >> tearDown [
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testAttributeCataloguePreservesScopeMissingValuesAndConflicts [
+	| attributes rifle value gearMod notes |
+	attributes := CIGameItemTypes buildCatalog attributeCatalogue.
+	self assert: (attributes definitionsIn: #gearMod) size equals: 11.
+	self assert: (attributes definitionsIn: #watch) size equals: 16.
+	self assert: (attributes definitionsIn: #statusImmunity) size equals: 10.
+	value := (attributes definitionAt: 'weapon.damage') valueFor: #prototypeMaximum.
+	self assert: value magnitude equals: 0.225.
+	self assert: value unit equals: #fraction.
+	self assert: value evidence equals: 'Attribute Info!F2'.
+	rifle := attributes definitionAt: 'weapon.class.rifle'.
+	self assert: (rifle valueFor: #standardMaximum) status equals: #conflicting.
+	self assert: (rifle valueFor: #standardMaximum) magnitude isNil.
+	self assert: (rifle valueFor: #weaponsTabMaximum) magnitude equals: 0.17.
+	self assert: (rifle valueFor: #prototypeMaximum) rawText equals: '51%%'.
+	self
+		assert: ((attributes definitionAt: 'weapon.class.pistol') valueFor: #standardMaximum)
+				status
+		equals: #inapplicable.
+	self
+		assert: ((attributes definitionAt: 'weapon.minor.optimalRange')
+				valueFor: #prototypeMaximum) status
+		equals: #unspecified.
+	gearMod := attributes definitionAt: 'gearMod.criticalHitChance'.
+	self assert: (gearMod valueFor: #standardMaximum) magnitude equals: 0.06.
+	self assert: (gearMod valueFor: #prototypeMaximum) magnitude isNil.
+	value := (attributes definitionAt: 'immunity.shock')
+			valueFor: #immunityThreshold.
+	self assert: value magnitude equals: 0.86.
+	notes := (attributes definitionAt: 'immunity.shock') notes.
+	self assert: (notes first includesSubstring: 'most enemies').
+	self
+		assert: ((attributes ruleAt: 'skillEfficiency') parameters at: #affectedStats) size
+		equals: 6.
+	self
+		assert: ((attributes ruleAt: 'expertise.skill') parameters at: #exception)
+		equals: #Achilles
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testBluescreenStackBandsShieldGateAndMarkedKill [
 	| catalog bluescreen result nearby |
 	catalog := CIGameItemTypes buildCatalog.

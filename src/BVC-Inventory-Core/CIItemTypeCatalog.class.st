@@ -8,11 +8,17 @@ Class {
 		'lootCatalogue',
 		'modCatalogue',
 		'gearFamiliesById',
-		'gadgetFamiliesByName'
+		'gadgetFamiliesByName',
+		'attributeCatalogue'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
 }
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> attributeCatalogue [
+	^ attributeCatalogue ifNil: [ attributeCatalogue := CIAttributeCatalogue new ]
+]
 
 { #category : 'accessing' }
 CIItemTypeCatalog >> gadgetFamilies [

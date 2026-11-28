@@ -40,6 +40,7 @@ CIGameItemTypes class >> buildCatalog [
 	self registerLaunchGearFamiliesIn: catalog.
 	CIWorkbookGadgetData registerIn: catalog.
 	CIWorkbookGadgetData registerItemTypesIn: catalog.
+	CIWorkbookAttributeData registerIn: catalog attributeCatalogue.
 	^ catalog
 ]
 
