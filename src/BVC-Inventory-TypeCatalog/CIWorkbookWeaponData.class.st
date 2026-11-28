@@ -231,7 +231,8 @@ CIWorkbookWeaponData class >> registerSupportedNamedWeaponSourcesIn: catalog [
 { #category : 'registration' }
 CIWorkbookWeaponData class >> registerSupportedNamedWeaponsIn: catalog [
 	self registerPerfectlyExtraIn: catalog.
-	#(#('C17' 'C8' 'perfectOptimist') #('C53' 'C17' 'perfectInSync') #('C87' 'C26' 'perfectFastHands') #('C150' 'C45' 'perfectPreservation') #('C159' 'C52' 'perfectlyExtra' 'weapon.workbook.rockNRoll'))
+	self registerUnwaveringIn: catalog.
+	#(#('C17' 'C8' 'perfectOptimist') #('C53' 'C17' 'perfectInSync') #('C87' 'C26' 'perfectFastHands') #('C150' 'C45' 'perfectPreservation') #('C159' 'C52' 'perfectlyExtra' 'weapon.workbook.rockNRoll') #('C134' 'C42' 'perfectUnwavering.swapChain' 'weapon.workbook.swapChain'))
 		do: [ :spec | 
 			| statistics named weapon |
 			statistics := catalog weaponReferenceAt: 'Weapons!' , spec first.
@@ -246,6 +247,24 @@ CIWorkbookWeaponData class >> registerSupportedNamedWeaponsIn: catalog [
 			catalog register: weapon.
 			catalog talentPool: {spec third} for: weapon id ].
 	self registerSupportedNamedWeaponSourcesIn: catalog
+]
+
+{ #category : 'registration' }
+CIWorkbookWeaponData class >> registerUnwaveringIn: catalog [
+	#(#('unwavering' 'Unwavering' 3 'Weapon Talents!B54:D54') #('perfectUnwavering.swapChain' 'Perfect Unwavering' 4 'Weapons Named + Exotics!E42'))
+		do: [ :row | 
+			catalog
+				registerTalent: (CIItemTalent
+						id: row first
+						name: row second
+						eligibility: #weapon
+						parameters: {#weaponHandling -> row third.
+								#durationSeconds -> 5.
+								#swapAwayLockoutSeconds -> 5.
+								#killsRefresh -> true.
+								#evidence -> row fourth} asDictionary
+						comment: 'Swapping to this weapon grants +' , (row third * 100) asString
+								, '% weapon handling for 5 seconds. Kills refresh the buff. Swapping away disables Unwavering on all weapons for 5 seconds.') ]
 ]
 
 { #category : 'registration' }

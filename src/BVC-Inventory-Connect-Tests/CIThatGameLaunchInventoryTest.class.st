@@ -3339,6 +3339,52 @@ CIThatGameLaunchInventoryTest >> testStrikerShieldUsesWorkbookBuffRangeForAllies
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSwapChainGeneratesWithPerfectUnwaveringAndSharesLockout [
+	| catalog weapon item swapChain standard state |
+	catalog := CIGameItemTypes buildCatalog.
+	weapon := catalog typeAt: 'weapon.workbook.swapChain'.
+	self assert: weapon statisticsReference weaponClass equals: #smg.
+	item := CIItemGenerator new
+			generate: 'swapChain'
+			type: weapon id
+			values: {'weaponDamage' -> 0.10} asDictionary
+			from: catalog
+			using: [ 0 ].
+	self assert: item talentIdentifier equals: 'perfectUnwavering.swapChain'.
+	swapChain := CIWeaponTalentEncounter
+			weapon: item itemIdentifier
+			talent: (catalog talentAt: item talentIdentifier).
+	standard := CIWeaponTalentEncounter
+			weapon: 'standard'
+			talent: (catalog talentAt: 'unwavering').
+	state := CIUnwaveringSwapState new.
+	swapChain useUnwaveringSwapState: state.
+	standard useUnwaveringSwapState: state.
+	standard
+		recordWeaponSwapFrom: 'other'
+		to: 'standard'
+		at: 0.
+	self assert: (standard weaponHandlingBonusAt: 0) equals: 3.
+	self assert: (standard weaponHandlingBonusAt: 5) equals: 0.
+	standard
+		recordWeaponSwapFrom: 'standard'
+		to: 'other'
+		at: 5.
+	swapChain
+		recordWeaponSwapFrom: 'other'
+		to: 'swapChain'
+		at: 10.
+	self assert: (swapChain weaponHandlingBonusAt: 10) equals: 4.
+	swapChain recordEnemyKillFrom: 'swapChain' at: 14.
+	self assert: (swapChain weaponHandlingBonusAt: 18) equals: 4.
+	swapChain
+		recordWeaponSwapFrom: 'swapChain'
+		to: 'standard'
+		at: 18.
+	self assert: (standard weaponHandlingBonusAt: 18) equals: 0
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testTacticalLinksUseSelectedPerksAndTargetConditions [
 	| catalog encounter sharpshooter survivalist demolitionist firewall inactive |
 	catalog := CIGameItemTypes buildCatalog.
