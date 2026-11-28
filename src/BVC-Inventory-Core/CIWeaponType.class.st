@@ -24,6 +24,19 @@ CIWeaponType class >> id: id name: name slot: slot core: core handling: handling
 		sockets: sockets
 ]
 
+{ #category : 'accessing' }
+CIWeaponType >> baseMagazineCapacity [
+	| row value |
+	row := coreStats detect: [ :stat | stat first = 'Magazine' ] ifNone: [ ^ nil ].
+	value := row second.
+	value isNumber ifTrue: [ ^ value ].
+	((value isString and: [ value endsWith: ' rounds' ])
+		and: [ (value allButLast: ' rounds' size) notEmpty
+				and: [ (value allButLast: ' rounds' size) allSatisfy: #isDigit ] ])
+		ifFalse: [ ^ nil ].
+	^ (value allButLast: ' rounds' size) asNumber
+]
+
 { #category : 'initialization' }
 CIWeaponType >> damageFalloff: points [
 	| lastDistance lastDamage |

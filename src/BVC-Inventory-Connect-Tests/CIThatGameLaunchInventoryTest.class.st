@@ -49,6 +49,88 @@ CIThatGameLaunchInventoryTest >> tearDown [
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testInstalledModEffectsUseWorkbookMagazineAndOwnedRoll [
+	| catalog store owner value chatterbox capacitor vest gearMod report magazine gear graph row |
+	catalog := CIGameItemTypes buildCatalog.
+	store := CIInventoryReadStore new.
+	owner := 'mod-evaluation-owner'.
+	value := Dictionary new
+			at: 'weaponDamage' put: 0.1;
+			yourself.
+	chatterbox := store
+			grantItem: 'chatterbox'
+			type: 'weapon.launch.chatterbox'
+			values: value
+			from: catalog
+			forOwner: owner.
+	capacitor := store
+			grantItem: 'capacitor'
+			type: 'weapon.launch.capacitor'
+			values: value
+			from: catalog
+			forOwner: owner.
+	store
+		grantItem: 'vest'
+		type: 'gear.launch.vossAndVale.chest'
+		values: value
+		from: catalog
+		forOwner: owner.
+	gearMod := store
+			grantGearMod: 'gear-mod'
+			definition: 'gearMod.criticalHitChance'
+			tier: 2
+			value: 0.04
+			from: catalog
+			forOwner: owner.
+	vest := store
+			installMod: gearMod itemIdentifier
+			on: 'vest'
+			socket: 'gearMod'
+			from: catalog
+			forOwner: owner.
+	report := CIEquipmentModEvaluator new
+			evaluateEquipment: {chatterbox.
+					capacitor.
+					vest}
+			owned: (store allRowsForOwner: owner)
+			catalogue: catalog modCatalogue.
+	self assertEmpty: report unresolved.
+	self
+		assert: (report
+				magazineCapacityFor: chatterbox
+				base: (catalog typeAt: chatterbox definitionIdentifier) baseMagazineCapacity)
+		equals: 60.
+	self
+		assert: (report
+				magazineCapacityFor: capacitor
+				base: (catalog typeAt: capacitor definitionIdentifier) baseMagazineCapacity)
+		equals: 41.
+	magazine := (report contributionsFor: #magazineCapacity on: 'chatterbox') first.
+	self assert: magazine value equals: 10.
+	self assert: magazine evidence equals: 'Weapons Named + Exotics!F130'.
+	gear := (report contributionsFor: #criticalHitChance on: 'vest') first.
+	self assert: gear value equals: 0.04.
+	self assert: gear operation equals: #percent.
+	row := chatterbox copy.
+	row equippedSlotIdentifier: 'RangedWeapon'.
+	graph := CIInventoryProfileGraph
+			forVerifiedUser: owner
+			rows: {row.
+					vest.
+					gearMod}
+			savedSets: Dictionary new
+			catalog: catalog.
+	self assert: ((STON toString: graph) includesSubstring: '60 rounds').
+	row := vest withMod: 'missing-mod' inSocket: 'gearMod'.
+	report := CIEquipmentModEvaluator new
+			evaluateEquipment: {row}
+			owned: #()
+			catalogue: catalog modCatalogue.
+	self assertEmpty: report contributions.
+	self assert: report unresolved equals: #(#('vest' 'gearMod' 'missing-mod'))
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testLaunchInventoryAndTalentsSurviveRestart [
 	| owner catalog before after |
 	owner := 'launch-inventory-owner'.

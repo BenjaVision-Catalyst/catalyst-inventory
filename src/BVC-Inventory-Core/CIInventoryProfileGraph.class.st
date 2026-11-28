@@ -88,7 +88,7 @@ CIInventoryProfileGraph class >> addItemInspector: sections forCard: card descri
 			ifTrue: [ sections detect: [ :each | each first = 'falloff' ] ifNone: [ nil ] ]
 			ifFalse: [ nil ].
 	sections
-		withIndexDo: [ :section :index |
+		withIndexDo: [ :section :index | 
 			| sectionId relation relationId rows fieldIds |
 			rows := section third.
 			(rows notEmpty and: [ falloff isNil or: [ section first ~= 'falloff' ] ])
@@ -250,6 +250,32 @@ CIInventoryProfileGraph class >> addRecordSchema: kind to: descriptions known: k
 										field: 'equippedModIdentifier'
 										from: (MAStringDescription new label: 'Equipped mod')) ].
 					descriptions add: field ] ]
+]
+
+{ #category : 'projection' }
+CIInventoryProfileGraph class >> applyingMagazineEffectsTo: sections type: type item: item owned: owned catalogue: modCatalogue [
+	| evaluation base effective |
+	(type isKindOf: CIWeaponType) ifFalse: [ ^ sections ].
+	base := type baseMagazineCapacity.
+	base ifNil: [ ^ sections ].
+	evaluation := CIEquipmentModEvaluator new
+			evaluateEquipment: {item}
+			owned: owned
+			catalogue: modCatalogue.
+	effective := evaluation magazineCapacityFor: item base: base.
+	(effective isNil or: [ effective = base ]) ifTrue: [ ^ sections ].
+	^ sections
+		collect: [ :section | 
+			section first = 'stats'
+				ifTrue: [ {section first.
+						section second.
+						section third
+							collect: [ :row | 
+								row first = 'Magazine'
+									ifTrue: [ {'Magazine'.
+											effective asString , ' rounds'} ]
+									ifFalse: [ row ] ]} ]
+				ifFalse: [ section ] ]
 ]
 
 { #category : 'projection' }
@@ -563,6 +589,12 @@ CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets
 									item: item
 									utilityTier: tier
 									catalog: catalog.
+							sections := self
+									applyingMagazineEffectsTo: sections
+									type: type
+									item: item
+									owned: items
+									catalogue: catalog modCatalogue.
 							sections
 								ifNotEmpty: [ self
 										addItemInspector: sections

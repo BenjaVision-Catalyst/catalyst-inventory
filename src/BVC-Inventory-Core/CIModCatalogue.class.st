@@ -25,6 +25,11 @@ CIModCatalogue >> definitionAt: identifier [
 	^ definitions at: identifier
 ]
 
+{ #category : 'accessing' }
+CIModCatalogue >> definitionAt: identifier ifAbsent: fallback [
+	^ definitions at: identifier ifAbsent: fallback
+]
+
 { #category : 'initialization' }
 CIModCatalogue >> initialize [
 	super initialize.
@@ -47,6 +52,13 @@ CIModCatalogue >> registerSocket: aSocket forItem: itemDefinitionId [
 	(sockets includesKey: aSocket id)
 		ifTrue: [ self error: 'Duplicate item socket' ].
 	sockets at: aSocket id put: aSocket
+]
+
+{ #category : 'accessing' }
+CIModCatalogue >> socketAt: socketId forItem: itemDefinitionId [
+	| sockets |
+	sockets := socketsByItem at: itemDefinitionId ifAbsent: [ ^ nil ].
+	^ sockets at: socketId ifAbsent: [ nil ]
 ]
 
 { #category : 'accessing' }

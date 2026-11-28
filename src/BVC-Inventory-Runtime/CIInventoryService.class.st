@@ -113,6 +113,22 @@ CIInventoryService >> installMod: modItemId on: equipmentId socket: socketId for
 				forOwner: identity ]
 ]
 
+{ #category : 'reading' }
+CIInventoryService >> modEvaluationFor: itemIdentifiers forVerifiedUser: identity [
+	^ savedSetsLock
+		critical: [ | rows items |
+			rows := readStore allRowsForOwner: identity.
+			items := itemIdentifiers asSet
+					collect: [ :id | 
+						rows
+							detect: [ :row | row itemIdentifier = id and: [ row isKindOf: CIInventoryEquipmentSummary ] ]
+							ifNone: [ self error: 'Equipment is not owned' ] ].
+			CIEquipmentModEvaluator new
+				evaluateEquipment: items
+				owned: rows
+				catalogue: itemTypeCatalog modCatalogue ]
+]
+
 { #category : 'writing' }
 CIInventoryService >> modStorageAllowance: allowance forVerifiedUser: identity [
 	^ savedSetsLock
