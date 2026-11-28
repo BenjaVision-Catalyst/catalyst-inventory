@@ -1420,6 +1420,61 @@ CIThatGameLaunchInventoryTest >> testNamedGearReferencesPreserveSplitRowsAndExpo
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testPrototypeConversionRequiresEligibleQualityLevelAndGrade [
+	| catalog rule capacitor |
+	catalog := CIGameItemTypes buildCatalog.
+	rule := catalog attributeCatalogue ruleAt: 'prototype.conversion'.
+	capacitor := catalog weaponReferences
+			detect: [ :reference | reference name = 'Capacitor' and: [ reference kind = #exotic ] ].
+	self assert: rule sourceQualities equals: #(highEnd named gearSet).
+	self assert: rule requiredItemLevel equals: 40.
+	self assert: rule requiredItemGrade equals: 30.
+	self assert: rule requiredPrototypeCores equals: 1.
+	self
+		deny: (rule
+				eligibilityForQuality: capacitor kind
+				itemLevel: 40
+				itemGrade: 30
+				itemEligible: nil).
+	self
+		deny: (rule
+				eligibilityForQuality: #highEnd
+				itemLevel: 39
+				itemGrade: 30
+				itemEligible: true).
+	self
+		deny: (rule
+				eligibilityForQuality: #highEnd
+				itemLevel: 40
+				itemGrade: 29
+				itemEligible: true).
+	self
+		deny: (rule
+				eligibilityForQuality: #gearSet
+				itemLevel: 40
+				itemGrade: 30
+				itemEligible: false).
+	self
+		assert: (rule
+				eligibilityForQuality: #named
+				itemLevel: 40
+				itemGrade: 30
+				itemEligible: nil) isNil.
+	self
+		assert: (rule
+				eligibilityForQuality: #highEnd
+				itemLevel: nil
+				itemGrade: 30
+				itemEligible: true) isNil.
+	self
+		assert: (rule
+				eligibilityForQuality: #highEnd
+				itemLevel: 40
+				itemGrade: 30
+				itemEligible: true)
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testPvPGearTalentProfilesPreserveConflictsAndUseDocumentedOverrides [
 	| catalog normal perfect conflicting missing owner row encounter cover |
 	catalog := CIGameItemTypes buildCatalog.

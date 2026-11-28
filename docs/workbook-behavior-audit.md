@@ -15,7 +15,7 @@ source beside the rule.
 | Skill List M15:M277 and Attribute Info B69:C71 | All 43 gadget entries calculate a 1% contribution per expertise grade. Forty link to a stat track. Damage uses the documented additive operation, with Achilles tagged as an amplifier. The catalog also evaluates Grade upgrade eligibility using item-type Proficiency and account Expertise. | Achilles has no numeric damage track. Artificer's Tech Efficiency and Striker's Regeneration lack a unique track mapping. Non-damage stacking and weapon and armor per-grade rates remain unspecified. |
 | Attribute Info E2:F9 and Weapons P2:R8 | Ordinary launch weapons and linked named and exotic weapons with class rules resolve their class attribute and innate headshot reference separately. Generation accepts supplied secondary rolls with a documented standard cap. TUY8S3.2 resolves the Rifle entries to 34% for High-End and Exotic, 51% for Prototype, and 80% innate Headshot Damage. The catalog preserves the original workbook entries. | The marksman rifle Prototype cap, roll minima and distributions remain unspecified. Existing spawn calls can omit secondary rolls. |
 | Weapons Named + Exotics E59, E64, E76, E77, E97 and Weapons O8 | Generation retains Backup Boomstick's 17% shotgun damage core, The Mop's 10% armor on kill, The White Death and Oh Carol's 137% headshot damage, and TDI Kard Custom's active-weapon skill tier. First Sight uses the reported 85% innate headshot value as a separate built-in stat. | The First Sight reload modifier is unresolved. Backup Boomstick's equipment slot is unspecified. Other intrinsic adjustments remain in the source rows. |
-| Weapons Named + Exotics F112:G112 and Attribute Info E10:E22 | Capacitor uses a Damage to Armor secondary core, capped at 12%, and excludes Damage to Armor from its basic minor choices. Exotics with a documented basic minor rule validate optional supplied ID/value pairs independently of cores and factory attachments. | The workbook supplies no weapon-specific prototype cap for Capacitor and no automatic minor-selection or roll distribution. |
+| Weapons Named + Exotics F112:G112 and Attribute Info E10:E22 | Capacitor uses a Damage to Armor secondary core, capped at 12%, and excludes Damage to Armor from its basic minor choices. Exotics with a documented basic minor rule validate optional supplied ID/value pairs independently of cores and factory attachments. The Prototype conversion rule excludes Exotic items such as Capacitor. | Item-specific conversion eligibility within supported qualities, automatic minor selection, and roll distributions remain unspecified. |
 
 Ubisoft's Episode 1 patch notes give the Riot Foam grenade a 3-metre radius.
 The grenade definition records this dated source. [Episode 1 Patch Notes](https://www.ubisoft.com/en-gb/game/the-division/the-division-2/news-updates/3pepSvWluJRxzkWZeEWv56/episode-1-patch-notes)
@@ -65,3 +65,12 @@ and the updated 80% base Headshot Damage. GT uses 34% in standard generation
 and exposes the 51% Prototype ceiling in the catalog. The lower-quality
 ceilings and the migration of existing rolls are outside this change.
 [TUY8S3.2 Gear Updates](https://ubi.li/SlCDg)
+
+Rise Up limits Prototype conversion to eligible High-End, Named, and Gear Set
+items. An item must be Level 40 and at maximum Grade, and conversion costs one
+Prototype Core. The catalog records the Grade 30 requirement corroborated by
+Spearfall's test notes. For a supported quality, individual eligibility can
+remain unknown. This rule covers conversion, while Prototype drops are a
+separate acquisition route.
+[Rise Up](https://www.ubisoft.com/en-us/game/the-division/the-division-2/news-updates/15OjYSjEhS2rUfiDINkRxD)
+[Spearfall PTS Patch Notes](https://www.ubisoft.com/en-us/game/the-division/the-division-2/news-updates/1wrUJ1HzY6BF8zzO4AMhJ3/spearfall-pts-patch-notes)
