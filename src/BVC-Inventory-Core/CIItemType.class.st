@@ -8,6 +8,11 @@ Class {
 	#package : 'BVC-Inventory-Core'
 }
 
+{ #category : 'accessing' }
+CIItemType >> generationLayout [
+	^ nil
+]
+
 { #category : 'initialization' }
 CIItemType >> inspectorIdentity: fields [
 	inspectorIdentity := fields copy

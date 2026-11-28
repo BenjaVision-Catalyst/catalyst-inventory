@@ -7,9 +7,11 @@ Class {
 
 { #category : 'generating' }
 CIItemGenerator >> completeValues: suppliedValues for: type [
-	| values |
+	| values layout |
 	(suppliedValues isKindOf: Dictionary)
 		ifFalse: [ self error: 'Inventory item values must be a dictionary' ].
+	layout := type generationLayout.
+	layout ifNotNil: [ ^ layout completeValues: suppliedValues ].
 	values := suppliedValues copy.
 	type inventoryItemDescription children
 		do: [ :field | 

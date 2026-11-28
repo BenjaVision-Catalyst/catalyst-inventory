@@ -7,7 +7,8 @@ Class {
 		'attributeType',
 		'value',
 		'valueFormat',
-		'isMaximum'
+		'isMaximum',
+		'generationSlotIdentifier'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -37,6 +38,16 @@ CIInventoryGearAttributeSummary >> attributeType [
 { #category : 'accessing' }
 CIInventoryGearAttributeSummary >> displayName [
 	^ displayName copy
+]
+
+{ #category : 'accessing' }
+CIInventoryGearAttributeSummary >> generationSlotIdentifier [
+	^ generationSlotIdentifier ifNotNil: #copy
+]
+
+{ #category : 'initialization' }
+CIInventoryGearAttributeSummary >> generationSlotIdentifier: identifier [
+	generationSlotIdentifier := identifier copy
 ]
 
 { #category : 'initialization' }

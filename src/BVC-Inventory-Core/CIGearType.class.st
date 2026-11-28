@@ -85,6 +85,29 @@ CIGearType >> inventoryFamilyMetadata [
 	^ Dictionary new
 ]
 
+{ #category : 'spawning' }
+CIGearType >> inventoryItem: itemIdentifier attributes: attributes sockets: sockets talentIdentifier: aTalentIdentifier [
+	| metadata item |
+	metadata := self inventoryFamilyMetadata
+			at: #presentationKind put: 'gear';
+			at: #inventoryTypeCount put: 1;
+			at: #talentIdentifier put: aTalentIdentifier;
+			at: #talentIdentifiers
+				put: (aTalentIdentifier ifNil: [ #() ] ifNotNil: [ {aTalentIdentifier} ]);
+			at: #gearSlotIdentifier put: slotIdentifier;
+			at: #primaryAttribute put: attributes first;
+			at: #rolledAttributes put: attributes allButFirst;
+			at: #modSlots put: sockets;
+			yourself.
+	item := CIInventoryCatalogGear
+			item: itemIdentifier
+			fromDefinition: self
+			metadata: metadata.
+	item availableEquipmentSlotIdentifiers: {slotIdentifier}.
+	item equippedSlotIdentifier: nil.
+	^ item
+]
+
 { #category : 'instance creation' }
 CIGearType >> inventoryItem: itemIdentifier values: values [
 	^ self
@@ -95,7 +118,7 @@ CIGearType >> inventoryItem: itemIdentifier values: values [
 
 { #category : 'spawning' }
 CIGearType >> inventoryItem: itemIdentifier values: values talentIdentifier: aTalentIdentifier [
-	| attributes item metadata |
+	| attributes sockets |
 	self validateInventoryItemValues: values.
 	attributes := attributeSpecs
 			collect: [ :spec | 
@@ -108,29 +131,16 @@ CIGearType >> inventoryItem: itemIdentifier values: values talentIdentifier: aTa
 					value: amount
 					format: spec fourth
 					hasMaximum: amount = (spec at: 6) ].
-	metadata := self inventoryFamilyMetadata
-			at: #presentationKind put: 'gear';
-			at: #inventoryTypeCount put: 1;
-			at: #talentIdentifier put: aTalentIdentifier;
-			at: #talentIdentifiers
-				put: (aTalentIdentifier ifNil: [ #() ] ifNotNil: [ {aTalentIdentifier} ]);
-			at: #gearSlotIdentifier put: slotIdentifier;
-			at: #primaryAttribute put: attributes first;
-			at: #rolledAttributes put: attributes allButFirst;
-			at: #modSlots
-				put: (socketIdentifiers
-						collect: [ :id | 
-							CIInventoryModSlotSummary
-								slot: id
-								equippedMod: (values at: id ifAbsent: [ nil ]) ]);
-			yourself.
-	item := CIInventoryCatalogGear
-			item: itemIdentifier
-			fromDefinition: self
-			metadata: metadata.
-	item availableEquipmentSlotIdentifiers: {slotIdentifier}.
-	item equippedSlotIdentifier: nil.
-	^ item
+	sockets := socketIdentifiers
+			collect: [ :id | 
+				CIInventoryModSlotSummary
+					slot: id
+					equippedMod: (values at: id ifAbsent: [ nil ]) ].
+	^ self
+		inventoryItem: itemIdentifier
+		attributes: attributes
+		sockets: sockets
+		talentIdentifier: aTalentIdentifier
 ]
 
 { #category : 'descriptions' }

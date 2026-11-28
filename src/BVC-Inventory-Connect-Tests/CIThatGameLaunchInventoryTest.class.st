@@ -770,6 +770,92 @@ CIThatGameLaunchInventoryTest >> testLootAwardPersistsSelectionAndGeneratedTalen
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testNamedGearLayoutsEnforceFixedRollsExclusionsAndSocketCounts [
+	| catalog type layout path store owner punch chill missing roll snapshot |
+	catalog := CIGameItemTypes buildCatalog.
+	type := catalog typeAt: 'gear.workbook.punchDrunk'.
+	layout := type generationLayout.
+	self assert: (layout slots collect: #id) equals: #('core' 'minor1' 'minor2').
+	self assert: layout slots second fixedValue equals: 0.20.
+	self
+		deny: (layout slots third eligibleAttributeIds includes: 'gear.minor.headshotDamage').
+	self assert: (type sourceInformation at: #acquisition) equals: 'LZ'.
+	path := (directory / 'named-gear.ston') fullName.
+	store := CIInventorySnapshotStore at: path.
+	owner := 'named-layout-owner'.
+	missing := Dictionary new
+			at: 'core' put: 0.10;
+			yourself.
+	self
+		should: [ store
+				grantItem: 'missing'
+				type: type id
+				values: missing
+				from: catalog
+				forOwner: owner ]
+		raise: Error.
+	roll := CIGearAttributeRoll attribute: 'gear.minor.headshotDamage' value: 0.05.
+	self
+		should: [ store
+				grantItem: 'excluded'
+				type: type id
+				values: (missing copy
+						at: 'minor2' put: roll;
+						yourself)
+				from: catalog
+				forOwner: owner ]
+		raise: Error.
+	roll := CIGearAttributeRoll
+			attribute: 'gear.minor.criticalHitChance'
+			value: 0.07.
+	self
+		should: [ store
+				grantItem: 'over-cap'
+				type: type id
+				values: (missing copy
+						at: 'minor2' put: roll;
+						yourself)
+				from: catalog
+				forOwner: owner ]
+		raise: Error.
+	self assertEmpty: (store allRowsForOwner: owner).
+	roll := CIGearAttributeRoll
+			attribute: 'gear.minor.criticalHitChance'
+			value: 0.06.
+	punch := store
+			grantItem: 'punch'
+			type: type id
+			values: (missing copy
+					at: 'minor2' put: roll;
+					yourself)
+			from: catalog
+			forOwner: owner.
+	self assert: punch rolledAttributes first value equals: 0.20.
+	self assert: punch rolledAttributes second value equals: 0.06.
+	self assert: (punch modSlots collect: #slotIdentifier) equals: #('gearMod1').
+	chill := store
+			grantItem: 'chill'
+			type: 'gear.workbook.chillOut'
+			values: (Dictionary new
+					at: 'core' put: 170000;
+					at: 'minor1' put: roll;
+					yourself)
+			from: catalog
+			forOwner: owner.
+	self assert: chill rolledAttributes size equals: 1.
+	self
+		assert: (chill modSlots collect: #slotIdentifier)
+		equals: #('gearMod1' 'gearMod2').
+	snapshot := (CIInventorySnapshotStore at: path) allRowsForOwner: owner.
+	self
+		assert: (snapshot first rolledAttributes collect: #generationSlotIdentifier)
+		equals: #('minor1' 'minor2').
+	self
+		assert: snapshot second primaryAttribute generationSlotIdentifier
+		equals: 'core'
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testPvPGearTalentProfilesPreserveConflictsAndUseDocumentedOverrides [
 	| catalog normal perfect conflicting missing owner row encounter cover |
 	catalog := CIGameItemTypes buildCatalog.
