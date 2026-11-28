@@ -177,6 +177,23 @@ CIWorkbookWeaponData class >> registerIn: catalog [
 ]
 
 { #category : 'registration' }
+CIWorkbookWeaponData class >> registerSheriffIn: catalog [
+	| statistics named weapon typeId source |
+	typeId := 'weapon.workbook.theSheriff'.
+	statistics := catalog weaponReferenceAt: 'Weapons!C192'.
+	named := catalog weaponReferenceAt: 'Weapons Named + Exotics!C146'.
+	statistics linkItemDefinition: typeId.
+	named linkItemDefinition: typeId.
+	weapon := CIWorkbookNamedWeaponType statistics: statistics named: named.
+	source := named evidenceForField: #talentOrAttribute.
+	weapon
+		fixedAttributes: (#(#('builtInWeaponDamageBonus' 'Built-in Weapon Damage bonus' 0.35 fraction intrinsic always) #('builtInAccuracyBonus' 'Built-in Accuracy bonus' 1 fraction intrinsic always))
+				collect: [ :row | CIWeaponFixedAttribute fromWorkbookRow: row evidence: source ]);
+		disableDamageFalloff.
+	catalog register: weapon
+]
+
+{ #category : 'registration' }
 CIWorkbookWeaponData class >> registerSupportedNamedWeaponSourcesIn: catalog [
 	#(#('namedWeapons.lightZone' 'LZ' zone #('C17' 'C45')) #('namedWeapons.darkZone' 'DZ' zone #('C26')) #('namedWeapons.shieldSplinterer' 'Ivory Cache / then Cassie Mendoza' acquisitionRoute #('C8')))
 		do: [ :spec | 
@@ -217,6 +234,7 @@ CIWorkbookWeaponData class >> registerSupportedNamedWeaponsIn: catalog [
 { #category : 'registration' }
 CIWorkbookWeaponData class >> registerVariantGenerationRulesIn: catalog [
 	self registerFixedNamedWeaponItemsIn: catalog.
+	self registerSheriffIn: catalog.
 	self registerCapacitorCoreOverrideIn: catalog.
 	self registerExoticMinorRulesIn: catalog
 ]

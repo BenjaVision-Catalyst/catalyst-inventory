@@ -109,6 +109,17 @@ CIWeaponType >> damageFalloff: points [
 ]
 
 { #category : 'accessing' }
+CIWeaponType >> damageFalloffPolicy [
+	damageFalloff ifNil: [ ^ nil ].
+	^ damageFalloff = #none ifTrue: [ #none ] ifFalse: [ #curve ]
+]
+
+{ #category : 'initialization' }
+CIWeaponType >> disableDamageFalloff [
+	damageFalloff := #none
+]
+
+{ #category : 'accessing' }
 CIWeaponType >> fixedAttributes [
 	^ fixedAttributes ifNil: [ #() ] ifNotNil: #copy
 ]
@@ -136,12 +147,12 @@ CIWeaponType >> initializeSlot: slot core: core handling: handling sockets: sock
 { #category : 'descriptions' }
 CIWeaponType >> inspectorFalloffRows [
 	| points |
-	damageFalloff ifNil: [ ^ #() ].
+	self damageFalloffPolicy = #curve ifFalse: [ ^ #() ].
 	points := {#(0 100).
 			{self optimalRangeMetres.
 				100}} , damageFalloff.
 	^ points
-		collect: [ :point |
+		collect: [ :point | 
 			{point first asString.
 				point second.
 				point first} ]

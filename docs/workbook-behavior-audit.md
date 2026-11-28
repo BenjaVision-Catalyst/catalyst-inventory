@@ -21,6 +21,7 @@ source beside the rule.
 | Attribute Info E2:F9 and Weapons P2:R8 | Ordinary launch weapons and linked named and exotic weapons with class rules resolve their class attribute and innate headshot reference separately. Generation accepts supplied secondary rolls with a documented standard cap. TUY8S3.2 resolves the Rifle entries to 34% for High-End and Exotic, 51% for Prototype, and 80% innate Headshot Damage. The catalog preserves the original workbook entries. | The marksman rifle Prototype cap, roll minima and distributions remain unspecified. Existing spawn calls can omit secondary rolls. |
 | Weapons Named + Exotics E59, E64, E76, E77, E97 and Weapons G8 and O8 | Backup Boomstick generates as a shotgun with a 17% shotgun damage core and the sidearm slot. Generation retains The Mop's 10% armor on kill, The White Death and Oh Carol's 137% headshot damage, and TDI Kard Custom's active-weapon skill tier. First Sight generation exposes 85% innate headshot damage and a 2.8-second empty reload as numeric built-in stats. | The Named + Exotics E4 reload-speed penalty is preserved as source text. Its calculation and interactions with other reload modifiers remain unspecified. Other intrinsic adjustments remain in the source rows. |
 | Weapons M140, M142 and Weapons Named + Exotics E49 | Slingshot generates with a fixed total optimal range of 60 metres. Both Slingshot workbook entries support that total. | The named entry reports +45, while the standard Tactical UMP-45 lists 16 metres. The relationship between the two remains unspecified. |
+| Weapons C192:O192 and Weapons Named + Exotics E146:G146 | The Sheriff keeps the workbook’s base stats and exposes Autentico’s built-in +35% Weapon Damage and +100% Accuracy. Its falloff policy explicitly specifies no damage drop-off. | The sources give no independent maximum hit distance or pellet spread formula. |
 | Weapons Named + Exotics F112:G112 and Attribute Info E10:E22 | Capacitor uses a Damage to Armor secondary core, capped at 12%, and excludes Damage to Armor from its basic minor choices. Exotics with a documented basic minor rule validate optional supplied ID/value pairs independently of cores and factory attachments. The Prototype conversion rule excludes Exotic items such as Capacitor. | Item-specific conversion eligibility within supported qualities, automatic minor selection, and roll distributions remain unspecified. |
 
 Ubisoft's Episode 1 patch notes give the Riot Foam grenade a 3-metre radius.
@@ -100,3 +101,8 @@ at 04:12 and the 60-second cooldown.
 Published gameplay lists Backup Boomstick in the sidearm slot. GT maps that
 placement to LeftHandWeapon and uses the workbook's shotgun class and core.
 [Player loadout and gameplay](https://www.youtube.com/watch?v=tlMfbh83RTE)
+
+Ubisoft's Mutiny notes confirm the percent unit for The Sheriff's +35 Weapon
+Damage entry and identify all three Autentico properties as built into its
+base stats. GT uses the workbook's listed damage directly before item rolls.
+[Mutiny](https://www.ubisoft.com/en-us/game/the-division/the-division-2/news-updates/5fLsSWyLeFsYWiBxlByY4K/the-division-2-mutiny)

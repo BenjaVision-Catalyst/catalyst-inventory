@@ -2119,6 +2119,35 @@ CIThatGameLaunchInventoryTest >> testSelectedSpecializationGadgetsCanBeClaimedOn
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSheriffAutenticoUsesBuiltInBonusesAndNoDamageFalloff [
+	| catalog weapon item rows |
+	catalog := CIGameItemTypes buildCatalog.
+	weapon := catalog typeAt: 'weapon.workbook.theSheriff'.
+	self assert: weapon namedReference kind equals: #exotic.
+	self assert: weapon damageFalloffPolicy equals: #none.
+	self assertEmpty: weapon inspectorFalloffRows.
+	self
+		assert: (catalog typeAt: 'weapon.workbook.slingshot') damageFalloffPolicy isNil.
+	self
+		assert: (catalog typeAt: 'weapon.ranged.pathfinder') damageFalloffPolicy
+		equals: #curve.
+	self assert: (weapon fixedAttributes collect: #magnitude) equals: #(0.35 1).
+	self
+		assert: (weapon fixedAttributes
+				allSatisfy: [ :attribute | attribute evidence = 'Weapons Named + Exotics!E146' ]).
+	item := CIItemGenerator new
+			generate: 'theSheriff'
+			type: weapon id
+			values: {'weaponDamage' -> 0} asDictionary
+			from: catalog
+			using: [ 0 ].
+	self assert: (item comparisonStats collect: #value) equals: #(0 0.35 1).
+	rows := (weapon inspectorSectionsAtUtilityTier: 0 item: item) first third.
+	self assert: rows first second asNumber equals: 526412.
+	self assert: item talentIdentifier isNil
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testSignatureAmmoDeviceDestructionAndMultikillsUseDistinctEvents [
 	| technician gunner demolitionist |
 	technician := self
