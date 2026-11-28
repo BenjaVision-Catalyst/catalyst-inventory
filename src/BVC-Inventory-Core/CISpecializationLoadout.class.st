@@ -23,6 +23,11 @@ CISpecializationLoadout >> definition [
 ]
 
 { #category : 'accessing' }
+CISpecializationLoadout >> equipmentRewardPerks [
+	^ selectedPerks select: [ :perk | perk equipmentReward notNil ]
+]
+
+{ #category : 'accessing' }
 CISpecializationLoadout >> gadgetUpgradePerksForType: typeIdentifier [
 	^ (selectedPerks
 		select: [ :perk | 

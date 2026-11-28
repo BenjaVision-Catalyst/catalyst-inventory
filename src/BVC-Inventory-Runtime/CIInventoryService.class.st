@@ -449,6 +449,13 @@ CIInventoryService >> specializationEncounterForVerifiedUser: identity mode: mod
 ]
 
 { #category : 'querying' }
+CIInventoryService >> specializationEquipmentRewardPerksForVerifiedUser: identity [
+	^ (self specializationLoadoutForVerifiedUser: identity)
+		ifNil: [ #() ]
+		ifNotNil: #equipmentRewardPerks
+]
+
+{ #category : 'querying' }
 CIInventoryService >> specializationGadgetUpgradePerksForType: typeIdentifier forVerifiedUser: identity [
 	^ (self specializationLoadoutForVerifiedUser: identity)
 		ifNil: [ #() ]

@@ -30,6 +30,20 @@ CIWorkbookSpecializationData class >> registerArmorKitEffectsIn: catalog [
 ]
 
 { #category : 'registration' }
+CIWorkbookSpecializationData class >> registerEquipmentRewardsIn: catalog [
+	#(#('Sharpshooter' 'sharpshooter.flashbanggrenade' grenade nil nil #(blind)) #('Sharpshooter' 'sharpshooter.sharpshooters93r' sidearm 'Weapons!C278' 'Weapons Named + Exotics!C90' #()) #('Sharpshooter' 'sharpshooter.tac50crifle' signatureWeapon nil nil #()) #('Survivalist' 'survivalist.incendiarygrenade' grenade nil nil #(burn)) #('Survivalist' 'survivalist.survivalistd50' sidearm 'Weapons!C281' 'Weapons Named + Exotics!C91' #()) #('Survivalist' 'survivalist.crossbow' signatureWeapon nil nil #()) #('Technician' 'technician.empgrenade' grenade nil nil #(disrupt)) #('Technician' 'technician.maxim9' sidearm 'Weapons!C289' 'Weapons Named + Exotics!C94' #()) #('Technician' 'technician.p017launcher' signatureWeapon nil nil #()) #('Gunner' 'gunner.riotfoamgrenade' grenade nil nil #(ensnare)) #('Gunner' 'gunner.p320xcompact' sidearm 'Weapons!C294' 'Weapons Named + Exotics!C95' #()) #('Gunner' 'gunner.minigun' signatureWeapon nil nil #()) #('Demolitionist' 'demolitionist.fragmentationgrenade' grenade nil nil #(bleed)) #('Demolitionist' 'demolitionist.dicerosspecial' sidearm 'Weapons!C305' 'Weapons Named + Exotics!C99' #()) #('Demolitionist' 'demolitionist.m32a1multishotgrenadelauncher' signatureWeapon nil nil #()) #('Firewall' 'firewall.clustergrenade' grenade nil nil #()) #('Firewall' 'firewall.firestartersawedoffshotgun' sidearm 'Weapons!C164' 'Weapons Named + Exotics!C60' #()) #('Firewall' 'firewall.k8jetstreamflamethrower' signatureWeapon nil nil #()))
+		do: [ :row | 
+			| perk reward |
+			perk := (catalog specializationNamed: row first) perkAt: row second.
+			reward := CISpecializationEquipmentReward
+					kind: row third
+					statistics: (row fourth ifNotNil: [ :id | catalog weaponReferenceAt: id ])
+					namedWeapon: (row fifth ifNotNil: [ :id | catalog weaponReferenceAt: id ])
+					statuses: row sixth.
+			perk eventParameters: {#equipmentReward -> reward} asDictionary ]
+]
+
+{ #category : 'registration' }
 CIWorkbookSpecializationData class >> registerEventParametersIn: catalog [
 	#(#('Gunner' 'gunner.barrage' #(#(rateOfFire 0.05) #(durationSeconds 5))) #('Gunner' 'gunner.coupler' #(#(reloadInterval 3) #(reloadSpeed 0.50))) #('Gunner' 'gunner.supplyline' #(#(intervalSeconds 60) #(personalFraction 0.10) #(partyFraction 0.05))) #('Technician' 'technician.faradayfield' #(#(radiusMetres 5) #(immunities #(shock disrupt)))) #('Firewall' 'firewall.fieryresponse' #(#(radiusMetres 5) #(status burn) #(disabledInPvP true))) #('Demolitionist' 'demolitionist.bracedforimpact' #(#(cooldownSeconds 60))) #('Sharpshooter' 'sharpshooter.sharpshootertacticallink' #(#(headshotDamage 0.10))) #('Survivalist' 'survivalist.survivalisttacticallink' #(#(damage 0.10))) #('Demolitionist' 'demolitionist.demolitionisttacticallink' #(#(damage 0.05))) #('Firewall' 'firewall.firewalltacticallink' #(#(damage 0.10) #(radiusMetres 10))) #('Sharpshooter' 'sharpshooter.myhomeismycastle' #(#(grantsBonusArmor true))) #('Survivalist' 'survivalist.crunchtime' #(#(gadgetHaste 0.10))) #('Technician' 'technician.technomancy' #(#(bonusArmor 0.15))) #('Technician' 'technician.dismantling' #(#(damage 0.12) #(targetKinds #(drone skillProxy robotics)))) #('Gunner' 'gunner.emplacement' #(#(weaponHandling 0.10) #(stationarySeconds 1))) #('Gunner' 'gunner.incessant' #(#(armorFraction 0.10))) #('Demolitionist' 'demolitionist.crisisresponse' #(#(refillsMainWeaponMagazines true))) #('Firewall' 'firewall.bullrush' #(#(bonusArmor 0.30))))
 		do: [ :spec | 
@@ -102,7 +116,8 @@ CIWorkbookSpecializationData class >> registerIn: catalog [
 	self registerSignatureAmmoParametersIn: catalog.
 	self registerArmorKitEffectsIn: catalog.
 	self registerOrdinaryAmmoAccrualsIn: catalog.
-	self registerGadgetUpgradesIn: catalog
+	self registerGadgetUpgradesIn: catalog.
+	self registerEquipmentRewardsIn: catalog
 ]
 
 { #category : 'registration' }

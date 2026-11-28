@@ -44,6 +44,12 @@ CISpecializationPerk >> description [
 ]
 
 { #category : 'accessing' }
+CISpecializationPerk >> equipmentReward [
+	^ eventParameters
+		ifNotNil: [ eventParameters at: #equipmentReward ifAbsent: [ nil ] ]
+]
+
+{ #category : 'accessing' }
 CISpecializationPerk >> eventParameters [
 	^ eventParameters ifNotNil: #copy
 ]

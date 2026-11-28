@@ -1234,6 +1234,31 @@ CIThatGameLaunchInventoryTest >> testSavedSpecializationChangesGadgetTierAndSurv
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSavedSpecializationOnlyExposesItsSelectedEquipmentRewards [
+	| owner rewards |
+	self startInventory.
+	owner := 'specialization-equipment-owner'.
+	self
+		assertEmpty: (service specializationEquipmentRewardPerksForVerifiedUser: owner).
+	service
+		selectSpecialization: 'Firewall'
+		perks: #('firewall.clustergrenade' 'firewall.firestartersawedoffshotgun' 'firewall.fieryresponse')
+		forVerifiedUser: owner.
+	rewards := service specializationEquipmentRewardPerksForVerifiedUser: owner.
+	self
+		assert: (rewards collect: #id)
+		equals: #('firewall.clustergrenade' 'firewall.firestartersawedoffshotgun').
+	self assertEmpty: rewards first equipmentReward appliedStatuses.
+	self
+		assertEmpty: (service specializationEquipmentRewardPerksForVerifiedUser: 'another-owner').
+	self
+		assertEmpty: (service
+				rowsForVerifiedUser: owner
+				offset: 0
+				limit: 32)
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testScorpioVenomThresholdsAndStackNineRefresh [
 	| catalog scorpio outcome |
 	catalog := CIGameItemTypes buildCatalog.
@@ -1616,6 +1641,36 @@ CIThatGameLaunchInventoryTest >> testSpecializationConditionalPerksHonorRangeCoo
 	self assert: (demolitionist blocksExplosionAt: 0).
 	self deny: (demolitionist blocksExplosionAt: 59).
 	self assert: (demolitionist blocksExplosionAt: 60)
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSpecializationEquipmentRewardsRetainWorkbookReferencesAndUnspecifiedStats [
+	| catalog equipped firestarter diceros emp |
+	catalog := CIGameItemTypes buildCatalog.
+	equipped := catalog specializations
+			flatCollect: [ :each | (each perks collect: #equipmentReward) reject: #isNil ].
+	#(grenade sidearm signatureWeapon)
+		do: [ :kind | self assert: (equipped count: [ :reward | reward kind = kind ]) equals: 6 ].
+	(equipped select: [ :reward | reward kind = #signatureWeapon ])
+		do: [ :reward | 
+			self assert: reward weaponStatistics isNil.
+			self assert: reward namedWeaponReference isNil ].
+	firestarter := ((catalog specializationNamed: 'Firewall')
+			perkAt: 'firewall.firestartersawedoffshotgun') equipmentReward.
+	self assert: firestarter weaponStatistics name equals: 'Firestarter'.
+	self assert: firestarter weaponStatistics id equals: 'Weapons!C164'.
+	self
+		assert: ((firestarter namedWeaponReference fieldAt: #talentOrAttribute)
+				includesSubstring: 'Primer Rounds').
+	diceros := ((catalog specializationNamed: 'Demolitionist')
+			perkAt: 'demolitionist.dicerosspecial') equipmentReward.
+	self
+		assert: ((diceros namedWeaponReference fieldAt: #talentOrAttribute)
+				includesSubstring: '4%').
+	emp := (catalog specializationNamed: 'Technician')
+			perkAt: 'technician.empgrenade'.
+	self assert: emp equipmentReward appliedStatuses equals: #(disrupt).
+	self assert: (emp description includesSubstring: 'electrical abilities')
 ]
 
 { #category : 'tests' }
