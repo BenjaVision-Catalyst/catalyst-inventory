@@ -20,9 +20,21 @@ CISkillEfficiencyRule >> actualContributionsForEfficiency: efficiency [
 
 { #category : 'evaluating' }
 CISkillEfficiencyRule >> cooldownSecondsFromBase: baseSeconds efficiency: efficiency [
+	^ self
+		cooldownSecondsFromBase: baseSeconds
+		skillHaste: 0
+		efficiency: efficiency
+]
+
+{ #category : 'evaluating' }
+CISkillEfficiencyRule >> cooldownSecondsFromBase: baseSeconds skillHaste: ordinaryHaste efficiency: efficiency [
+	| efficiencyHaste |
+	ordinaryHaste isNumber ifFalse: [ self error: 'Invalid skill haste' ].
+	efficiencyHaste := (self actualContributionsForEfficiency: efficiency)
+			at: #skillHaste.
 	^ CISkillHasteRule
 		secondsFromBase: baseSeconds
-		withHaste: ((self actualContributionsForEfficiency: efficiency) at: #skillHaste)
+		withHaste: ordinaryHaste + efficiencyHaste
 ]
 
 { #category : 'evaluating' }

@@ -2507,6 +2507,36 @@ CIThatGameLaunchInventoryTest >> testSkillEfficiencyUsesActualHasteForCooldownAn
 	self assert: (rule cooldownSecondsFromBase: 60 efficiency: 0.2) closeTo: 50.
 	self assert: (rule cooldownSecondsFromBase: 60 efficiency: 1) equals: 30.
 	self assert: (rule cooldownSecondsFromBase: 60 efficiency: 0) equals: 60.
+	self
+		assert: (rule
+				cooldownSecondsFromBase: 60
+				skillHaste: 0.50
+				efficiency: 0.20)
+		closeTo: 60 / 1.70.
+	self
+		assert: (rule
+				cooldownSecondsFromBase: 60
+				skillHaste: 0.50
+				efficiency: 0)
+		equals: 40.
+	self
+		assert: (rule
+				cooldownSecondsFromBase: 60
+				skillHaste: 0
+				efficiency: 0.20)
+		closeTo: 50.
+	self
+		should: [ rule
+				cooldownSecondsFromBase: 60
+				skillHaste: nil
+				efficiency: 0.20 ]
+		raise: Error.
+	self
+		should: [ rule
+				cooldownSecondsFromBase: 60
+				skillHaste: -1.20
+				efficiency: 0.10 ]
+		raise: Error.
 	self should: [ rule actualContributionsForEfficiency: -0.1 ] raise: Error
 ]
 
