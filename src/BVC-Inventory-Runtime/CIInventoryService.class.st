@@ -387,6 +387,22 @@ CIInventoryService >> updateClassifiedEncounter: encounter forVerifiedUser: iden
 		updateFromActivations: (self familyEvaluationForVerifiedUser: identity mode: mode)
 ]
 
+{ #category : 'reading' }
+CIInventoryService >> weaponTalentEncounterFor: weaponId forVerifiedUser: identity [
+	^ savedSetsLock
+		critical: [ | weapon talent |
+			weapon := (readStore allRowsForOwner: identity)
+					detect: [ :row | row itemIdentifier = weaponId ]
+					ifNone: [ self error: 'Weapon is not owned' ].
+			((weapon isKindOf: CIInventoryWeaponToolSummary)
+				and: [ weapon equippedSlotIdentifier notNil ])
+				ifFalse: [ self error: 'A weapon must be equipped' ].
+			talent := weapon talentIdentifier
+					ifNil: [ self error: 'The equipped weapon has no talent' ]
+					ifNotNil: [ :id | itemTypeCatalog talentAt: id ].
+			CIWeaponTalentEncounter weapon: weapon itemIdentifier talent: talent ]
+]
+
 { #category : 'private' }
 CIInventoryService >> withSavedSet: setIdentifier forVerifiedUser: identity do: action [
 	^ savedSetsLock

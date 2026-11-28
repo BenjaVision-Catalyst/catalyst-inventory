@@ -208,6 +208,39 @@ CIThatGameLaunchInventoryTest >> testGearFamilyThresholdsAndModeValues [
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testInSyncEffectsOverlapAndExpireIndependently [
+	| owner catalog weapon encounter |
+	self startInventory.
+	owner := 'weapon-talent-owner'.
+	catalog := CIGameItemTypes buildCatalog.
+	weapon := (catalog typeAt: 'weapon.launch.akM')
+			inventoryItem: 'weapon'
+			values: (Dictionary new
+					at: 'weaponDamage' put: 0.1;
+					yourself)
+			talentIdentifier: 'perfectInSync'.
+	service replaceReadRows: {weapon} forOwner: owner.
+	self
+		should: [ service weaponTalentEncounterFor: 'weapon' forVerifiedUser: owner ]
+		raise: Error.
+	weapon := weapon copy.
+	weapon equippedSlotIdentifier: 'RangedWeapon'.
+	service replaceReadRows: {weapon} forOwner: owner.
+	encounter := service weaponTalentEncounterFor: 'weapon' forVerifiedUser: owner.
+	encounter
+		recordEnemyHitFrom: 'weapon'
+		critical: false
+		at: 1.
+	self assert: ((encounter damageBonusesAt: 1) at: #skillDamage) equals: 0.20.
+	encounter recordGadgetUseOrDamageAt: 3.
+	self assert: ((encounter damageBonusesAt: 3) at: #skillDamage) equals: 0.40.
+	self assert: ((encounter damageBonusesAt: 3) at: #weaponDamage) equals: 0.40.
+	self assert: ((encounter damageBonusesAt: 6) at: #skillDamage) equals: 0.
+	self assert: ((encounter damageBonusesAt: 6) at: #weaponDamage) equals: 0.20.
+	self assert: ((encounter damageBonusesAt: 8) at: #weaponDamage) equals: 0
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testInstalledModEffectsUseWorkbookMagazineAndOwnedRoll [
 	| catalog store owner value chatterbox capacitor vest gearMod report magazine gear graph row |
 	catalog := CIGameItemTypes buildCatalog.
@@ -628,6 +661,57 @@ CIThatGameLaunchInventoryTest >> testWeaponAttachmentUnlocksAndOwnedGearModsPers
 				assert: (rows detect: [ :row | row itemIdentifier = id ]) modSlots first
 						equippedModIdentifier
 				equals: unlock itemIdentifier ]
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testWeaponTalentBoundariesAndPerfectVariants [
+	| catalog make optimist perfect ranger repair reload |
+	catalog := CIGameItemTypes buildCatalog.
+	make := [ :id | CIWeaponTalentEncounter weapon: 'weapon' talent: (catalog talentAt: id) ].
+	optimist := make value: 'optimist'.
+	perfect := make value: 'perfectOptimist'.
+	self
+		assert: (optimist weaponDamageBonusForMagazine: 30 remaining: 28)
+		equals: 0.
+	self
+		assert: (optimist weaponDamageBonusForMagazine: 30 remaining: 21)
+		closeTo: 0.105.
+	self
+		assert: (perfect weaponDamageBonusForMagazine: 30 remaining: 21)
+		closeTo: 0.135.
+	self
+		assert: (optimist weaponDamageBonusForMagazine: 30 remaining: 0)
+		closeTo: 0.35.
+	ranger := make value: 'ranger'.
+	self assert: (ranger weaponDamageMultiplierAtDistance: 3.9) equals: 1.
+	self assert: (ranger weaponDamageMultiplierAtDistance: 4) equals: 1.02.
+	self
+		assert: ((make value: 'perfectRanger') weaponDamageMultiplierAtDistance: 6)
+		equals: 1.04.
+	repair := (make value: 'perfectPreservation')
+			armorRepairOnKillFrom: 'weapon'
+			headshot: true.
+	self assert: repair fraction closeTo: 0.30.
+	self assert: repair durationSeconds equals: 5.
+	self
+		assert: ((make value: 'preservation') armorRepairOnKillFrom: 'another' headshot: true)
+				isNil.
+	reload := make value: 'perfectFastHands'.
+	reload
+		recordEnemyHitFrom: 'weapon'
+		critical: false
+		at: 0.
+	reload
+		recordEnemyHitFrom: 'another'
+		critical: true
+		at: 0.
+	self assert: reload reloadSpeedBonus equals: 0.
+	45
+		timesRepeat: [ reload
+				recordEnemyHitFrom: 'weapon'
+				critical: true
+				at: 1 ].
+	self assert: reload reloadSpeedBonus equals: 2
 ]
 
 { #category : 'tests' }
