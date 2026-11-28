@@ -889,6 +889,65 @@ CIThatGameLaunchInventoryTest >> testExpertiseProgressionRequiresProficiencyAndR
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testFeedbackLoopTargetsOtherGadgetAndAppliesSlotBonusesIndependently [
+	| catalog rule normal upgraded |
+	catalog := CIGameItemTypes buildCatalog.
+	rule := (catalog gearFamilyReferenceAt: 'Hard Wired') gadgetTalentRule.
+	self assert: rule evidence equals: 'Gearsets!E23:G23'.
+	self assert: (rule cooldownSecondsWithShortCircuit: false) equals: 10.
+	self assert: (rule cooldownSecondsWithShortCircuit: true) equals: 5.
+	self
+		assertEmpty: (rule
+				effectsOnGadgetEvent: #use
+				equippedPieces: 3
+				secondsSinceLastActivation: nil
+				positiveReinforcement: false
+				shortCircuit: false).
+	self
+		assertEmpty: (rule
+				effectsOnGadgetEvent: #hit
+				equippedPieces: 4
+				secondsSinceLastActivation: nil
+				positiveReinforcement: false
+				shortCircuit: false).
+	normal := rule
+			effectsOnGadgetEvent: #use
+			equippedPieces: 4
+			secondsSinceLastActivation: nil
+			positiveReinforcement: false
+			shortCircuit: false.
+	self assert: (normal at: #otherGadgetCooldownReductionSeconds) equals: 30.
+	self assert: (normal at: #totalGadgetDamageBonus) equals: 0.10.
+	self assert: (normal at: #totalGadgetRepairBonus) equals: 0.10.
+	self assert: (normal at: #buffDurationSeconds) equals: 20.
+	self
+		assertEmpty: (rule
+				effectsOnGadgetEvent: #cancel
+				equippedPieces: 4
+				secondsSinceLastActivation: 5
+				positiveReinforcement: true
+				shortCircuit: false).
+	self
+		assert: (rule
+				effectsOnGadgetEvent: #cancel
+				equippedPieces: 4
+				secondsSinceLastActivation: 5
+				positiveReinforcement: false
+				shortCircuit: true)
+		equals: normal.
+	upgraded := rule
+			effectsOnGadgetEvent: #cancel
+			equippedPieces: 4
+			secondsSinceLastActivation: 10
+			positiveReinforcement: true
+			shortCircuit: false.
+	self assert: (upgraded at: #totalGadgetDamageBonus) equals: 0.25.
+	self assert: (upgraded at: #totalGadgetRepairBonus) equals: 0.25.
+	self assert: (upgraded at: #otherGadgetCooldownReductionSeconds) equals: 30.
+	self assert: (upgraded at: #buffDurationSeconds) equals: 20
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testFirstSightUsesDocumentedEmptyReloadTime [
 	| catalog weapon reload item |
 	catalog := CIGameItemTypes buildCatalog.
