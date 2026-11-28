@@ -2778,6 +2778,90 @@ CIThatGameLaunchInventoryTest >> testStandardWeaponClassGenerationUsesOnlyDocume
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testStrikerShieldUsesWorkbookBuffRangeForAllies [
+	| catalog striker profile bonus tierZero tierOne overcharge track |
+	catalog := CIGameItemTypes buildCatalog.
+	striker := (catalog gadgetFamilyNamed: 'Shield') variantNamed: 'Striker'.
+	profile := striker behaviorProfile.
+	bonus := [ :count :owner :behind :distance :stats | 
+		profile
+			damageBonusForEnemiesInFront: count
+			recipientIsOwner: owner
+			allyBehind: behind
+			allyDistanceInMetres: distance
+			stats: stats ].
+	tierZero := striker knownStatsAtTier: 0.
+	tierOne := striker knownStatsAtTier: 1.
+	overcharge := striker knownStatsAtTier: #overcharge.
+	self assert: (tierZero at: 'Buff Range') equals: 10.
+	self assert: (tierOne at: 'Buff Range') equals: 10.
+	self assert: (overcharge at: 'Buff Range') equals: 10.
+	self
+		assert: (bonus
+				valueWithArguments: {3.
+						false.
+						true.
+						10.
+						tierZero})
+		closeTo: 0.15.
+	self
+		assert: (bonus
+				valueWithArguments: {3.
+						false.
+						true.
+						10.01.
+						tierZero})
+		equals: 0.
+	self
+		assert: (bonus
+				valueWithArguments: {3.
+						false.
+						false.
+						1.
+						tierZero})
+		equals: 0.
+	self
+		assert: (bonus
+				valueWithArguments: {3.
+						true.
+						false.
+						nil.
+						tierZero})
+		closeTo: 0.15.
+	self
+		assert: (bonus
+				valueWithArguments: {3.
+						false.
+						true.
+						nil.
+						tierZero}) isNil.
+	self
+		assert: (bonus
+				valueWithArguments: {3.
+						false.
+						true.
+						5.
+						tierOne}) isNil.
+	self
+		assert: (bonus
+				valueWithArguments: {3.
+						false.
+						true.
+						5.
+						overcharge}) isNil.
+	self
+		assert: (bonus
+				valueWithArguments: {3.
+						false.
+						true.
+						11.
+						overcharge})
+		equals: 0.
+	track := striker trackNamed: 'Damage bonus / (per enemy)'.
+	self assert: (track rawValueAtTier: #overcharge) equals: '+2.5 Buff strength'
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testTacticalLinksUseSelectedPerksAndTargetConditions [
 	| catalog encounter sharpshooter survivalist demolitionist firewall inactive |
 	catalog := CIGameItemTypes buildCatalog.

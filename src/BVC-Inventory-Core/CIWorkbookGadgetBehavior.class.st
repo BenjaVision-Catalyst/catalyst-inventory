@@ -30,7 +30,25 @@ CIWorkbookGadgetBehavior >> allowsSignatureWeapon: identifier [
 ]
 
 { #category : 'evaluating' }
+CIWorkbookGadgetBehavior >> damageBonusForEnemiesInFront: enemyCount recipientIsOwner: owner allyBehind: allyBehind allyDistanceInMetres: allyDistance stats: effectiveStats [
+	| bonus range |
+	bonus := self
+			damageBonusForEnemiesInFront: enemyCount
+			recipientIsOwner: owner
+			allyBehind: allyBehind
+			stats: effectiveStats.
+	(owner or: [ bonus = 0 ]) ifTrue: [ ^ bonus ].
+	allyDistance ifNil: [ ^ nil ].
+	(allyDistance isNumber and: [ allyDistance >= 0 ])
+		ifFalse: [ self error: 'Invalid ally distance' ].
+	range := effectiveStats at: 'Buff Range' ifAbsent: [ ^ nil ].
+	^ allyDistance > range ifTrue: [ 0 ] ifFalse: [ bonus ]
+]
+
+{ #category : 'evaluating' }
 CIWorkbookGadgetBehavior >> damageBonusForEnemiesInFront: enemyCount recipientIsOwner: owner allyBehind: allyBehind stats: effectiveStats [
+	"Use this selector when allyBehind already includes range eligibility."
+
 	(enemyCount isInteger and: [ enemyCount >= 0 ])
 		ifFalse: [ self error: 'Invalid enemy count' ].
 	((effects includes: #damageBonusPerEnemy) and: [ owner or: [ allyBehind ] ])
