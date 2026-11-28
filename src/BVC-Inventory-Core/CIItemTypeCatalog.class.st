@@ -7,11 +7,24 @@ Class {
 		'talentPoolsByTypeId',
 		'lootCatalogue',
 		'modCatalogue',
-		'gearFamiliesById'
+		'gearFamiliesById',
+		'gadgetFamiliesByName'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
 }
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> gadgetFamilies [
+	gadgetFamiliesByName ifNil: [ ^ #() ].
+	^ (gadgetFamiliesByName values sorted: [ :a :b | a name < b name ]) asArray
+]
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> gadgetFamilyNamed: label [
+	gadgetFamiliesByName ifNil: [ self error: 'No gadget families registered' ].
+	^ gadgetFamiliesByName at: label
+]
 
 { #category : 'accessing' }
 CIItemTypeCatalog >> gearFamilies [
@@ -52,6 +65,15 @@ CIItemTypeCatalog >> register: aType [
 		ifTrue: [ self error: 'Duplicate item type: ' , identifier ].
 	typesById at: identifier put: aType.
 	^ aType
+]
+
+{ #category : 'registration' }
+CIItemTypeCatalog >> registerGadgetFamily: family [
+	gadgetFamiliesByName ifNil: [ gadgetFamiliesByName := Dictionary new ].
+	(gadgetFamiliesByName includesKey: family name)
+		ifTrue: [ self error: 'Duplicate gadget family' ].
+	gadgetFamiliesByName at: family name put: family.
+	^ family
 ]
 
 { #category : 'registration' }

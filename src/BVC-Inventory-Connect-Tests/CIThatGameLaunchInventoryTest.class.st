@@ -521,6 +521,44 @@ CIThatGameLaunchInventoryTest >> testWorkbookFactoryAttachmentsAreLockedAndPersi
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testWorkbookGadgetTiersKeepMissingAndOverchargeSeparate [
+	| catalog pulse scanner tactician track repair cooldown |
+	catalog := CIGameItemTypes buildCatalog.
+	self assert: catalog gadgetFamilies size equals: 12.
+	self
+		assert: (catalog gadgetFamilies sum: [ :family | family variants size ])
+		equals: 43.
+	self
+		assert: (catalog gadgetFamilies
+				sum: [ :family | family variants sum: [ :variant | variant tracks size ] ])
+		equals: 270.
+	pulse := catalog gadgetFamilyNamed: 'Pulse'.
+	scanner := pulse variantNamed: 'Scanner'.
+	self assert: ((scanner knownStatsAtTier: 0) at: 'Effect Radius') equals: 100.
+	self
+		assert: (((scanner knownStatsAtTier: 6) at: 'Duration') - 15.2) abs < 0.001.
+	self
+		assert: ((scanner knownStatsAtTier: #overcharge) at: 'Duration')
+		equals: 24.
+	self assert: (scanner overchargeEffects first includesSubstring: '15%').
+	self assert: (scanner expertiseScaling first includesSubstring: '+1% Duration').
+	cooldown := scanner trackNamed: 'Cooldown'.
+	self assert: (cooldown rawValueAtTier: 1) equals: '-'.
+	self assert: (cooldown magnitudeAtTier: 1) equals: 20.
+	tactician := (catalog gadgetFamilyNamed: 'Drone') variantNamed: 'Tactician'.
+	track := tactician trackNamed: 'Scan Range'.
+	self assert: track unit equals: #metres.
+	self assert: track evidence equals: 'Skill List!C260:M260'.
+	self assert: (track magnitudeAtTier: 6) equals: 80.
+	self assert: (track magnitudeAtTier: #overcharge) equals: 90.
+	repair := ((catalog gadgetFamilyNamed: 'Chem Launcher')
+			variantNamed: 'Reinforcer') trackNamed: 'Repair Over Time'.
+	self assert: (repair rawValueAtTier: 1) isNil.
+	self assert: (repair magnitudeAtTier: 1) isNil.
+	self should: [ scanner knownStatsAtTier: 7 ] raise: Error
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testWorkbookLootSourcesKeepUnknownOdds [
 	| catalog loot pools entry |
 	catalog := CIGameItemTypes buildCatalog.

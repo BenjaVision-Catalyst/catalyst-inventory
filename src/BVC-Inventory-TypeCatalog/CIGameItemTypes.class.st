@@ -38,6 +38,7 @@ CIGameItemTypes class >> buildCatalog [
 	self registerLootIn: catalog.
 	self registerModsIn: catalog.
 	self registerLaunchGearFamiliesIn: catalog.
+	CIWorkbookGadgetData registerIn: catalog.
 	^ catalog
 ]
 

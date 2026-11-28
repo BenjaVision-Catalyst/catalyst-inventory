@@ -75,6 +75,14 @@ CIInventoryService >> familyEvaluationForVerifiedUser: identity mode: mode [
 				mode: mode ]
 ]
 
+{ #category : 'reading' }
+CIInventoryService >> gadgetStatsForFamily: familyName variant: variantName tier: tier [
+	| variant |
+	variant := (itemTypeCatalog gadgetFamilyNamed: familyName)
+			variantNamed: variantName.
+	^ variant knownStatsAtTier: tier
+]
+
 { #category : 'writing' }
 CIInventoryService >> grantGearMod: itemId definition: modId tier: tier value: value forVerifiedUser: identity [
 	^ savedSetsLock
