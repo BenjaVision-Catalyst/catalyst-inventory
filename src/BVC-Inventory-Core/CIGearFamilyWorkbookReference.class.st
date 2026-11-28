@@ -6,7 +6,8 @@ Class {
 		'kind',
 		'fields',
 		'evidence',
-		'runtimeFamilyIdentifier'
+		'runtimeFamilyIdentifier',
+		'gadgetTalentRule'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -19,6 +20,16 @@ CIGearFamilyWorkbookReference class >> name: label kind: familyKind fields: entr
 		kind: familyKind
 		fields: entries
 		runtimeFamily: identifier
+]
+
+{ #category : 'accessing' }
+CIGearFamilyWorkbookReference >> gadgetTalentRule [
+	^ gadgetTalentRule
+]
+
+{ #category : 'accessing' }
+CIGearFamilyWorkbookReference >> gadgetTalentRule: aRule [
+	gadgetTalentRule := aRule
 ]
 
 { #category : 'initialization' }

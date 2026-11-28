@@ -1024,6 +1024,97 @@ CIThatGameLaunchInventoryTest >> testGunnerEncounterUsesSelectedPerksAndDocument
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testHuddleUsesSetThresholdAndIndependentCooldownModifiers [
+	| catalog reference rule |
+	catalog := CIGameItemTypes buildCatalog.
+	reference := catalog gearFamilyReferenceAt: 'Measured Assembly'.
+	rule := reference gadgetTalentRule.
+	self assert: (rule evidence includesSubstring: 'Gearsets!E31:G31').
+	self
+		assert: (rule gadgetTierBonusForAlliesInRange: 2 equippedPieces: 3)
+		equals: 0.
+	self
+		assert: (rule gadgetTierBonusForAlliesInRange: 2 equippedPieces: 4)
+		equals: 2.
+	self assert: (rule overchargeCooldownSecondsWithHivemind: false) equals: 40.
+	self assert: (rule overchargeCooldownSecondsWithHivemind: true) equals: 25.
+	self
+		assert: (rule
+				overchargeSecondsAtGadgetTier: 6
+				equippedPieces: 3
+				secondsQualifying: 4
+				secondsSinceLastActivation: nil
+				hivemind: false)
+		equals: 0.
+	self
+		assert: (rule
+				overchargeSecondsAtGadgetTier: 6
+				equippedPieces: 4
+				secondsQualifying: 3.99
+				secondsSinceLastActivation: nil
+				hivemind: false)
+		equals: 0.
+	self
+		assert: (rule
+				overchargeSecondsAtGadgetTier: 5
+				equippedPieces: 4
+				secondsQualifying: 4
+				secondsSinceLastActivation: nil
+				hivemind: false)
+		equals: 0.
+	self
+		assert: (rule
+				overchargeSecondsAtGadgetTier: 6
+				equippedPieces: 4
+				secondsQualifying: 4
+				secondsSinceLastActivation: 25
+				hivemind: false)
+		equals: 0.
+	self
+		assert: (rule
+				overchargeSecondsAtGadgetTier: 6
+				equippedPieces: 4
+				secondsQualifying: 4
+				secondsSinceLastActivation: 25
+				hivemind: true)
+		equals: 15.
+	self
+		assert: (rule
+				overchargeSecondsAtGadgetTier: #overcharge
+				equippedPieces: 4
+				secondsQualifying: 4
+				secondsSinceLastActivation: nil
+				hivemind: false) isNil.
+	self
+		assert: (rule interceptionCooldownSecondsWithSmartCooperation: false)
+		equals: 10.
+	self
+		assert: (rule interceptionCooldownSecondsWithSmartCooperation: true)
+		equals: 1.
+	self assert: rule reportedInterceptionSpeedBonusPerAlly equals: 0.20.
+	self
+		assert: (rule
+				interceptsTargetEnteringRange: #mortar
+				equippedPieces: 4
+				cooldownReady: true).
+	self
+		assert: (rule
+				interceptsTargetEnteringRange: #enemyGadget
+				equippedPieces: 4
+				cooldownReady: true).
+	self
+		deny: (rule
+				interceptsTargetEnteringRange: #allyGadget
+				equippedPieces: 4
+				cooldownReady: true).
+	self
+		deny: (rule
+				interceptsTargetEnteringRange: #mortar
+				equippedPieces: 4
+				cooldownReady: false)
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testInSyncEffectsOverlapAndExpireIndependently [
 	| owner catalog weapon encounter |
 	self startInventory.

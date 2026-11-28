@@ -71,5 +71,7 @@ CIWorkbookFamilyData class >> registerIn: catalog [
 						name: record first
 						kind: #gearSet
 						fields: record third
-						runtimeFamily: record second) ]
+						runtimeFamily: record second) ].
+	(catalog gearFamilyReferenceAt: 'Measured Assembly')
+		gadgetTalentRule: CIHuddleRule new
 ]
