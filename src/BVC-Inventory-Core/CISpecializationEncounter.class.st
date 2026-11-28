@@ -33,6 +33,19 @@ CISpecializationEncounter >> advanceTo: seconds [
 ]
 
 { #category : 'combat' }
+CISpecializationEncounter >> armorKitEffectsForRecipient: recipient atDistance: metres [
+	| effects |
+	(#(self groupMember friendlySkillProxy) includes: recipient)
+		ifFalse: [ self error: 'Unknown armor kit recipient' ].
+	(metres isNil or: [ self isValidDistance: metres ])
+		ifFalse: [ self error: 'Invalid armor kit recipient distance' ].
+	effects := loadout selectedPerks flatCollect: #armorKitEffects.
+	^ (effects
+		select: [ :effect | effect appliesToRecipient: recipient atDistance: metres ])
+		asArray
+]
+
+{ #category : 'combat' }
 CISpecializationEncounter >> blocksExplosionAt: seconds [
 	| parameters |
 	self advanceTo: seconds.

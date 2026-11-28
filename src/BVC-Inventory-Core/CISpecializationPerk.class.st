@@ -11,7 +11,8 @@ Class {
 		'exclusions',
 		'rewardIdentifier',
 		'modifiers',
-		'eventParameters'
+		'eventParameters',
+		'armorKitEffects'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -20,6 +21,16 @@ Class {
 { #category : 'instance creation' }
 CISpecializationPerk class >> fromWorkbookRow: row [
 	^ self new initializeWorkbookRow: row
+]
+
+{ #category : 'accessing' }
+CISpecializationPerk >> armorKitEffects [
+	^ armorKitEffects ifNil: [ #() ] ifNotNil: #copy
+]
+
+{ #category : 'accessing' }
+CISpecializationPerk >> armorKitEffects: effects [
+	armorKitEffects := effects asArray copy
 ]
 
 { #category : 'accessing' }

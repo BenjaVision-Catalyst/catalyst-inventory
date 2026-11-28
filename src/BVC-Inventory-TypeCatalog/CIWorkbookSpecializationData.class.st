@@ -21,6 +21,15 @@ CIWorkbookSpecializationData class >> gunnerPerks [
 ]
 
 { #category : 'registration' }
+CIWorkbookSpecializationData class >> registerArmorKitEffectsIn: catalog [
+	#(#('Sharpshooter' 'sharpshooter.emegencycleanse' #(#(repair self onUse 1 nil nil #()) #(removeStatusEffects self onUse nil nil nil #()) #(statusResistance self timed nil 20 nil #(bleed poison burn)))) #('Survivalist' 'survivalist.distributedrepair' #(#(repair self overTime nil 5 nil #()) #(repair groupMember overTime nil 5 20 #()))) #('Technician' 'technician.emergencypatch' #(#(shareBaseKit friendlySkillProxy baseKit nil nil 10 #()))) #('Gunner' 'gunner.hardenedarmorkits' #(#(armorRepair self onUse 1 nil nil #()) #(bonusArmor self timed 0.30 10 nil #()))) #('Demolitionist' 'demolitionist.stimulantpatch' #(#(repair self onUse 1 nil nil #()) #(weaponHandling self timed 0.30 15 nil #()))) #('Firewall' 'firewall.extracellularmatrixmesh' #(#(armorRepair self overTime 2 10 nil #()) #(healthRecovery self overTime 2 10 nil #()))))
+		do: [ :row | 
+			((catalog specializationNamed: row first) perkAt: row second)
+				armorKitEffects: (row third
+						collect: [ :effect | CISpecializationArmorKitEffect fromWorkbookRow: effect ]) ]
+]
+
+{ #category : 'registration' }
 CIWorkbookSpecializationData class >> registerEventParametersIn: catalog [
 	#(#('Gunner' 'gunner.barrage' #(#(rateOfFire 0.05) #(durationSeconds 5))) #('Gunner' 'gunner.coupler' #(#(reloadInterval 3) #(reloadSpeed 0.50))) #('Gunner' 'gunner.supplyline' #(#(intervalSeconds 60) #(personalFraction 0.10) #(partyFraction 0.05))) #('Technician' 'technician.faradayfield' #(#(radiusMetres 5) #(immunities #(shock disrupt)))) #('Firewall' 'firewall.fieryresponse' #(#(radiusMetres 5) #(status burn) #(disabledInPvP true))) #('Demolitionist' 'demolitionist.bracedforimpact' #(#(cooldownSeconds 60))) #('Sharpshooter' 'sharpshooter.sharpshootertacticallink' #(#(headshotDamage 0.10))) #('Survivalist' 'survivalist.survivalisttacticallink' #(#(damage 0.10))) #('Demolitionist' 'demolitionist.demolitionisttacticallink' #(#(damage 0.05))) #('Firewall' 'firewall.firewalltacticallink' #(#(damage 0.10) #(radiusMetres 10))))
 		do: [ :spec | 
@@ -68,7 +77,8 @@ CIWorkbookSpecializationData class >> registerIn: catalog [
 				perks: (self firewallPerks
 						collect: [ :row | CISpecializationPerk fromWorkbookRow: row ])).
 	self registerEventParametersIn: catalog.
-	self registerSignatureAmmoParametersIn: catalog
+	self registerSignatureAmmoParametersIn: catalog.
+	self registerArmorKitEffectsIn: catalog
 ]
 
 { #category : 'registration' }

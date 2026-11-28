@@ -10,6 +10,14 @@ Class {
 }
 
 { #category : 'support' }
+CIThatGameLaunchInventoryTest >> armorKitEncounterIn: catalog named: name selected: selections [
+	^ CISpecializationEncounter
+		forLoadout: (catalog specializationLoadoutNamed: name selected: selections)
+		mode: #pve
+		startedAt: 0
+]
+
+{ #category : 'support' }
 CIThatGameLaunchInventoryTest >> assertSignatureAmmo: grant personal: personal group: group [
 	self assert: grant personalPoints equals: personal.
 	self assert: grant groupMemberPoints equals: group
@@ -80,6 +88,82 @@ CIThatGameLaunchInventoryTest >> tearDown [
 	[ service ifNotNil: [ service stop ] ]
 		ensure: [ directory ensureDeleteAll.
 			super tearDown ]
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testArmorKitOwnerEffectsPreserveWorkbookValuesAndMissingValues [
+	| catalog cases |
+	catalog := CIGameItemTypes buildCatalog.
+	cases := #(#('Sharpshooter' 'sharpshooter.emegencycleanse' #(#(repair onUse 1 nil #()) #(removeStatusEffects onUse nil nil #()) #(statusResistance timed nil 20 #(bleed poison burn)))) #('Gunner' 'gunner.hardenedarmorkits' #(#(armorRepair onUse 1 nil #()) #(bonusArmor timed 0.30 10 #()))) #('Demolitionist' 'demolitionist.stimulantpatch' #(#(repair onUse 1 nil #()) #(weaponHandling timed 0.30 15 #()))) #('Firewall' 'firewall.extracellularmatrixmesh' #(#(armorRepair overTime 2 10 #()) #(healthRecovery overTime 2 10 #())))).
+	cases
+		do: [ :row | 
+			| encounter effects |
+			encounter := self
+					armorKitEncounterIn: catalog
+					named: row first
+					selected: {row second}.
+			effects := encounter armorKitEffectsForRecipient: #self atDistance: nil.
+			self
+				assert: (effects
+						collect: [ :each | 
+							{each kind.
+								each timing.
+								each fraction.
+								each durationSeconds.
+								each statuses} ])
+				equals: row third.
+			self
+				assertEmpty: (encounter armorKitEffectsForRecipient: #groupMember atDistance: 0) ]
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testArmorKitRecipientsHonorSelectionAndWorkbookRanges [
+	| catalog survivalist technician inactive repair proxyEffect |
+	catalog := CIGameItemTypes buildCatalog.
+	survivalist := self
+			armorKitEncounterIn: catalog
+			named: 'Survivalist'
+			selected: #('survivalist.distributedrepair').
+	technician := self
+			armorKitEncounterIn: catalog
+			named: 'Technician'
+			selected: #('technician.emergencypatch').
+	inactive := self
+			armorKitEncounterIn: catalog
+			named: 'Survivalist'
+			selected: #().
+	repair := (survivalist armorKitEffectsForRecipient: #self atDistance: nil)
+			first.
+	self assert: repair kind equals: #repair.
+	self assert: repair timing equals: #overTime.
+	self assert: repair durationSeconds equals: 5.
+	self assert: repair fraction isNil.
+	repair := (survivalist armorKitEffectsForRecipient: #groupMember atDistance: 20)
+			first.
+	self assert: repair recipient equals: #groupMember.
+	self assert: repair timing equals: #overTime.
+	self assert: repair durationSeconds equals: 5.
+	self assert: repair fraction isNil.
+	self
+		assertEmpty: (survivalist armorKitEffectsForRecipient: #groupMember atDistance: 20.01).
+	self
+		assertEmpty: (survivalist armorKitEffectsForRecipient: #groupMember atDistance: nil).
+	self
+		assertEmpty: (survivalist armorKitEffectsForRecipient: #friendlySkillProxy atDistance: 1).
+	self
+		assertEmpty: (inactive armorKitEffectsForRecipient: #groupMember atDistance: 1).
+	proxyEffect := (technician
+			armorKitEffectsForRecipient: #friendlySkillProxy
+			atDistance: 10) first.
+	self assert: proxyEffect kind equals: #shareBaseKit.
+	self assert: proxyEffect timing equals: #baseKit.
+	self assert: proxyEffect fraction isNil.
+	self
+		assertEmpty: (technician armorKitEffectsForRecipient: #friendlySkillProxy atDistance: 10.01).
+	self
+		assertEmpty: (technician armorKitEffectsForRecipient: #groupMember atDistance: 1).
+	self
+		assertEmpty: (technician armorKitEffectsForRecipient: #self atDistance: nil)
 ]
 
 { #category : 'tests' }
