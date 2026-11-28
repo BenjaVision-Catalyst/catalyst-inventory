@@ -1516,3 +1516,44 @@ CIThatGameLaunchInventoryTest >> testWorkbookLootSourcesKeepUnknownOdds [
 		should: [ (loot poolAt: 'exoticCaches') selectUsing: 0.5 satisfying: [ :each | true ] ]
 		raise: Error
 ]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testWorkbookTalentReferencesPreserveScopesAndExecutableLinks [
+	| catalog reference repeated |
+	catalog := CIGameItemTypes buildCatalog.
+	self
+		assert: (catalog talentReferences
+				count: [ :each | each id beginsWith: 'Weapon Talents!' ])
+		equals: 67.
+	self
+		assert: (catalog talentReferences count: [ :each | each id beginsWith: 'Gear Talents!' ])
+		equals: 46.
+	reference := (catalog talentReferencesNamed: 'Perfect Optimist') first.
+	self assert: reference scope equals: #weapon.
+	self assert: reference talentIdentifier equals: 'optimist'.
+	self assert: reference perfectTalentIdentifier equals: 'perfectOptimist'.
+	self
+		assert: ((catalog talentAt: reference perfectTalentIdentifier) parameters
+				at: #damagePerStep)
+		equals: 0.045.
+	self
+		assert: (reference evidenceForField: #description)
+		equals: 'Weapon Talents!D5'.
+	repeated := catalog talentReferencesNamed: 'Back and Forth'.
+	self assert: repeated size equals: 6.
+	self
+		assert: (repeated collect: #scope) asSet
+		equals: #(rifle assaultRifle marksmanRifle smg lmg shotgun) asSet.
+	reference := catalog talentReferenceAt: 'Gear Talents!D14'.
+	self assert: (reference fieldAt: #pvpModifier) notNil.
+	self assert: (reference fieldAt: #dzPvpDescription) notNil.
+	self
+		assert: (reference evidenceForField: #dzPvpDescription)
+		equals: 'Gear Talents!K14'.
+	reference := catalog talentReferenceAt: 'Gear Talents!D24'.
+	self
+		assert: ((reference fieldAt: #eligibilityNotes) includesSubstring: 'backpack').
+	reference := (catalog talentReferencesNamed: 'Perpetuation') first.
+	self assert: reference talentIdentifier isNil.
+	self assert: (catalog talentAt: 'perpetuation' ifAbsent: [ nil ]) isNil
+]

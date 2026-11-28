@@ -12,7 +12,8 @@ Class {
 		'attributeCatalogue',
 		'gearReferencesByName',
 		'weaponReferencesById',
-		'familyReferencesByName'
+		'familyReferencesByName',
+		'talentReferencesById'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -151,6 +152,15 @@ CIItemTypeCatalog >> registerTalent: aTalent [
 ]
 
 { #category : 'registration' }
+CIItemTypeCatalog >> registerTalentReference: reference [
+	talentReferencesById ifNil: [ talentReferencesById := Dictionary new ].
+	(talentReferencesById includesKey: reference id)
+		ifTrue: [ self error: 'Duplicate talent reference' ].
+	talentReferencesById at: reference id put: reference.
+	^ reference
+]
+
+{ #category : 'registration' }
 CIItemTypeCatalog >> registerWeaponReference: reference [
 	weaponReferencesById ifNil: [ weaponReferencesById := Dictionary new ].
 	(weaponReferencesById includesKey: reference id)
@@ -201,6 +211,28 @@ CIItemTypeCatalog >> talentPool: identifiers for: aTypeIdentifier [
 CIItemTypeCatalog >> talentPoolFor: aTypeIdentifier [
 	talentPoolsByTypeId ifNil: [ ^ #() ].
 	^ (talentPoolsByTypeId at: aTypeIdentifier ifAbsent: [ #() ]) collect: #copy
+]
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> talentReferenceAt: identifier [
+	talentReferencesById ifNil: [ self error: 'No talent references registered' ].
+	^ talentReferencesById at: identifier
+]
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> talentReferences [
+	talentReferencesById ifNil: [ ^ #() ].
+	^ (talentReferencesById values sorted: [ :a :b | a id < b id ]) asArray
+]
+
+{ #category : 'querying' }
+CIItemTypeCatalog >> talentReferencesNamed: label [
+	^ self talentReferences
+		select: [ :reference | 
+			(reference name sameAs: label)
+				or: [ reference perfectName
+						ifNil: [ false ]
+						ifNotNil: [ :perfectName | perfectName sameAs: label ] ] ]
 ]
 
 { #category : 'accessing' }
