@@ -549,6 +549,17 @@ CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets
 
 { #category : 'projection' }
 CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets: savedSets catalog: catalog modStorageAllowance: allowance [
+	^ self
+		forVerifiedUser: identity
+		rows: items
+		savedSets: savedSets
+		catalog: catalog
+		modStorageAllowance: allowance
+		specialization: nil
+]
+
+{ #category : 'projection' }
+CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets: savedSets catalog: catalog modStorageAllowance: allowance specialization: specialization [
 	| graph descriptions objects cards itemsById tier visibleItems workbookTier |
 	visibleItems := items first: (items size min: 32).
 	(items allButFirst: visibleItems size)
@@ -572,7 +583,9 @@ CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets
 	itemsById := Dictionary new.
 	items do: [ :item | itemsById at: item itemIdentifier put: item ].
 	tier := self utilityTierForRows: items.
-	workbookTier := self workbookGadgetTierForRows: items.
+	workbookTier := self
+			workbookGadgetTierForRows: items
+			specialization: specialization.
 	cards
 		do: [ :card | 
 			| values item type sections |
@@ -825,4 +838,15 @@ CIInventoryProfileGraph class >> workbookGadgetTierForRows: rows [
 			(core notNil and: [ core attributeIdentifier = 'skillTier' ])
 				ifTrue: [ total + core value ]
 				ifFalse: [ total ] ]
+]
+
+{ #category : 'projection' }
+CIInventoryProfileGraph class >> workbookGadgetTierForRows: rows specialization: loadout [
+	| equipmentTier |
+	equipmentTier := self workbookGadgetTierForRows: rows.
+	loadout ifNil: [ ^ equipmentTier ].
+	^ ((loadout modifiersFor: nil)
+		select: [ :modifier | modifier stat = #skillTier and: [ modifier unit = #skillTier ] ])
+		inject: equipmentTier
+		into: [ :total :modifier | total + modifier magnitude ]
 ]

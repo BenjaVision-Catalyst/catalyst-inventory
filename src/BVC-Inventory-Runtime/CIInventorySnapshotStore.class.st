@@ -20,12 +20,14 @@ CIInventorySnapshotStore >> modStorageAllowance: allowance forOwner: identity [
 
 { #category : 'initialization' }
 CIInventorySnapshotStore >> openSnapshotAt: aPath [
-	| snapshot |
+	| snapshot validVersion |
 	snapshotFile := aPath asFileReference asAbsolute.
 	snapshotFile exists ifFalse: [ ^ self ].
 	snapshot := STON fromString: snapshotFile contents.
-	((snapshot isArray and: [ snapshot size = 3 ])
-		and: [ snapshot first = 1 and: [ snapshot second isKindOf: Dictionary ] ])
+	validVersion := snapshot isArray
+			and: [ (snapshot size = 3 and: [ snapshot first = 1 ])
+					or: [ snapshot size = 4 and: [ snapshot first = 2 ] ] ].
+	(validVersion and: [ snapshot second isKindOf: Dictionary ])
 		ifFalse: [ self error: 'Invalid inventory snapshot' ].
 	snapshot second
 		keysAndValuesDo: [ :owner :rows | super replaceRows: rows forOwner: owner ].
@@ -33,6 +35,11 @@ CIInventorySnapshotStore >> openSnapshotAt: aPath [
 		ifNotNil: [ :allowances | 
 			allowances
 				keysAndValuesDo: [ :owner :allowance | super modStorageAllowance: allowance forOwner: owner ] ].
+	snapshot size = 4
+		ifTrue: [ snapshot fourth
+				ifNotNil: [ :selections | 
+					selections
+						keysAndValuesDo: [ :owner :selection | super specialization: selection forOwner: owner ] ] ].
 	^ self
 ]
 
@@ -43,16 +50,24 @@ CIInventorySnapshotStore >> replaceRows: aCollection forOwner: identity [
 
 { #category : 'private' }
 CIInventorySnapshotStore >> saveAfter: mutation [
-	| previousRows previousAllowances result |
+	| previousRows previousAllowances previousSpecializations result |
 	previousRows := rowsByOwner.
 	previousAllowances := modStorageAllowancesByOwner.
+	previousSpecializations := specializationsByOwner.
 	rowsByOwner := previousRows copy.
 	modStorageAllowancesByOwner := previousAllowances ifNotNil: #copy.
+	specializationsByOwner := previousSpecializations ifNotNil: #copy.
 	[ result := mutation value.
 	self writeSnapshot ]
 		ifCurtailed: [ rowsByOwner := previousRows.
-			modStorageAllowancesByOwner := previousAllowances ].
+			modStorageAllowancesByOwner := previousAllowances.
+			specializationsByOwner := previousSpecializations ].
 	^ result
+]
+
+{ #category : 'writing' }
+CIInventorySnapshotStore >> specialization: selection forOwner: identity [
+	^ self saveAfter: [ super specialization: selection forOwner: identity ]
 ]
 
 { #category : 'private' }
@@ -64,9 +79,10 @@ CIInventorySnapshotStore >> writeSnapshot [
 	[ temporary
 		writeStreamDo: [ :stream | 
 			STON
-				put: {1.
+				put: {2.
 						rowsByOwner.
-						modStorageAllowancesByOwner}
+						modStorageAllowancesByOwner.
+						specializationsByOwner}
 				onStream: stream ].
 	File
 		rename: (File encodePathString: temporary pathString)

@@ -3,7 +3,8 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'rowsByOwner',
-		'modStorageAllowancesByOwner'
+		'modStorageAllowancesByOwner',
+		'specializationsByOwner'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -341,6 +342,27 @@ CIInventoryReadStore >> rowsForOwner: anOwnerIdentifier offset: anOffset limit: 
 	anOffset >= rows size ifTrue: [ ^ #() ].
 	end := anOffset + aLimit min: rows size.
 	^ rows copyFrom: anOffset + 1 to: end
+]
+
+{ #category : 'writing' }
+CIInventoryReadStore >> specialization: selection forOwner: identity [
+	self validateOwner: identity.
+	(selection isNil or: [ selection isKindOf: CISpecializationSelection ])
+		ifFalse: [ self error: 'Invalid specialization selection object' ].
+	selection
+		ifNil: [ specializationsByOwner
+				ifNotNil: [ specializationsByOwner removeKey: identity ifAbsent: [  ] ].
+			^ nil ].
+	specializationsByOwner ifNil: [ specializationsByOwner := Dictionary new ].
+	specializationsByOwner at: identity copy put: selection.
+	^ selection
+]
+
+{ #category : 'reading' }
+CIInventoryReadStore >> specializationForOwner: identity [
+	self validateOwner: identity.
+	specializationsByOwner ifNil: [ ^ nil ].
+	^ specializationsByOwner at: identity ifAbsent: [ nil ]
 ]
 
 { #category : 'private' }

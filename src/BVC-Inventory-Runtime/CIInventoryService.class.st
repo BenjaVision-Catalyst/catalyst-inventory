@@ -29,7 +29,8 @@ CIInventoryService >> applySavedSet: savedSet forOwner: identity outfit: isOutfi
 					rows: rows
 					savedSets: ownerSets
 					catalog: itemTypeCatalog
-					modStorageAllowance: (readStore modStorageAllowanceForOwner: identity)).
+					modStorageAllowance: (readStore modStorageAllowanceForOwner: identity)
+					specialization: (self resolvedSpecializationFor: identity)).
 	reply ifNotNil: [ readStore replaceRows: rows forOwner: identity ].
 	^ reply
 ]
@@ -38,6 +39,11 @@ CIInventoryService >> applySavedSet: savedSet forOwner: identity outfit: isOutfi
 CIInventoryService >> classifiedEncounterForVerifiedUser: identity mode: mode [
 	^ CIClassifiedEncounter
 		forActivations: (self familyEvaluationForVerifiedUser: identity mode: mode)
+]
+
+{ #category : 'writing' }
+CIInventoryService >> clearSpecializationForVerifiedUser: identity [
+	^ savedSetsLock critical: [ readStore specialization: nil forOwner: identity ]
 ]
 
 { #category : 'writing' }
@@ -128,7 +134,9 @@ CIInventoryService >> gadgetEncounterFor: gadgetId weapon: weaponId forVerifiedU
 			activeTalent := weapon talentIdentifier
 					ifNil: [ self error: 'The equipped weapon has no talent' ]
 					ifNotNil: [ :id | itemTypeCatalog talentAt: id ].
-			tier := CIInventoryProfileGraph workbookGadgetTierForRows: rows.
+			tier := CIInventoryProfileGraph
+					workbookGadgetTierForRows: rows
+					specialization: (self resolvedSpecializationFor: identity).
 			CIGadgetEncounter
 				variant: type workbookVariantDefinition
 				baseTier: tier
@@ -258,7 +266,8 @@ CIInventoryService >> newSavedSetReplyFor: identity outfit: isOutfit [
 					rows: (readStore allRowsForOwner: identity)
 					savedSets: ownerSets
 					catalog: itemTypeCatalog
-					modStorageAllowance: (readStore modStorageAllowanceForOwner: identity)).
+					modStorageAllowance: (readStore modStorageAllowanceForOwner: identity)
+					specialization: (self resolvedSpecializationFor: identity)).
 	reply ifNotNil: [ savedSetsByOwner at: identity copy put: ownerSets ].
 	^ reply
 ]
@@ -292,7 +301,8 @@ CIInventoryService >> profileGraphForVerifiedUser: identity [
 				rows: (readStore allRowsForOwner: identity)
 				savedSets: (savedSetsByOwner at: identity ifAbsent: [ Dictionary new ])
 				catalog: itemTypeCatalog
-				modStorageAllowance: (readStore modStorageAllowanceForOwner: identity) ]
+				modStorageAllowance: (readStore modStorageAllowanceForOwner: identity)
+				specialization: (self resolvedSpecializationFor: identity) ]
 ]
 
 { #category : 'writing' }
@@ -388,9 +398,16 @@ CIInventoryService >> replaceSavedSets: entries in: section of: sets forOwner: i
 					rows: (readStore allRowsForOwner: identity)
 					savedSets: updated
 					catalog: itemTypeCatalog
-					modStorageAllowance: (readStore modStorageAllowanceForOwner: identity)).
+					modStorageAllowance: (readStore modStorageAllowanceForOwner: identity)
+					specialization: (self resolvedSpecializationFor: identity)).
 	reply ifNotNil: [ savedSetsByOwner at: identity copy put: updated ].
 	^ reply
+]
+
+{ #category : 'private' }
+CIInventoryService >> resolvedSpecializationFor: identity [
+	^ (readStore specializationForOwner: identity)
+		ifNotNil: [ :selection | selection resolveIn: itemTypeCatalog ]
 ]
 
 { #category : 'reading' }
@@ -400,6 +417,23 @@ CIInventoryService >> rowsForVerifiedUser: anIdentifier offset: anOffset limit: 
 				rowsForOwner: anIdentifier
 				offset: anOffset
 				limit: aLimit ]
+]
+
+{ #category : 'writing' }
+CIInventoryService >> selectSpecialization: label perks: identifiers forVerifiedUser: identity [
+	^ savedSetsLock
+		critical: [ | selection loadout |
+			selection := CISpecializationSelection
+					specialization: label
+					perks: identifiers.
+			loadout := selection resolveIn: itemTypeCatalog.
+			readStore specialization: selection forOwner: identity.
+			loadout ]
+]
+
+{ #category : 'reading' }
+CIInventoryService >> specializationLoadoutForVerifiedUser: identity [
+	^ savedSetsLock critical: [ self resolvedSpecializationFor: identity ]
 ]
 
 { #category : 'lifecycle' }
@@ -487,6 +521,8 @@ CIInventoryService >> workbookGadgetStatsFor: itemIdentifier forVerifiedUser: id
 			type := itemTypeCatalog typeAt: gadget definitionIdentifier.
 			(type respondsTo: #workbookVariantDefinition)
 				ifFalse: [ self error: 'This item is not a workbook gadget' ].
-			tier := CIInventoryProfileGraph workbookGadgetTierForRows: rows.
+			tier := CIInventoryProfileGraph
+					workbookGadgetTierForRows: rows
+					specialization: (self resolvedSpecializationFor: identity).
 			type statsAtUtilityTier: tier ]
 ]

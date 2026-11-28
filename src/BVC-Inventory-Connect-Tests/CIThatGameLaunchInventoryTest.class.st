@@ -1005,6 +1005,50 @@ CIThatGameLaunchInventoryTest >> testRedLotusCombatStacksDecayAndRefreshWithLoad
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSavedSpecializationChangesGadgetTierAndSurvivesRestart [
+	| owner catalog gadget loadout stats graph |
+	self startInventory.
+	owner := 'specialization-save-owner'.
+	catalog := CIGameItemTypes buildCatalog.
+	gadget := (catalog typeAt: 'gadget.workbook.pulse.scanner')
+			inventoryItem: 'scanner'
+			values: Dictionary new.
+	gadget equippedSlotIdentifier: 'GadgetLeft'.
+	service replaceReadRows: {gadget} forOwner: owner.
+	self
+		assert: ((service workbookGadgetStatsFor: 'scanner' forVerifiedUser: owner)
+				at: 'Duration')
+		equals: 8.
+	service
+		selectSpecialization: 'Technician'
+		perks: #('technician.amped')
+		forVerifiedUser: owner.
+	self
+		should: [ service
+				selectSpecialization: 'Gunner'
+				perks: #('technician.amped')
+				forVerifiedUser: owner ]
+		raise: Error.
+	self assert: (service specializationLoadoutForVerifiedUser: 'other') isNil.
+	service stop.
+	service := nil.
+	self startInventory.
+	loadout := service specializationLoadoutForVerifiedUser: owner.
+	self assert: loadout definition name equals: 'Technician'.
+	self assert: (loadout selectedPerks collect: #id) equals: #('technician.amped').
+	stats := service workbookGadgetStatsFor: 'scanner' forVerifiedUser: owner.
+	self assert: (stats at: 'Duration') closeTo: 9.2.
+	graph := service profileGraphForVerifiedUser: owner.
+	self assert: ((STON toString: graph) includesSubstring: '9.200 s').
+	service clearSpecializationForVerifiedUser: owner.
+	self assert: (service specializationLoadoutForVerifiedUser: owner) isNil.
+	self
+		assert: ((service workbookGadgetStatsFor: 'scanner' forVerifiedUser: owner)
+				at: 'Duration')
+		equals: 8
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testScorpioVenomThresholdsAndStackNineRefresh [
 	| catalog scorpio outcome |
 	catalog := CIGameItemTypes buildCatalog.
@@ -1099,6 +1143,38 @@ CIThatGameLaunchInventoryTest >> testSpecializationsPreserveWorkbookPerksAndVali
 	self
 		assert: (catalog modCatalogue definitionAt: digital rewardIdentifier) name
 		equals: 'Digital Scope'
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testVersionOneInventorySnapshotCanStoreSpecialization [
+	| path owner item old new selection |
+	path := (directory / 'legacy-selection.ston') fullName.
+	owner := 'legacy-owner'.
+	item := CIInventoryItemSummary
+			item: 'item'
+			definition: 'legacy.definition'
+			name: 'Legacy item'.
+	path asFileReference
+		writeStreamDo: [ :stream | 
+			STON
+				put: {1.
+						Dictionary new
+							at: owner put: {item};
+							yourself.
+						nil}
+				onStream: stream ].
+	old := CIInventorySnapshotStore at: path.
+	self assert: (old specializationForOwner: owner) isNil.
+	self assert: (old allRowsForOwner: owner) first itemIdentifier equals: 'item'.
+	selection := CISpecializationSelection
+			specialization: 'Technician'
+			perks: #('technician.amped').
+	old specialization: selection forOwner: owner.
+	new := CIInventorySnapshotStore at: path.
+	self assert: (new allRowsForOwner: owner) first itemIdentifier equals: 'item'.
+	self
+		assert: (new specializationForOwner: owner) perkIdentifiers
+		equals: #('technician.amped')
 ]
 
 { #category : 'tests' }
