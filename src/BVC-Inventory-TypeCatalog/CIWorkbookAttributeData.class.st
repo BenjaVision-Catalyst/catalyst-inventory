@@ -73,11 +73,14 @@ CIWorkbookAttributeData class >> registerIn: catalogue [
 CIWorkbookAttributeData class >> registerSupportingRulesIn: catalogue [
 	#(#('skillEfficiency' 'Each 1% of Skill Efficiency contributes 1% to skill damage, haste, duration, health, repair and status effects. The workbook notes that the stat sheet doubles the haste display only.' 'Attribute Info!E49,G49' #(#(affectedStats #(skillDamage skillHaste skillDuration skillHealth repairSkills statusEffects)) #(contributionFactor 1) #(observedHasteDisplayFactor 2))) #('gearModSockets' 'Masks, backpacks and chests have a mod socket. Other gear pieces have one if Improvised.' 'Attribute Info!A66' #(#(ordinarySockets #(Mask Backpack Chest)) #(improvisedSocket true))) #('expertise.weapon' 'Additive with normal weapon damage.' 'Attribute Info!B69:C69' #(#(targetStat weaponDamage) #(operation additive))) #('expertise.skill' 'Additive with normal skill damage for most gadgets. Achilles Pulse is an amplifier.' 'Attribute Info!B70:C70' #(#(targetStat skillDamage) #(operation additive) #(exception Achilles) #(exceptionOperation amplifier))) #('expertise.armor' 'Additive with base armor.' 'Attribute Info!B71:C71' #(#(targetStat baseArmor) #(operation additive))))
 		do: [ :spec | 
-			| parameters |
+			| parameters ruleClass |
 			parameters := Dictionary new.
 			spec fourth do: [ :entry | parameters at: entry first put: entry second ].
+			ruleClass := spec first = 'skillEfficiency'
+					ifTrue: [ CISkillEfficiencyRule ]
+					ifFalse: [ CIAttributeRule ].
 			catalogue
-				registerRule: (CIAttributeRule
+				registerRule: (ruleClass
 						id: spec first
 						description: spec second
 						parameters: parameters

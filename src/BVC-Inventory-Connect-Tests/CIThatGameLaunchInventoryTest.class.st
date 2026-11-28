@@ -91,6 +91,29 @@ CIThatGameLaunchInventoryTest >> tearDown [
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testAllDocumentedGadgetHasteTracksResolveAsSpeed [
+	| catalog cases track variant result |
+	catalog := CIGameItemTypes buildCatalog.
+	cases := #(#('Sticky Bomb' 'Burn' 'Cooldown' 60 5) #('Sticky Bomb' 'Explosive' 'Cooldown' 60 5) #('Decoy' 'Holographic Distraction' 'Cooldown' 25 2) #('Pulse' 'Achilles' 'Cooldown' 40 1) #('Hive' 'Restorer' 'Refill Speed' 11 1.5) #('Hive' 'Stinger' 'Refill Speed' 10 3) #('Hive' 'Reviver' 'Refill Speed' 180 10) #('Hive' 'Booster' 'Refill Speed' 11.3 1.5) #('Hive' 'Artificer' 'Refill Speed' 11.3 1.5)).
+	cases
+		do: [ :row | 
+			variant := (catalog gadgetFamilyNamed: row first) variantNamed: row second.
+			track := variant trackNamed: row third.
+			self
+				assert: ((track rawValueAtTier: #overcharge) includesSubstring: 'Skill Haste').
+			self assert: (track magnitudeAtTier: 0) equals: row fourth.
+			result := (variant knownStatsAtTier: #overcharge) at: row third.
+			self assert: result closeTo: row fourth / (1 + row fifth) ].
+	variant := (catalog gadgetFamilyNamed: 'Pulse') variantNamed: 'Achilles'.
+	self
+		assert: ((variant trackNamed: 'Cooldown') magnitudeAtTier: 1)
+		closeTo: 40 / 1.1.
+	variant := (catalog gadgetFamilyNamed: 'Shield') variantNamed: 'Striker'.
+	self
+		assert: ((variant trackNamed: 'Damage bonus / (per enemy)') magnitudeAtTier: 1) isNil
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testAllSpecializationGrenadesClaimWithWorkbookStatusAndSource [
 	| catalog store owner cases |
 	catalog := CIGameItemTypes buildCatalog.
@@ -1957,6 +1980,28 @@ CIThatGameLaunchInventoryTest >> testSignatureWeaponRewardsClaimWithSourceNamesA
 			self assert: perk equipmentReward weaponStatistics isNil.
 			self assertEmpty: (catalog talentPoolFor: type id) ].
 	self assert: (store allRowsForOwner: owner) size equals: 6
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSkillEfficiencyUsesActualHasteForCooldownAndDoublesOnlyTheReportedHaste [
+	| rule actual reported |
+	rule := CIGameItemTypes buildCatalog attributeCatalogue
+			ruleAt: 'skillEfficiency'.
+	self assert: rule evidence equals: 'Attribute Info!E49,G49'.
+	actual := rule actualContributionsForEfficiency: 0.2.
+	self
+		assert: actual keys asSet
+		equals: #(skillDamage skillHaste skillDuration skillHealth repairSkills statusEffects)
+				asSet.
+	self assert: (actual values allSatisfy: [ :value | value = 0.2 ]).
+	reported := rule reportedContributionsForEfficiency: 0.2.
+	self assert: (reported at: #skillHaste) closeTo: 0.4.
+	reported at: #skillHaste put: 0.2.
+	self assert: reported equals: actual.
+	self assert: (rule cooldownSecondsFromBase: 60 efficiency: 0.2) closeTo: 50.
+	self assert: (rule cooldownSecondsFromBase: 60 efficiency: 1) equals: 30.
+	self assert: (rule cooldownSecondsFromBase: 60 efficiency: 0) equals: 60.
+	self should: [ rule actualContributionsForEfficiency: -0.1 ] raise: Error
 ]
 
 { #category : 'tests' }

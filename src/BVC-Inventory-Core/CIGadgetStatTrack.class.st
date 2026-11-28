@@ -35,6 +35,21 @@ CIGadgetStatTrack >> evidence [
 ]
 
 { #category : 'private' }
+CIGadgetStatTrack >> hasteOperationFor: cell [
+	| amount |
+	(unit = #seconds and: [ #('Cooldown' 'Refill Speed') includes: label ])
+		ifFalse: [ ^ nil ].
+	(cell notNil
+		and: [ (cell includes: $+) and: [ cell trimBoth endsWith: '% Skill Haste' ] ])
+		ifFalse: [ ^ nil ].
+	amount := ((cell copyAfter: $+) copyUpTo: $%) trimBoth.
+	(amount notEmpty and: [ amount allSatisfy: [ :character | character isDigit ] ])
+		ifFalse: [ ^ nil ].
+	^ {#haste.
+		amount asInteger / 100}
+]
+
+{ #category : 'private' }
 CIGadgetStatTrack >> indexForTier: aTier [
 	aTier = #overcharge ifTrue: [ ^ 7 ].
 	(aTier isInteger and: [ aTier between: 1 and: 6 ])
@@ -51,7 +66,8 @@ CIGadgetStatTrack >> initializeWorkbookRow: record [
 	baseMagnitude := record fourth.
 	unit := record fifth.
 	tierCells := (record at: 6) collect: [ :cell | cell ifNotNil: #copy ].
-	operations := (record at: 7) collect: [ :entry | entry ifNotNil: #copy ].
+	operations := (record at: 7)
+			withIndexCollect: [ :entry :index | entry ifNil: [ self hasteOperationFor: (tierCells at: index) ] ifNotNil: #copy ].
 	^ self
 ]
 
@@ -70,6 +86,8 @@ CIGadgetStatTrack >> magnitudeAtTier: aTier [
 	cell = '-' ifTrue: [ ^ baseMagnitude ].
 	operation := operations at: index.
 	operation ifNil: [ ^ nil ].
+	operation first = #haste
+		ifTrue: [ ^ CISkillHasteRule secondsFromBase: baseMagnitude withHaste: operation second ].
 	^ operation first = #relative
 		ifTrue: [ baseMagnitude * (1 + operation second) ]
 		ifFalse: [ baseMagnitude + operation second ]
