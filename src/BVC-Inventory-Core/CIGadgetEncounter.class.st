@@ -36,6 +36,11 @@ CIGadgetEncounter class >> variant: aVariant baseTier: aTier weapon: itemId tale
 		yourself
 ]
 
+{ #category : 'combat' }
+CIGadgetEncounter >> activeOverchargeRuleAt: seconds [
+	^ variant overchargeRuleAtTier: (self effectiveTierAt: seconds)
+]
+
 { #category : 'private' }
 CIGadgetEncounter >> advanceTo: seconds [
 	(seconds isNumber

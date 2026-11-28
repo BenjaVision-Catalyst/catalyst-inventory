@@ -111,7 +111,8 @@ CIWorkbookGadgetData class >> registerIn: catalog [
 	self
 		registerFamily: 'Shield'
 		variants: self shieldVariants
-		in: catalog
+		in: catalog.
+	self registerOverchargeRulesIn: catalog
 ]
 
 { #category : 'registration' }
@@ -122,6 +123,20 @@ CIWorkbookGadgetData class >> registerItemTypesIn: catalog [
 				do: [ :variant | 
 					catalog
 						register: (CIWorkbookGadgetType id: (self identifierFor: variant) variant: variant) ] ]
+]
+
+{ #category : 'registration' }
+CIWorkbookGadgetData class >> registerOverchargeRulesIn: catalog [
+	#(#('Trap' 'Healing' immunizingSerum nil 10 'L49') #('Pulse' 'Scanner' weaknessExploit 0.15 nil 'L65') #('Pulse' 'Remote' weaknessExploit 0.15 nil 'L69') #('Pulse' 'Banshee' weaknessExploit 0.15 nil 'L80') #('Drone' 'Tactician' weaknessExploit 0.15 nil 'L257') #('Shield' 'Bulwark' shieldWall nil nil 'L261') #('Shield' 'Crusader' shieldWall nil nil 'L266') #('Shield' 'Deflector' shieldWall nil nil 'L271') #('Shield' 'Striker' shieldWall nil nil 'L277'))
+		do: [ :row | 
+			| variant |
+			variant := (catalog gadgetFamilyNamed: row first) variantNamed: row second.
+			variant
+				overchargeRule: (CIGadgetOverchargeRule
+						kind: row third
+						magnitude: row fourth
+						seconds: row fifth
+						evidence: 'Skill List!' , row sixth) ]
 ]
 
 { #category : 'workbook data' }

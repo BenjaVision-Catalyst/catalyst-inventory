@@ -7,7 +7,8 @@ Class {
 		'tracks',
 		'overchargeEffects',
 		'expertiseScaling',
-		'behaviorProfile'
+		'behaviorProfile',
+		'overchargeRule'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -79,6 +80,16 @@ CIGadgetVariantDefinition >> name [
 { #category : 'accessing' }
 CIGadgetVariantDefinition >> overchargeEffects [
 	^ overchargeEffects collect: #copy
+]
+
+{ #category : 'initialization' }
+CIGadgetVariantDefinition >> overchargeRule: rule [
+	overchargeRule := rule
+]
+
+{ #category : 'accessing' }
+CIGadgetVariantDefinition >> overchargeRuleAtTier: tier [
+	^ tier = #overcharge ifTrue: [ overchargeRule ]
 ]
 
 { #category : 'accessing' }

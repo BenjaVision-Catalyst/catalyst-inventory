@@ -581,9 +581,13 @@ CIThatGameLaunchInventoryTest >> testGadgetEncounterOverchargeExpiresAndHonorsCo
 	self assert: (encounter effectiveTierAt: 1) equals: #overcharge.
 	self assert: ((encounter statsAt: 1) at: 'Duration') equals: 24.
 	self assert: (encounter overchargeEffectsAt: 1) notEmpty.
+	self
+		assert: (encounter activeOverchargeRuleAt: 1) kind
+		equals: #weaknessExploit.
 	self deny: (encounter recordWeaponKillFrom: 'weapon' at: 14).
 	self assert: (encounter effectiveTierAt: 16) equals: 5.
 	self assertEmpty: (encounter overchargeEffectsAt: 16).
+	self assert: (encounter activeOverchargeRuleAt: 16) isNil.
 	self assert: (encounter recordWeaponKillFrom: 'weapon' at: 90).
 	self deny: (encounter recordWeaponKillFrom: 'weapon' at: 90).
 	self assert: (encounter recordWeaponKillFrom: 'weapon' at: 91).
@@ -3258,6 +3262,37 @@ CIThatGameLaunchInventoryTest >> testWorkbookLootSourcesKeepUnknownOdds [
 	self
 		should: [ (loot poolAt: 'exoticCaches') selectUsing: 0.5 satisfying: [ :each | true ] ]
 		raise: Error
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testWorkbookOverchargeRulesResolveOnlyForDocumentedVariantsAndTier [
+	| catalog variants scanner serum |
+	catalog := CIGameItemTypes buildCatalog.
+	variants := catalog gadgetFamilies flatCollect: #variants.
+	self
+		assert: (variants
+				count: [ :variant | (variant overchargeRuleAtTier: #overcharge) notNil ])
+		equals: 9.
+	variants
+		do: [ :variant | self assert: (variant overchargeRuleAtTier: 6) isNil ].
+	scanner := ((catalog gadgetFamilyNamed: 'Pulse') variantNamed: 'Scanner')
+			overchargeRuleAtTier: #overcharge.
+	self assert: scanner evidence equals: 'Skill List!L65'.
+	self
+		assert: (scanner damageAmplificationForPulsedTarget: true recipientIsAgentOrAlly: true)
+		equals: 0.15.
+	self
+		assert: (scanner damageAmplificationForPulsedTarget: false recipientIsAgentOrAlly: true)
+		equals: 0.
+	self
+		assert: (scanner damageAmplificationForPulsedTarget: true recipientIsAgentOrAlly: false)
+		equals: 0.
+	(catalog gadgetFamilyNamed: 'Shield') variants
+		do: [ :variant | self assert: (variant overchargeRuleAtTier: #overcharge) shieldIsInvulnerable ].
+	serum := ((catalog gadgetFamilyNamed: 'Trap') variantNamed: 'Healing')
+			overchargeRuleAtTier: #overcharge.
+	self assert: serum statusImmunitySecondsOnTrapContact equals: 10.
+	self assert: serum evidence equals: 'Skill List!L49'
 ]
 
 { #category : 'tests' }
