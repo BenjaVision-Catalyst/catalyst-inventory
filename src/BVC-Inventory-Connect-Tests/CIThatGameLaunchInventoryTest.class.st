@@ -91,6 +91,39 @@ CIThatGameLaunchInventoryTest >> tearDown [
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testAcostaGoBagRefundsOnActivationAndGrantsTierOrOvercharge [
+	| catalog rule effects |
+	catalog := CIGameItemTypes buildCatalog.
+	rule := (catalog namedGearReferenceAt: 'Acosta''s Go-Bag') gadgetTalentRule.
+	self assert: (rule evidence includesSubstring: 'Gear Named + Exotics!F79:G79').
+	self assert: rule cooldownSeconds equals: 60.
+	self
+		assert: rule passiveBonuses
+		equals: {#armorKitCapacity -> 1.
+				#grenadeCapacity -> 3.
+				#ammoCapacity -> 0.25.
+				#repairSkills -> 0.10.
+				#statusEffects -> 0.10} asDictionary.
+	effects := rule
+			effectsOnGrenadeThrowAtGadgetTier: 5
+			secondsSinceLastActivation: nil.
+	self assert: (effects at: #grenadesRefunded) equals: 1.
+	self assert: (effects at: #gadgetTierBonus) equals: 1.
+	self assert: (effects at: #gadgetTierBonusSeconds) equals: 15.
+	self
+		assertEmpty: (rule effectsOnGrenadeThrowAtGadgetTier: 6 secondsSinceLastActivation: 59.99).
+	effects := rule
+			effectsOnGrenadeThrowAtGadgetTier: 6
+			secondsSinceLastActivation: 60.
+	self assert: (effects at: #grenadesRefunded) equals: 1.
+	self assert: (effects at: #overchargeSeconds) equals: 15.
+	self
+		assert: (rule
+				effectsOnGrenadeThrowAtGadgetTier: #overcharge
+				secondsSinceLastActivation: 60) isNil
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testAllDocumentedGadgetHasteTracksResolveAsSpeed [
 	| catalog cases track variant result |
 	catalog := CIGameItemTypes buildCatalog.

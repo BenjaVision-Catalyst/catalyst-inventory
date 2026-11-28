@@ -59,5 +59,7 @@ CIWorkbookNamedGearReferences class >> registerIn: catalog [
 	(catalog namedGearReferenceAt: 'BTSU Datagloves')
 		gadgetTalentRule: CITransferenceOverclockRule new.
 	(catalog namedGearReferenceAt: 'Birdie''s Quick Fix Pack')
-		gadgetTalentRule: CICombatMedicRule new
+		gadgetTalentRule: CICombatMedicRule new.
+	(catalog namedGearReferenceAt: 'Acosta''s Go-Bag')
+		gadgetTalentRule: CIAcostaGoBagRule new
 ]
