@@ -21,6 +21,7 @@ source beside the rule.
 | Skill List E28:K28, E38:K38, K61, E79:K79, K117, K125, K136, K143, K151 and Attribute Info E49,G49 | Nine cooldown and refill tracks now convert documented Skill Haste percentages to durations using base seconds divided by one plus haste. Skill Efficiency contributes equally to the six documented stats. For a raw cooldown, its actual haste is added to ordinary Skill Haste before dividing the base by one plus their sum. Only the reported Efficiency-derived haste doubles. | Per-Gadget cooldown floors and interactions with separate cooldown effects remain unspecified. |
 | Gear Talents D21:F21 and K21 and Gear Named + Exotics F38:G38 | Skilled and Perfectly Skilled roll on Gadget kills. Chances are 25% and 30% in PvE and 20% and 25% in DZ/PvP, respectively. A success resets active Gadget cooldowns or banks one reset for the next Gadget cooldown if none is active. Caesar’s Guard documents the Perfect talent. | Bank expiration, persistence across encounters, and interactions with individual Gadget charges remain unspecified. |
 | Gear Talents D22:F22 | Tag Team marks the last enemy damaged by a Gadget. Weapon damage to the marked enemy consumes the mark when a Gadget cooldown is active, subtracts six seconds from active cooldowns down to zero, and starts a four-second talent cooldown. | Mark expiry, transfer after a target dies, and a separate PvP value remain unspecified. |
+| Gear Talents D24:K24 and Gear Named + Exotics F22:K22 | Tamper Proof and Perfectly Tamper Proof shock an enemy entering range of an armed Hive, Turret, or Remote Pulse. The Perfect talent also supports Decoy and is fixed on Proxy, a named Backpack. Arming takes two seconds. The PvE radius is 3 metres and per-Gadget cooldowns are 10 and 8 seconds. The revised PvP radius is 4 metres and cooldowns are 15 and 10 seconds. | Shock duration, whether an enemy already in range at arming time triggers the effect, and cooldown carryover to a new deployment remain unspecified. |
 | Gear Talents D45:F45 and Gear Named + Exotics F19:G19 | Calculated and Perfectly Calculated report a 10% and 15% Gadget cooldown reduction respectively on a kill from cover. Battery Pack is the named source of the Perfect talent. | The current cooldown basis, stacking with other cooldown effects, and separate PvP values remain unspecified. |
 | Skill List M15:M277 and Attribute Info B69:C71 | All 43 gadget entries calculate a 1% contribution per expertise grade. Forty-two link to a stat track. Ordinary damage contributions are additive. Achilles exposes a multiplier of 1 plus its Grade contribution for a hit on a marked zone. The catalog also evaluates Grade upgrade eligibility using item-type Proficiency and account Expertise. | Achilles has no standalone numeric damage track. Its underlying damage formula, mark thresholds, and interactions with other amplifiers remain unspecified. Non-damage Gadget stacking remains unspecified. |
 | Skill List M151 and D156:K156 | Artificer Hive Tech Efficiency adds 1% of the base Buff Amount per Grade. Its 10% base yields 0.1 percentage point per Grade, added to tier-scaled Buff Amount. | Stacking with external buffs and formulas for other Hive tracks remain unspecified. |
@@ -153,3 +154,13 @@ is on cooldown. A later player account corroborates that the reset applies to
 the next Gadget to go on cooldown.
 [Title Update 8 patch notes as reproduced](https://mp1st.com/news/the-division-2-update-march-2-title-update-8-patch-notes)
 [Player account](https://www.reddit.com/r/thedivision/comments/1mqeed7/)
+
+The Tamper Proof workbook row combines both variants in its description, and
+H24 and K24 give conflicting PvP arming times. Ubisoft's Vanguard notes confirm
+Proxy and the Perfect variant's Decoy eligibility. The PvP rebalance lists
+Decoy as Perfect-only in both its previous and revised profiles. It confirms
+the previous three-second arm time and gives the revised two-second arm time,
+four-metre radius and per-Gadget cooldowns. The catalog retains the workbook's
+original fields and records the revised values in the PvP profile.
+[Ubisoft Vanguard notes](https://www.ubisoft.com/fr-fr/game/the-division/the-division-2/news-updates/4Q5mYbSvaH9H3YZtMiraHs/year-5-season-3-vanguard)
+[Ubisoft TUY8S3.2 PvP rebalance, page 5](https://canopy.ubisoft.com/AssetLink/7nldd32j3808dc3253uf1lt2l685om77.pdf#page=5)

@@ -1773,7 +1773,7 @@ CIThatGameLaunchInventoryTest >> testNamedGearReferencesPreserveSplitRowsAndExpo
 	self assert: (rows count: [ :each | each kind = #exotic ]) equals: 32.
 	self
 		assert: (rows count: [ :each | each itemDefinitionIdentifier notNil ])
-		equals: 10.
+		equals: 11.
 	reference := catalog namedGearReferenceAt: 'Vile'.
 	self assert: (reference fieldAt: #talent) equals: 'Toxic Delivery'.
 	self
@@ -1878,6 +1878,35 @@ CIThatGameLaunchInventoryTest >> testPrototypeConversionRequiresEligibleQualityL
 				itemLevel: 40
 				itemGrade: 30
 				itemEligible: true)
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testProxyGeneratesWithFixedPerfectlyTamperProof [
+	| catalog reference values proxy |
+	catalog := CIGameItemTypes buildCatalog.
+	reference := catalog namedGearReferenceAt: 'Proxy'.
+	self assert: reference itemDefinitionIdentifier equals: 'gear.workbook.proxy'.
+	self assert: (catalog talentAt: 'tamperProof') eligibility equals: #Chest.
+	self
+		assert: (catalog talentAt: 'perfectlyTamperProof') eligibility
+		equals: #Backpack.
+	values := Dictionary new
+			at: 'core' put: 50000;
+			at: 'minor1'
+				put: (CIGearAttributeRoll attribute: 'gear.minor.criticalHitChance' value: 0.05);
+			at: 'minor2'
+				put: (CIGearAttributeRoll attribute: 'gear.minor.criticalHitDamage' value: 0.10);
+			yourself.
+	proxy := CIInventoryReadStore new
+			grantItem: 'proxy'
+			type: reference itemDefinitionIdentifier
+			values: values
+			from: catalog
+			forOwner: 'owner'
+			using: [ self error: 'Fixed talent must not draw' ].
+	self assert: proxy talentIdentifier equals: 'perfectlyTamperProof'.
+	self assert: proxy gearSlotIdentifier equals: 'Backpack'.
+	self assert: proxy modSlots size equals: 1
 ]
 
 { #category : 'tests' }
@@ -3856,6 +3885,127 @@ CIThatGameLaunchInventoryTest >> testTagTeamConsumesLatestMarkOnlyToReduceActive
 	self assert: encounter markedEnemyIdentifier isNil.
 	encounter recordGadgetDamageToEnemy: 'first' at: 6.
 	self assert: encounter markedEnemyIdentifier equals: 'first'
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testTamperProofArmsAndCoolsDownPerDeployment [
+	| catalog reference pulse remote hive turret decoy scanner |
+	catalog := CIGameItemTypes buildCatalog.
+	reference := catalog talentReferenceAt: 'Gear Talents!D24'.
+	pulse := catalog gadgetFamilyNamed: 'Pulse'.
+	remote := pulse variantNamed: 'Remote'.
+	scanner := pulse variantNamed: 'Scanner'.
+	hive := (catalog gadgetFamilyNamed: 'Hive') variants first.
+	turret := (catalog gadgetFamilyNamed: 'Turret') variantNamed: 'Assault'.
+	decoy := (catalog gadgetFamilyNamed: 'Decoy') variants first.
+	{{reference talentIdentifier.
+			#pve.
+			3.
+			10.
+			false}.
+		{reference perfectTalentIdentifier.
+			#pve.
+			3.
+			8.
+			true}.
+		{reference talentIdentifier.
+			#pvp.
+			4.
+			15.
+			false}.
+		{reference perfectTalentIdentifier.
+			#pvp.
+			4.
+			10.
+			true}}
+		do: [ :row | 
+			| encounter radius readyAt shockOn |
+			encounter := CIGearTalentEncounter
+					talent: (catalog talentAt: row first)
+					mode: row second.
+			radius := row third.
+			readyAt := 2 + row fourth.
+			shockOn := [ :deployment :seconds :distance | 
+				encounter
+					statusOnEnemyEnteringRangeOfGadget: deployment
+					at: seconds
+					distanceMetres: distance ].
+			encounter
+				recordGadgetDeployment: #hive
+				variant: hive
+				at: 0.
+			encounter
+				recordGadgetDeployment: #turret
+				variant: turret
+				at: 0.
+			encounter
+				recordGadgetDeployment: #remote
+				variant: remote
+				at: 0.
+			encounter
+				recordGadgetDeployment: #scanner
+				variant: scanner
+				at: 0.
+			encounter
+				recordGadgetDeployment: #decoy
+				variant: decoy
+				at: 0.
+			self
+				assert: (shockOn
+						value: #hive
+						value: 1.99
+						value: radius) isNil.
+			self
+				assert: (shockOn
+						value: #hive
+						value: 2
+						value: radius + 0.01) isNil.
+			self
+				assert: (shockOn
+						value: #hive
+						value: 2
+						value: radius)
+				equals: #shock.
+			self
+				assert: (shockOn
+						value: #turret
+						value: 2
+						value: radius)
+				equals: #shock.
+			self
+				assert: (shockOn
+						value: #remote
+						value: 2
+						value: radius)
+				equals: #shock.
+			self
+				assert: (shockOn
+						value: #scanner
+						value: 2
+						value: radius) isNil.
+			self
+				assert: (shockOn
+						value: #decoy
+						value: 2
+						value: radius)
+				equals: (row fifth ifTrue: [ #shock ]).
+			self
+				assert: (shockOn
+						value: #hive
+						value: readyAt - 0.01
+						value: radius) isNil.
+			self
+				assert: (shockOn
+						value: #hive
+						value: readyAt
+						value: radius)
+				equals: #shock.
+			encounter recordGadgetDeploymentEnded: #hive at: readyAt.
+			self
+				assert: (shockOn
+						value: #hive
+						value: readyAt + 20
+						value: radius) isNil ]
 ]
 
 { #category : 'tests' }

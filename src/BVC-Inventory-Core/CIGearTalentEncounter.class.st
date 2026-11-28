@@ -13,7 +13,8 @@ Class {
 		'buffUntil',
 		'cooldownUntil',
 		'markedEnemyIdentifier',
-		'bankedGadgetReset'
+		'bankedGadgetReset',
+		'tamperProofReadyAt'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -111,7 +112,7 @@ CIGearTalentEncounter >> gadgetCooldownReductionFractionOnEnemyKillAt: seconds [
 { #category : 'initialization' }
 CIGearTalentEncounter >> initializeTalent: aTalent [
 	| rule |
-	rule := #(#(obliterate 'obliterate' 'perfectObliterate' 'Gear Talents!D7:F7') #(unbreakable 'unbreakable' 'perfectUnbreakable' 'Gear Talents!D14:F14') #(overwatch 'overwatch' 'perfectOverwatch' 'Gear Talents!D11:F11') #(composure 'composure' 'perfectComposure' 'Gear Talents!D33:F33, Gear Named + Exotics!F25:G25') #(combinedArms 'combinedArms' 'perfectCombinedArms' 'Gear Talents!D26:F26') #(calculated 'calculated' 'perfectlyCalculated' 'Gear Talents!D45:F45, Gear Named + Exotics!F19:G19') #(skilled 'skilled' 'perfectlySkilled' 'Gear Talents!D21:F21, Gear Named + Exotics!F38:G38') #(tagTeam 'tagTeam' 'tagTeam' 'Gear Talents!D22:F22') #(creepingDeath 'creepingDeath' 'perfectCreepingDeath' 'Gear Talents!D47:F47'))
+	rule := #(#(obliterate 'obliterate' 'perfectObliterate' 'Gear Talents!D7:F7') #(unbreakable 'unbreakable' 'perfectUnbreakable' 'Gear Talents!D14:F14') #(overwatch 'overwatch' 'perfectOverwatch' 'Gear Talents!D11:F11') #(composure 'composure' 'perfectComposure' 'Gear Talents!D33:F33, Gear Named + Exotics!F25:G25') #(combinedArms 'combinedArms' 'perfectCombinedArms' 'Gear Talents!D26:F26') #(calculated 'calculated' 'perfectlyCalculated' 'Gear Talents!D45:F45, Gear Named + Exotics!F19:G19') #(skilled 'skilled' 'perfectlySkilled' 'Gear Talents!D21:F21, Gear Named + Exotics!F38:G38') #(tamperProof 'tamperProof' 'perfectlyTamperProof' 'Gear Talents!D24:I24, Gear Named + Exotics!F22:G22') #(tagTeam 'tagTeam' 'tagTeam' 'Gear Talents!D22:F22') #(creepingDeath 'creepingDeath' 'perfectCreepingDeath' 'Gear Talents!D47:F47'))
 			detect: [ :spec | aTalent id = spec second or: [ aTalent id = spec third ] ]
 			ifNone: [ self error: 'Unsupported gear talent' ].
 	mechanic := rule first.
@@ -121,6 +122,7 @@ CIGearTalentEncounter >> initializeTalent: aTalent [
 	coverState := #exposed.
 	overwatchPrimed := false.
 	bankedGadgetReset := false.
+	mechanic = #tamperProof ifTrue: [ tamperProofReadyAt := Dictionary new ].
 	^ self
 ]
 
@@ -152,6 +154,30 @@ CIGearTalentEncounter >> recordGadgetDamageToEnemy: enemyIdentifier at: seconds 
 	mechanic = #tagTeam ifFalse: [ ^ self ].
 	(cooldownUntil isNil or: [ seconds >= cooldownUntil ])
 		ifTrue: [ markedEnemyIdentifier := enemyIdentifier copy ]
+]
+
+{ #category : 'combat' }
+CIGearTalentEncounter >> recordGadgetDeployment: deploymentIdentifier variant: aVariant at: seconds [
+	"Register an owned Gadget deployment. The identifier refers to this deployment instance."
+
+	| family eligible |
+	self advanceTo: seconds.
+	mechanic = #tamperProof ifFalse: [ ^ self ].
+	family := aVariant familyName.
+	eligible := (#('Hive' 'Turret') includes: family)
+			or: [ (family = 'Pulse' and: [ aVariant name = 'Remote' ])
+					or: [ family = 'Decoy' and: [ parameters at: #allowsDecoy ] ] ].
+	eligible
+		ifTrue: [ tamperProofReadyAt
+				at: deploymentIdentifier
+				ifAbsentPut: [ seconds + (parameters at: #armSeconds) ] ]
+]
+
+{ #category : 'combat' }
+CIGearTalentEncounter >> recordGadgetDeploymentEnded: deploymentIdentifier at: seconds [
+	self advanceTo: seconds.
+	mechanic = #tamperProof
+		ifTrue: [ tamperProofReadyAt removeKey: deploymentIdentifier ifAbsent: [  ] ]
 ]
 
 { #category : 'combat' }
@@ -222,6 +248,24 @@ CIGearTalentEncounter >> squadDamageBonusesAt: seconds [
 		#skillDamage
 			-> (active ifTrue: [ parameters at: #squadSkillDamage ] ifFalse: [ 0 ])}
 		asDictionary
+]
+
+{ #category : 'combat' }
+CIGearTalentEncounter >> statusOnEnemyEnteringRangeOfGadget: deploymentIdentifier at: seconds distanceMetres: distance [
+	"Answer the status applied to the entering enemy, or nil. The Shock duration is unspecified."
+
+	| readyAt |
+	self advanceTo: seconds.
+	mechanic = #tamperProof ifFalse: [ ^ nil ].
+	(distance isNumber and: [ distance >= 0 ])
+		ifFalse: [ self error: 'Invalid Gadget distance' ].
+	readyAt := tamperProofReadyAt at: deploymentIdentifier ifAbsent: [ ^ nil ].
+	(seconds < readyAt or: [ distance > (parameters at: #shockRadiusMetres) ])
+		ifTrue: [ ^ nil ].
+	tamperProofReadyAt
+		at: deploymentIdentifier
+		put: seconds + (parameters at: #cooldownSeconds).
+	^ #shock
 ]
 
 { #category : 'accessing' }
