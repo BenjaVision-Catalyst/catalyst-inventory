@@ -2398,6 +2398,42 @@ CIThatGameLaunchInventoryTest >> testSkillEfficiencyUsesActualHasteForCooldownAn
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSlingshotGeneratesWithDocumentedTotalOptimalRange [
+	| catalog weapon range item comparison |
+	catalog := CIGameItemTypes buildCatalog.
+	weapon := catalog typeAt: 'weapon.workbook.slingshot'.
+	self assert: weapon statisticsReference weaponClass equals: #smg.
+	self assert: weapon optimalRangeMetres equals: 60.
+	self
+		assert: (weapon namedReference fieldAt: #talentOrAttribute)
+		equals: '+45 Optimal Range (60 total)'.
+	range := weapon fixedAttributes
+			detect: [ :attribute | attribute statIdentifier = 'optimalRangeMetres' ].
+	self assert: range magnitude equals: 60.
+	self assert: range unit equals: #metres.
+	self assert: range evidence equals: 'Weapons!M142'.
+	item := CIItemGenerator new
+			generate: 'slingshot'
+			type: weapon id
+			values: {'weaponDamage' -> 0.10} asDictionary
+			from: catalog
+			using: [ 0 ].
+	comparison := item comparisonStats
+			detect: [ :stat | stat statIdentifier = 'optimalRangeMetres' ].
+	self assert: comparison value equals: 60.
+	self assert: item talentIdentifier isNil.
+	self
+		should: [ CIItemGenerator new
+				generate: 'bad'
+				type: weapon id
+				values: {'weaponDamage' -> 0.10.
+						'optimalRangeMetres' -> 61} asDictionary
+				from: catalog
+				using: [ 0 ] ]
+		raise: Error
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testSpecializationConditionalPerksHonorRangeCooldownAndPvP [
 	| catalog loadout field pve pvp demolitionist targets |
 	catalog := CIGameItemTypes buildCatalog.

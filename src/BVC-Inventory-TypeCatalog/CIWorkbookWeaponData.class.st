@@ -134,7 +134,7 @@ CIWorkbookWeaponData class >> registerFixedMountNotesIn: catalog [
 
 { #category : 'registration' }
 CIWorkbookWeaponData class >> registerFixedNamedWeaponItemsIn: catalog [
-	#(#('C8' 'C4' 'firstSight' #('innateHeadshotDamage' 'Innate headshot damage' 0.85 fraction intrinsic always)) #('C165' 'C59' 'backupBoomstick' #('weaponDamage' 'Shotgun damage' 0.17 fraction primaryCore always)) #('C195' 'C64' 'theMop' #('armorOnKill' 'Armor on kill' 0.10 fraction secondary always)) #('C269' 'C76' 'theWhiteDeath' #('headshotDamage' 'Headshot damage' 1.37 fraction secondary always)) #('C268' 'C77' 'ohCarol' #('headshotDamage' 'Headshot damage' 1.37 fraction secondary always)) #('C318' 'C97' 'tdiKardCustom' #('skillTier' 'Skill tier while active' 1 count secondary whileActiveWeapon)))
+	#(#('C8' 'C4' 'firstSight' #('innateHeadshotDamage' 'Innate headshot damage' 0.85 fraction intrinsic always) headshotDamage) #('C142' 'C49' 'slingshot' #('optimalRangeMetres' 'Optimal range (m)' 60 metres intrinsic always) optimalRangeMetres) #('C165' 'C59' 'backupBoomstick' #('weaponDamage' 'Shotgun damage' 0.17 fraction primaryCore always)) #('C195' 'C64' 'theMop' #('armorOnKill' 'Armor on kill' 0.10 fraction secondary always)) #('C269' 'C76' 'theWhiteDeath' #('headshotDamage' 'Headshot damage' 1.37 fraction secondary always)) #('C268' 'C77' 'ohCarol' #('headshotDamage' 'Headshot damage' 1.37 fraction secondary always)) #('C318' 'C97' 'tdiKardCustom' #('skillTier' 'Skill tier while active' 1 count secondary whileActiveWeapon)))
 		do: [ :row | 
 			| statistics named weapon typeId |
 			statistics := catalog weaponReferenceAt: 'Weapons!' , row first.
@@ -152,7 +152,7 @@ CIWorkbookWeaponData class >> registerFixedNamedWeaponItemsIn: catalog [
 				fixedAttributes: {CIWeaponFixedAttribute
 							fromWorkbookRow: row fourth
 							evidence: (row fourth fifth = #intrinsic
-									ifTrue: [ statistics evidenceForField: #headshotDamage ]
+									ifTrue: [ statistics evidenceForField: row fifth ]
 									ifFalse: [ named evidenceForField: #talentOrAttribute ])}.
 			catalog register: weapon ].
 	self registerFirstSightReloadIn: catalog
