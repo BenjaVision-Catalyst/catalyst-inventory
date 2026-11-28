@@ -104,8 +104,8 @@ CIGadgetStatTrack >> magnitudeAtTier: aTier withSpecializationUpgrades: upgrades
 			upgrade resolvedTrack == self
 				ifTrue: [ adjustment := adjustment
 							+ (upgrade unit = #fraction
-									ifTrue: [ value * upgrade reportedMagnitude ]
-									ifFalse: [ upgrade reportedMagnitude ]) ] ].
+									ifTrue: [ value * upgrade resolvedMagnitude ]
+									ifFalse: [ upgrade resolvedMagnitude ]) ] ].
 	^ value + adjustment
 ]
 

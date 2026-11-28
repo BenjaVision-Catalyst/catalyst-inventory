@@ -1098,6 +1098,28 @@ CIThatGameLaunchInventoryTest >> testLaunchInventoryAndTalentsSurviveRestart [
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testLiquidCoolingIncreasesArtificerDuration [
+	| catalog typeIdentifier variant loadout upgrades liquid base effective |
+	catalog := CIGameItemTypes buildCatalog.
+	typeIdentifier := 'gadget.workbook.hive.artificer'.
+	variant := (catalog typeAt: typeIdentifier) workbookVariantDefinition.
+	loadout := catalog
+			specializationLoadoutNamed: 'Technician'
+			selected: #('technician.artificer' 'technician.upgradedsensorpackage' 'technician.liquidcooling').
+	upgrades := loadout resolvedGadgetUpgradesForType: typeIdentifier.
+	liquid := upgrades
+			detect: [ :upgrade | upgrade resolvedTrack label = 'Duration' ].
+	self assert: liquid resolvedMagnitude equals: 0.10.
+	self deny: liquid reviewEvidence isEmpty.
+	base := variant knownStatsAtTier: 0 withSpecializationUpgrades: #().
+	effective := variant knownStatsAtTier: 0 withSpecializationUpgrades: upgrades.
+	self assert: (base at: 'Duration') equals: 180.
+	self assert: (effective at: 'Duration') closeTo: 198.
+	self assert: (effective at: 'Refill Speed') equals: (base at: 'Refill Speed').
+	self assert: (effective at: 'Buff Duration') equals: (base at: 'Buff Duration')
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testLootAwardPersistsSelectionAndGeneratedTalent [
 	| catalog loot pool entries owner store path award samples calls reloaded noValues values |
 	catalog := CIGameItemTypes buildCatalog.
@@ -2202,8 +2224,8 @@ CIThatGameLaunchInventoryTest >> testSpecializationGadgetBehaviorsUseWorkbookTar
 ]
 
 { #category : 'tests' }
-CIThatGameLaunchInventoryTest >> testSpecializationGadgetUpgradesResolveNineTracksAndKeepThreeConflicts [
-	| catalog upgrades conflicts mortar |
+CIThatGameLaunchInventoryTest >> testSpecializationGadgetUpgradesKeepUnspecifiedEffectsOutOfStats [
+	| catalog upgrades conflicts mortar carbon magnetic |
 	catalog := CIGameItemTypes buildCatalog.
 	upgrades := catalog specializations
 			flatCollect: [ :specialization | specialization perks select: [ :perk | perk gadgetUpgrade notNil ] ].
@@ -2211,13 +2233,27 @@ CIThatGameLaunchInventoryTest >> testSpecializationGadgetUpgradesResolveNineTrac
 	conflicts := upgrades reject: [ :perk | perk gadgetUpgrade isResolved ].
 	self
 		assert: (conflicts collect: #id) asSet
-		equals: #('sharpshooter.carbonfiberframe' 'survivalist.magneticdisc' 'technician.liquidcooling')
-				asSet.
+		equals: #('sharpshooter.carbonfiberframe' 'survivalist.magneticdisc') asSet.
 	conflicts
 		do: [ :perk | 
+			| upgrade variant |
+			upgrade := perk gadgetUpgrade.
+			variant := (catalog typeAt: upgrade gadgetTypeIdentifier)
+					workbookVariantDefinition.
 			self deny: perk description isEmpty.
-			self assert: perk gadgetUpgrade resolvedTrack isNil.
-			self assert: perk gadgetUpgrade reportedMagnitude > 0 ].
+			self assert: upgrade resolvedTrack isNil.
+			self assert: upgrade resolvedMagnitude isNil.
+			self assert: upgrade reportedMagnitude > 0.
+			self deny: upgrade reviewEvidence isEmpty.
+			self
+				assert: (variant knownStatsAtTier: 0 withSpecializationUpgrades: {upgrade})
+				equals: (variant knownStatsAtTier: 0 withSpecializationUpgrades: #()) ].
+	carbon := ((catalog specializationNamed: 'Sharpshooter')
+			perkAt: 'sharpshooter.carbonfiberframe') gadgetUpgrade.
+	magnetic := ((catalog specializationNamed: 'Survivalist')
+			perkAt: 'survivalist.magneticdisc') gadgetUpgrade.
+	self assert: carbon supportedTargetTrack label equals: 'Scan Range'.
+	self assert: magnetic supportedTargetTrack label equals: 'Health'.
 	mortar := ((catalog specializationNamed: 'Demolitionist')
 			perkAt: 'demolitionist.cyclonemagazine') gadgetUpgrade.
 	self assert: mortar reportedStatLabel equals: 'Extra Mortar Ammo'.

@@ -21,6 +21,20 @@ CIWorkbookSpecializationData class >> gunnerPerks [
 ]
 
 { #category : 'registration' }
+CIWorkbookSpecializationData class >> recordGadgetUpgradeEvidenceIn: catalog [
+	#(#('Sharpshooter' 'sharpshooter.carbonfiberframe' 'Scan Range' #('https://www.reddit.com/r/thedivision/comments/gewh6w/remove_redundant_skill_mods/' 'https://www.ubisoft.com/en-us/game/the-division/the-division-2/news-updates/3pepSvWluJRxzkWZeEWv56/episode-1-patch-notes')) #('Survivalist' 'survivalist.magneticdisc' 'Health' #('https://www.ubisoft.com/en-us/game/the-division/the-division-2/news-updates/3pepSvWluJRxzkWZeEWv56/episode-1-patch-notes')) #('Technician' 'technician.liquidcooling' 'Duration' #('https://thedivisiondispatch.com/2026/08/01/%F0%9F%93%84-the-immortal-tech-tank/')))
+		do: [ :row | 
+			| perk upgrade variant |
+			perk := (catalog specializationNamed: row first) perkAt: row second.
+			upgrade := perk gadgetUpgrade.
+			variant := (catalog typeAt: upgrade gadgetTypeIdentifier)
+					workbookVariantDefinition.
+			upgrade
+				reviewTargetTrack: (variant trackNamed: row third)
+				evidence: row fourth ]
+]
+
+{ #category : 'registration' }
 CIWorkbookSpecializationData class >> registerArmorKitEffectsIn: catalog [
 	#(#('Sharpshooter' 'sharpshooter.emegencycleanse' #(#(repair self onUse 1 nil nil #()) #(removeStatusEffects self onUse nil nil nil #()) #(statusResistance self timed nil 20 nil #(bleed poison burn)))) #('Survivalist' 'survivalist.distributedrepair' #(#(repair self overTime nil 5 nil #()) #(repair groupMember overTime nil 5 20 #()))) #('Technician' 'technician.emergencypatch' #(#(shareBaseKit friendlySkillProxy baseKit nil nil 10 #()))) #('Gunner' 'gunner.hardenedarmorkits' #(#(armorRepair self onUse 1 nil nil #()) #(bonusArmor self timed 0.30 10 nil #()))) #('Demolitionist' 'demolitionist.stimulantpatch' #(#(repair self onUse 1 nil nil #()) #(weaponHandling self timed 0.30 15 nil #()))) #('Firewall' 'firewall.extracellularmatrixmesh' #(#(armorRepair self overTime 2 10 nil #()) #(healthRecovery self overTime 2 10 nil #()))))
 		do: [ :row | 
@@ -75,7 +89,7 @@ CIWorkbookSpecializationData class >> registerGadgetBehaviorsIn: catalog [
 
 { #category : 'registration' }
 CIWorkbookSpecializationData class >> registerGadgetUpgradesIn: catalog [
-	#(#('Sharpshooter' 'sharpshooter.tactician' #(#('sharpshooter.graphenebattery' 'Duration' 0.15 fraction 'Duration') #('sharpshooter.carbonfiberframe' 'Scan Range' 0.20 fraction nil))) #('Survivalist' 'survivalist.mender' #(#('survivalist.magneticdisc' 'Health' 0.15 fraction nil) #('survivalist.larreatridentatainfusion' 'Healing' 0.15 fraction 'Healing'))) #('Technician' 'technician.artificer' #(#('technician.upgradedsensorpackage' 'Range' 0.10 fraction 'Range') #('technician.liquidcooling' 'Duration' 0.10 fraction nil))) #('Gunner' 'gunner.banshee' #(#('gunner.microwaveamplifier' 'Effect Duration' 0.15 fraction 'Disorient Duration') #('gunner.directionaltransmitter' 'Radius' 0.15 fraction 'Radius'))) #('Demolitionist' 'demolitionist.artilleryturret' #(#('demolitionist.cyclonemagazine' 'Extra Mortar Ammo' 1 count 'Ammo') #('demolitionist.shdcpuv2' 'Damage' 0.10 fraction 'Damage'))) #('Firewall' 'firewall.strikershield' #(#('firewall.shockhardenedframe' 'Shield Health' 0.08 fraction 'Health') #('firewall.macromolecularcoverings' 'Active Regeneration' 0.08 fraction 'Active / Regeneration'))))
+	#(#('Sharpshooter' 'sharpshooter.tactician' #(#('sharpshooter.graphenebattery' 'Duration' 0.15 fraction 'Duration') #('sharpshooter.carbonfiberframe' 'Scan Range' 0.20 fraction nil))) #('Survivalist' 'survivalist.mender' #(#('survivalist.magneticdisc' 'Health' 0.15 fraction nil) #('survivalist.larreatridentatainfusion' 'Healing' 0.15 fraction 'Healing'))) #('Technician' 'technician.artificer' #(#('technician.upgradedsensorpackage' 'Range' 0.10 fraction 'Range') #('technician.liquidcooling' 'Duration' 0.10 fraction 'Duration'))) #('Gunner' 'gunner.banshee' #(#('gunner.microwaveamplifier' 'Effect Duration' 0.15 fraction 'Disorient Duration') #('gunner.directionaltransmitter' 'Radius' 0.15 fraction 'Radius'))) #('Demolitionist' 'demolitionist.artilleryturret' #(#('demolitionist.cyclonemagazine' 'Extra Mortar Ammo' 1 count 'Ammo') #('demolitionist.shdcpuv2' 'Damage' 0.10 fraction 'Damage'))) #('Firewall' 'firewall.strikershield' #(#('firewall.shockhardenedframe' 'Shield Health' 0.08 fraction 'Health') #('firewall.macromolecularcoverings' 'Active Regeneration' 0.08 fraction 'Active / Regeneration'))))
 		do: [ :group | 
 			| specialization typeIdentifier variant |
 			specialization := catalog specializationNamed: group first.
@@ -92,7 +106,8 @@ CIWorkbookSpecializationData class >> registerGadgetUpgradesIn: catalog [
 							unit: row fourth
 							resolvedTrack: track.
 					(specialization perkAt: row first)
-						eventParameters: {#gadgetUpgrade -> upgrade} asDictionary ] ]
+						eventParameters: {#gadgetUpgrade -> upgrade} asDictionary ] ].
+	self recordGadgetUpgradeEvidenceIn: catalog
 ]
 
 { #category : 'registration' }
