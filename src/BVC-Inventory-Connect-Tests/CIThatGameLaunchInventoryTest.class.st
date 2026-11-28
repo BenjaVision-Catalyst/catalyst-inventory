@@ -91,6 +91,26 @@ CIThatGameLaunchInventoryTest >> tearDown [
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testAchillesExpertiseAmplifiesOnlyHitsOnMarkedZones [
+	| catalog achilles rule |
+	catalog := CIGameItemTypes buildCatalog.
+	achilles := (catalog gadgetFamilyNamed: 'Pulse') variantNamed: 'Achilles'.
+	rule := achilles expertiseRule.
+	self assert: rule evidence equals: 'Skill List!M76'.
+	self assert: rule operation equals: #amplifier.
+	self assert: rule targetTrackLabel isNil.
+	self assert: (rule damageMultiplierForMarkedHit: true atGrade: 0) equals: 1.
+	self
+		assert: (rule damageMultiplierForMarkedHit: true atGrade: 20)
+		closeTo: 1.20.
+	self assert: (rule damageMultiplierForMarkedHit: false atGrade: 20) equals: 1.
+	self
+		should: [ rule damageMultiplierForMarkedHit: true atGrade: -1 ]
+		raise: Error.
+	self deny: ((achilles knownStatsAtTier: 0) includesKey: 'Damage')
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testAcostaGoBagRefundsOnActivationAndGrantsTierOrOvercharge [
 	| catalog rule effects |
 	catalog := CIGameItemTypes buildCatalog.
