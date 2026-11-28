@@ -1837,6 +1837,110 @@ CIThatGameLaunchInventoryTest >> testSpecializationPassivesHonorTargetKindKillAn
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSpecializationSidearmClaimsValidateRollAndSurviveRestart [
+	| owner perk values item retry catalog talent encounter preservation repair |
+	self startInventory.
+	owner := 'specialization-sidearm-claim-owner'.
+	perk := 'demolitionist.dicerosspecial'.
+	values := {'weaponDamage' -> 0.10} asDictionary.
+	self
+		should: [ service
+				claimSpecializationSidearmForPerk: perk
+				values: values
+				forVerifiedUser: owner ]
+		raise: Error.
+	service
+		selectSpecialization: 'Demolitionist'
+		perks: {perk}
+		forVerifiedUser: owner.
+	self
+		should: [ service
+				claimSpecializationSidearmForPerk: perk
+				values: Dictionary new
+				forVerifiedUser: owner ]
+		raise: Error.
+	self
+		should: [ service
+				claimSpecializationSidearmForPerk: perk
+				values: {'weaponDamage' -> 0.16} asDictionary
+				forVerifiedUser: owner ]
+		raise: Error.
+	item := service
+			claimSpecializationSidearmForPerk: perk
+			values: values
+			forVerifiedUser: owner.
+	self assert: item equippedSlotIdentifier isNil.
+	service stop.
+	service := nil.
+	self startInventory.
+	retry := service
+			claimSpecializationSidearmForPerk: perk
+			values: values
+			forVerifiedUser: owner.
+	self assert: retry itemIdentifier equals: item itemIdentifier.
+	self assert: retry talentIdentifier equals: 'perfectOptimist.dicerosSpecial'.
+	self
+		assert: (service
+				rowsForVerifiedUser: owner
+				offset: 0
+				limit: 32) size
+		equals: 1.
+	catalog := CIGameItemTypes buildCatalog.
+	talent := catalog talentAt: retry talentIdentifier.
+	encounter := CIWeaponTalentEncounter
+			weapon: retry itemIdentifier
+			talent: talent.
+	self
+		assert: (encounter weaponDamageBonusForMagazine: 10 remaining: 9)
+		closeTo: 0.04.
+	self assert: encounter evidence equals: 'Weapons Named + Exotics!E99'.
+	preservation := CIWeaponTalentEncounter
+			weapon: 'p320'
+			talent: (catalog talentAt: 'perfectPreservation.p320XCompact').
+	repair := preservation armorRepairOnKillFrom: 'p320' headshot: true.
+	self assert: repair fraction closeTo: 0.24.
+	self assert: repair durationSeconds equals: 5.
+	self
+		assert: ((catalog talentAt: 'perfectPreservation') parameters at: #armorRepairOnKill)
+		equals: 0.15
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSpecializationSidearmsClaimWithTheirSourceSpecificFixedTalents [
+	| catalog store owner cases values |
+	catalog := CIGameItemTypes buildCatalog.
+	store := CIInventoryReadStore new.
+	owner := 'specialization-sidearm-types'.
+	values := {'weaponDamage' -> 0.1} asDictionary.
+	cases := #(#('Sharpshooter' 'sharpshooter.sharpshooters93r' 'perfectUnwavering.sharpshooter93r') #('Survivalist' 'survivalist.survivalistd50' 'perfectSadist.survivalistD50') #('Technician' 'technician.maxim9' 'perfectSpike.maxim9') #('Gunner' 'gunner.p320xcompact' 'perfectPreservation.p320XCompact') #('Demolitionist' 'demolitionist.dicerosspecial' 'perfectOptimist.dicerosSpecial') #('Firewall' 'firewall.firestartersawedoffshotgun' 'primerRounds.firestarter')).
+	cases
+		do: [ :row | 
+			| item perk weapon |
+			store
+				specialization: (CISpecializationSelection specialization: row first perks: {row second})
+				forOwner: owner.
+			item := store
+					claimSpecializationSidearmForPerk: row second
+					values: values
+					from: catalog
+					forOwner: owner.
+			perk := (catalog specializationNamed: row first) perkAt: row second.
+			weapon := catalog typeAt: item definitionIdentifier.
+			self assert: item definitionIdentifier equals: perk rewardIdentifier.
+			self assert: item talentIdentifier equals: row third.
+			self
+				assert: (catalog talentPoolFor: item definitionIdentifier)
+				equals: {row third}.
+			self assert: (item permitsCapturedEquipmentSlot: 'LeftHandWeapon').
+			self deny: (item permitsCapturedEquipmentSlot: 'RangedWeapon').
+			self assert: weapon namedReference itemDefinitionIdentifier equals: weapon id.
+			self
+				assert: weapon statisticsReference itemDefinitionIdentifier
+				equals: weapon id ].
+	self assert: (store allRowsForOwner: owner) size equals: 6
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testSpecializationWeaponModRewardsRetainExactWorkbookSocketInterfaces [
 	| catalog rows |
 	catalog := CIGameItemTypes buildCatalog.

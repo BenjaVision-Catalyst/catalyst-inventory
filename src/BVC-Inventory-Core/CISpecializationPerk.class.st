@@ -123,3 +123,8 @@ CISpecializationPerk >> prerequisites [
 CISpecializationPerk >> rewardIdentifier [
 	^ rewardIdentifier ifNotNil: #copy
 ]
+
+{ #category : 'initialization' }
+CISpecializationPerk >> rewardIdentifier: typeIdentifier [
+	rewardIdentifier := typeIdentifier copy
+]

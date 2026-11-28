@@ -66,6 +66,14 @@ CIWeaponWorkbookReference >> kind [
 	^ kind
 ]
 
+{ #category : 'initialization' }
+CIWeaponWorkbookReference >> linkItemDefinition: typeIdentifier [
+	(itemDefinitionIdentifier notNil
+		and: [ itemDefinitionIdentifier ~= typeIdentifier ])
+		ifTrue: [ self error: 'Weapon reference already links to a different item definition' ].
+	itemDefinitionIdentifier := typeIdentifier copy
+]
+
 { #category : 'accessing' }
 CIWeaponWorkbookReference >> mountLayout [
 	^ CIWeaponMountLayout

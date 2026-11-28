@@ -23,18 +23,26 @@ CIInventoryReadStore >> allRowsForOwner: identity [
 
 { #category : 'specializations' }
 CIInventoryReadStore >> claimSpecializationGadgetForPerk: perkIdentifier from: catalog forOwner: identity [
-	| selection perk typeIdentifier type owned |
-	selection := self specializationForOwner: identity.
-	selection
-		ifNil: [ self error: 'Select the gadget reward perk before claiming it' ].
-	perk := (selection resolveIn: catalog) selectedPerks
-			detect: [ :each | each id = perkIdentifier ]
-			ifNone: [ self error: 'Select the gadget reward perk before claiming it' ].
+	| perk typeIdentifier type |
+	perk := self
+			selectedSpecializationRewardPerk: perkIdentifier
+			from: catalog
+			forOwner: identity.
 	typeIdentifier := perk rewardIdentifier.
 	type := typeIdentifier
 			ifNotNil: [ catalog typeAt: typeIdentifier ifAbsent: [ nil ] ].
 	(type respondsTo: #workbookVariantDefinition)
 		ifFalse: [ self error: 'This perk does not grant a workbook gadget' ].
+	^ self
+		claimSpecializationRewardType: typeIdentifier
+		values: Dictionary new
+		from: catalog
+		forOwner: identity
+]
+
+{ #category : 'private' }
+CIInventoryReadStore >> claimSpecializationRewardType: typeIdentifier values: values from: catalog forOwner: identity [
+	| owned |
 	owned := (self allRowsForOwner: identity)
 			detect: [ :row | row definitionIdentifier = typeIdentifier ]
 			ifNone: [ nil ].
@@ -42,7 +50,24 @@ CIInventoryReadStore >> claimSpecializationGadgetForPerk: perkIdentifier from: c
 	^ self
 		grantItem: 'specialization.reward.' , typeIdentifier
 		type: typeIdentifier
-		values: Dictionary new
+		values: values
+		from: catalog
+		forOwner: identity
+]
+
+{ #category : 'specializations' }
+CIInventoryReadStore >> claimSpecializationSidearmForPerk: perkIdentifier values: values from: catalog forOwner: identity [
+	| perk reward |
+	perk := self
+			selectedSpecializationRewardPerk: perkIdentifier
+			from: catalog
+			forOwner: identity.
+	reward := perk equipmentReward.
+	(reward notNil and: [ reward kind = #sidearm ])
+		ifFalse: [ self error: 'This perk does not grant a specialization sidearm' ].
+	^ self
+		claimSpecializationRewardType: perk rewardIdentifier
+		values: values
 		from: catalog
 		forOwner: identity
 ]
@@ -368,6 +393,16 @@ CIInventoryReadStore >> rowsForOwner: anOwnerIdentifier offset: anOffset limit: 
 	anOffset >= rows size ifTrue: [ ^ #() ].
 	end := anOffset + aLimit min: rows size.
 	^ rows copyFrom: anOffset + 1 to: end
+]
+
+{ #category : 'private' }
+CIInventoryReadStore >> selectedSpecializationRewardPerk: perkIdentifier from: catalog forOwner: identity [
+	| selection |
+	selection := self specializationForOwner: identity.
+	selection ifNil: [ self error: 'Select the reward perk before claiming it' ].
+	^ (selection resolveIn: catalog) selectedPerks
+		detect: [ :each | each id = perkIdentifier ]
+		ifNone: [ self error: 'Select the reward perk before claiming it' ]
 ]
 
 { #category : 'writing' }

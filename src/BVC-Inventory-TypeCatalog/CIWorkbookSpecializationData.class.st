@@ -117,7 +117,8 @@ CIWorkbookSpecializationData class >> registerIn: catalog [
 	self registerArmorKitEffectsIn: catalog.
 	self registerOrdinaryAmmoAccrualsIn: catalog.
 	self registerGadgetUpgradesIn: catalog.
-	self registerEquipmentRewardsIn: catalog
+	self registerEquipmentRewardsIn: catalog.
+	self registerSidearmItemsIn: catalog
 ]
 
 { #category : 'registration' }
@@ -134,6 +135,36 @@ CIWorkbookSpecializationData class >> registerOrdinaryAmmoAccrualsIn: catalog [
 					roundsByTarget: rounds.
 			((catalog specializationNamed: row first) perkAt: row second)
 				eventParameters: {#ammoAccrual -> accrual} asDictionary ]
+]
+
+{ #category : 'registration' }
+CIWorkbookSpecializationData class >> registerSidearmItemsIn: catalog [
+	#(#('Sharpshooter' 'sharpshooter.sharpshooters93r' 'sharpshooter93r' 'perfectUnwavering.sharpshooter93r' 'Perfect Unwavering' #(#(weaponHandling 4) #(durationSeconds 5) #(swapAwayLockoutSeconds 5) #(killsRefresh true))) #('Survivalist' 'survivalist.survivalistd50' 'survivalistD50' 'perfectSadist.survivalistD50' 'Perfect Sadist' #(#(damageAgainstBleeding 0.25) #(killThreshold 3) #(status bleed))) #('Technician' 'technician.maxim9' 'maxim9' 'perfectSpike.maxim9' 'Perfect Spike' #(#(gadgetDamage 0.25) #(durationSeconds 15))) #('Gunner' 'gunner.p320xcompact' 'p320XCompact' 'perfectPreservation.p320XCompact' 'Perfect Preservation' #(#(armorRepairOnKill 0.12) #(extraArmorRepairOnHeadshotKill 0.12) #(repairSeconds 5))) #('Demolitionist' 'demolitionist.dicerosspecial' 'dicerosSpecial' 'perfectOptimist.dicerosSpecial' 'Perfect Optimist' #(#(damagePerStep 0.04) #(magazineStep 0.10))) #('Firewall' 'firewall.firestartersawedoffshotgun' 'firestarter' 'primerRounds.firestarter' 'Primer Rounds' #(#(burnResistanceReduction 0.50) #(durationSeconds 5))))
+		do: [ :row | 
+			| perk reward typeIdentifier talentId parameters weapon |
+			perk := (catalog specializationNamed: row first) perkAt: row second.
+			reward := perk equipmentReward.
+			typeIdentifier := 'weapon.specialization.' , row third.
+			talentId := row fourth.
+			parameters := (row sixth collect: [ :entry | entry first -> entry second ])
+					asDictionary.
+			catalog
+				registerTalent: (CIItemTalent
+						id: talentId
+						name: row fifth
+						eligibility: #weapon
+						parameters: parameters
+						comment: ((reward namedWeaponReference fieldAt: #talentOrAttribute)
+								copyAfter: $/) trimBoth).
+			reward weaponStatistics linkItemDefinition: typeIdentifier.
+			reward namedWeaponReference linkItemDefinition: typeIdentifier.
+			weapon := CIWorkbookNamedWeaponType
+					statistics: reward weaponStatistics
+					named: reward namedWeaponReference
+					slot: 'LeftHandWeapon'.
+			catalog register: weapon.
+			catalog talentPool: {talentId} for: typeIdentifier.
+			perk rewardIdentifier: typeIdentifier ]
 ]
 
 { #category : 'registration' }

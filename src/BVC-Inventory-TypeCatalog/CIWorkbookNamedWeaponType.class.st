@@ -11,10 +11,19 @@ Class {
 
 { #category : 'instance creation' }
 CIWorkbookNamedWeaponType class >> statistics: stats named: named [
-	| slot weapon |
+	| slot |
 	slot := stats weaponClass = #pistol
 			ifTrue: [ 'LeftHandWeapon' ]
 			ifFalse: [ 'RangedWeapon' ].
+	^ self
+		statistics: stats
+		named: named
+		slot: slot
+]
+
+{ #category : 'instance creation' }
+CIWorkbookNamedWeaponType class >> statistics: stats named: named slot: slot [
+	| weapon |
 	weapon := self
 			id: named itemDefinitionIdentifier
 			name: named name

@@ -69,7 +69,7 @@ CIWeaponTalentEncounter >> evidence [
 { #category : 'initialization' }
 CIWeaponTalentEncounter >> initializeWeapon: itemId talent: aTalent [
 	| rule |
-	rule := #(#(optimist 'optimist' 'perfectOptimist' 'Weapon Talents!B5:D5') #(ranger 'ranger' 'perfectRanger' 'Weapon Talents!B13:D13') #(preservation 'preservation' 'perfectPreservation' 'Weapon Talents!B4:D4') #(fastHands 'fastHands' 'perfectFastHands' 'Weapon Talents!B8:D8') #(inSync 'inSync' 'perfectInSync' 'Weapon Talents!B22:D22'))
+	rule := #(#(optimist 'optimist' 'perfectOptimist' 'Weapon Talents!B5:D5') #(ranger 'ranger' 'perfectRanger' 'Weapon Talents!B13:D13') #(preservation 'preservation' 'perfectPreservation' 'Weapon Talents!B4:D4') #(fastHands 'fastHands' 'perfectFastHands' 'Weapon Talents!B8:D8') #(inSync 'inSync' 'perfectInSync' 'Weapon Talents!B22:D22') #(optimist 'perfectOptimist.dicerosSpecial' 'perfectOptimist.dicerosSpecial' 'Weapons Named + Exotics!E99') #(preservation 'perfectPreservation.p320XCompact' 'perfectPreservation.p320XCompact' 'Weapons Named + Exotics!E95'))
 			detect: [ :spec | aTalent id = spec second or: [ aTalent id = spec third ] ]
 			ifNone: [ self error: 'Unsupported weapon talent' ].
 	weaponIdentifier := itemId copy.
