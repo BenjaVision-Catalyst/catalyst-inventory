@@ -22,6 +22,16 @@ CISpecializationLoadout >> definition [
 	^ definition
 ]
 
+{ #category : 'accessing' }
+CISpecializationLoadout >> gadgetUpgradePerksForType: typeIdentifier [
+	^ (selectedPerks
+		select: [ :perk | 
+			perk gadgetUpgrade
+				ifNil: [ false ]
+				ifNotNil: [ :upgrade | upgrade gadgetTypeIdentifier = typeIdentifier ] ])
+		asArray
+]
+
 { #category : 'initialization' }
 CISpecializationLoadout >> initializeDefinition: aDefinition universal: shared selected: identifiers [
 	| ids |

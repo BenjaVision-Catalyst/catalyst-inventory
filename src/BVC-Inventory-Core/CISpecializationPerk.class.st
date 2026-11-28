@@ -64,6 +64,12 @@ CISpecializationPerk >> exclusions [
 ]
 
 { #category : 'accessing' }
+CISpecializationPerk >> gadgetUpgrade [
+	^ eventParameters
+		ifNotNil: [ eventParameters at: #gadgetUpgrade ifAbsent: [ nil ] ]
+]
+
+{ #category : 'accessing' }
 CISpecializationPerk >> id [
 	^ id copy
 ]

@@ -41,6 +41,28 @@ CIWorkbookSpecializationData class >> registerEventParametersIn: catalog [
 ]
 
 { #category : 'registration' }
+CIWorkbookSpecializationData class >> registerGadgetUpgradesIn: catalog [
+	#(#('Sharpshooter' 'sharpshooter.tactician' #(#('sharpshooter.graphenebattery' 'Duration' 0.15 fraction 'Duration') #('sharpshooter.carbonfiberframe' 'Scan Range' 0.20 fraction nil))) #('Survivalist' 'survivalist.mender' #(#('survivalist.magneticdisc' 'Health' 0.15 fraction nil) #('survivalist.larreatridentatainfusion' 'Healing' 0.15 fraction 'Healing'))) #('Technician' 'technician.artificer' #(#('technician.upgradedsensorpackage' 'Range' 0.10 fraction 'Range') #('technician.liquidcooling' 'Duration' 0.10 fraction nil))) #('Gunner' 'gunner.banshee' #(#('gunner.microwaveamplifier' 'Effect Duration' 0.15 fraction 'Disorient Duration') #('gunner.directionaltransmitter' 'Radius' 0.15 fraction 'Radius'))) #('Demolitionist' 'demolitionist.artilleryturret' #(#('demolitionist.cyclonemagazine' 'Extra Mortar Ammo' 1 count 'Ammo') #('demolitionist.shdcpuv2' 'Damage' 0.10 fraction 'Damage'))) #('Firewall' 'firewall.strikershield' #(#('firewall.shockhardenedframe' 'Shield Health' 0.08 fraction 'Health') #('firewall.macromolecularcoverings' 'Active Regeneration' 0.08 fraction 'Active / Regeneration'))))
+		do: [ :group | 
+			| specialization typeIdentifier variant |
+			specialization := catalog specializationNamed: group first.
+			typeIdentifier := (specialization perkAt: group second) rewardIdentifier.
+			variant := (catalog typeAt: typeIdentifier) workbookVariantDefinition.
+			group third
+				do: [ :row | 
+					| track upgrade |
+					track := row fifth ifNotNil: [ :label | variant trackNamed: label ].
+					upgrade := CISpecializationGadgetUpgrade
+							forGadgetType: typeIdentifier
+							reportedStat: row second
+							magnitude: row third
+							unit: row fourth
+							resolvedTrack: track.
+					(specialization perkAt: row first)
+						eventParameters: {#gadgetUpgrade -> upgrade} asDictionary ] ]
+]
+
+{ #category : 'registration' }
 CIWorkbookSpecializationData class >> registerIn: catalog [
 	catalog
 		registerSpecialization: (CISpecializationDefinition
@@ -79,7 +101,8 @@ CIWorkbookSpecializationData class >> registerIn: catalog [
 	self registerEventParametersIn: catalog.
 	self registerSignatureAmmoParametersIn: catalog.
 	self registerArmorKitEffectsIn: catalog.
-	self registerOrdinaryAmmoAccrualsIn: catalog
+	self registerOrdinaryAmmoAccrualsIn: catalog.
+	self registerGadgetUpgradesIn: catalog
 ]
 
 { #category : 'registration' }

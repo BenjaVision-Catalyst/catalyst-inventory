@@ -1535,6 +1535,31 @@ CIThatGameLaunchInventoryTest >> testSpecializationConditionalPerksHonorRangeCoo
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSpecializationGadgetUpgradesResolveNineTracksAndKeepThreeConflicts [
+	| catalog upgrades conflicts mortar |
+	catalog := CIGameItemTypes buildCatalog.
+	upgrades := catalog specializations
+			flatCollect: [ :specialization | specialization perks select: [ :perk | perk gadgetUpgrade notNil ] ].
+	self assert: upgrades size equals: 12.
+	conflicts := upgrades reject: [ :perk | perk gadgetUpgrade isResolved ].
+	self
+		assert: (conflicts collect: #id) asSet
+		equals: #('sharpshooter.carbonfiberframe' 'survivalist.magneticdisc' 'technician.liquidcooling')
+				asSet.
+	conflicts
+		do: [ :perk | 
+			self deny: perk description isEmpty.
+			self assert: perk gadgetUpgrade resolvedTrack isNil.
+			self assert: perk gadgetUpgrade reportedMagnitude > 0 ].
+	mortar := ((catalog specializationNamed: 'Demolitionist')
+			perkAt: 'demolitionist.cyclonemagazine') gadgetUpgrade.
+	self assert: mortar reportedStatLabel equals: 'Extra Mortar Ammo'.
+	self assert: mortar reportedMagnitude equals: 1.
+	self assert: mortar unit equals: #count.
+	self assert: mortar resolvedTrack label equals: 'Ammo'
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testSpecializationPassivesHonorCoverAimingAndStationaryConditions [
 	| catalog encounter sharpshooter survivalist technician gunner firewall inactive |
 	catalog := CIGameItemTypes buildCatalog.
@@ -1732,6 +1757,52 @@ CIThatGameLaunchInventoryTest >> testTacticalLinksUseSelectedPerksAndTargetCondi
 	self
 		should: [ firewall damageBonusForAlly: true targetDistanceFromOwner: -1 ]
 		raise: Error
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testVerifiedSpecializationReturnsOnlySelectedUpgradesForMatchingGadget [
+	| owner tactician perks graphene carbon |
+	self startInventory.
+	owner := 'gadget-upgrade-owner'.
+	tactician := 'gadget.workbook.drone.tactician'.
+	self
+		should: [ service
+				selectSpecialization: 'Sharpshooter'
+				perks: #('sharpshooter.tactician' 'sharpshooter.carbonfiberframe')
+				forVerifiedUser: owner ]
+		raise: Error.
+	service
+		selectSpecialization: 'Sharpshooter'
+		perks: #('sharpshooter.tactician' 'sharpshooter.graphenebattery')
+		forVerifiedUser: owner.
+	perks := service
+			specializationGadgetUpgradePerksForType: tactician
+			forVerifiedUser: owner.
+	self assert: (perks collect: #id) equals: #('sharpshooter.graphenebattery').
+	graphene := perks first gadgetUpgrade.
+	self assert: graphene reportedMagnitude equals: 0.15.
+	self assert: graphene resolvedTrack label equals: 'Duration'.
+	service
+		selectSpecialization: 'Sharpshooter'
+		perks: #('sharpshooter.tactician' 'sharpshooter.graphenebattery' 'sharpshooter.carbonfiberframe')
+		forVerifiedUser: owner.
+	perks := service
+			specializationGadgetUpgradePerksForType: tactician
+			forVerifiedUser: owner.
+	self assert: perks size equals: 2.
+	carbon := (perks detect: [ :perk | perk id = 'sharpshooter.carbonfiberframe' ])
+			gadgetUpgrade.
+	self assert: carbon reportedStatLabel equals: 'Scan Range'.
+	self assert: carbon reportedMagnitude equals: 0.20.
+	self deny: carbon isResolved.
+	self
+		assertEmpty: (service
+				specializationGadgetUpgradePerksForType: 'gadget.workbook.shield.striker'
+				forVerifiedUser: owner).
+	self
+		assertEmpty: (service
+				specializationGadgetUpgradePerksForType: tactician
+				forVerifiedUser: 'other-owner')
 ]
 
 { #category : 'tests' }

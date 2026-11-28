@@ -443,6 +443,13 @@ CIInventoryService >> specializationEncounterForVerifiedUser: identity mode: mod
 				startedAt: seconds ]
 ]
 
+{ #category : 'querying' }
+CIInventoryService >> specializationGadgetUpgradePerksForType: typeIdentifier forVerifiedUser: identity [
+	^ (self specializationLoadoutForVerifiedUser: identity)
+		ifNil: [ #() ]
+		ifNotNil: [ :loadout | loadout gadgetUpgradePerksForType: typeIdentifier ]
+]
+
 { #category : 'reading' }
 CIInventoryService >> specializationLoadoutForVerifiedUser: identity [
 	^ savedSetsLock critical: [ self resolvedSpecializationFor: identity ]
