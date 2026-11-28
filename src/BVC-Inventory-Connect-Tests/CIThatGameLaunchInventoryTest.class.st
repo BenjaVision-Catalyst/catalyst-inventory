@@ -290,6 +290,25 @@ CIThatGameLaunchInventoryTest >> testArmorKitRecipientsHonorSelectionAndWorkbook
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testArtificerExpertiseAddsFromBaseBuffAmountAtEveryTier [
+	| catalog variant rule stats |
+	catalog := CIGameItemTypes buildCatalog.
+	variant := (catalog gadgetFamilyNamed: 'Hive') variantNamed: 'Artificer'.
+	rule := variant expertiseRule.
+	self assert: rule evidence equals: 'Skill List!M151'.
+	self assert: rule operation equals: #additive.
+	self assert: (rule buffAmountAtTier: 0 grade: 2) closeTo: 0.102.
+	self assert: (rule buffAmountAtTier: 1 grade: 0) closeTo: 0.20.
+	self assert: (rule buffAmountAtTier: 1 grade: 5) closeTo: 0.205.
+	self assert: (rule buffAmountAtTier: 6 grade: 30) closeTo: 0.73.
+	self assert: (rule buffAmountAtTier: #overcharge grade: 30) closeTo: 0.83.
+	stats := variant knownStatsAtTier: 1.
+	self assert: (stats at: 'Buff Amount') closeTo: 0.20.
+	self assert: (stats at: 'Skill Repair') closeTo: 0.10.
+	self assert: (stats at: 'Buff Duration') equals: 10
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testAttributeCataloguePreservesScopeMissingValuesAndConflicts [
 	| attributes rifle value gearMod notes |
 	attributes := CIGameItemTypes buildCatalog attributeCatalogue.
@@ -3952,7 +3971,7 @@ CIThatGameLaunchInventoryTest >> testWorkbookExpertiseScalesByGradeAndPreservesU
 	rules := variants collect: #expertiseRule.
 	self assert: rules size equals: 43.
 	self deny: (rules includes: nil).
-	self assert: (rules count: [ :rule | rule targetTrackLabel isNil ]) equals: 3.
+	self assert: (rules count: [ :rule | rule targetTrackLabel isNil ]) equals: 2.
 	rules do: [ :rule | self assert: (rule contributionAtGrade: 3) closeTo: 0.03 ].
 	pulse := catalog gadgetFamilyNamed: 'Pulse'.
 	scanner := (pulse variantNamed: 'Scanner') expertiseRule.
@@ -3974,7 +3993,7 @@ CIThatGameLaunchInventoryTest >> testWorkbookExpertiseScalesByGradeAndPreservesU
 	self assert: striker targetTrackLabel isNil.
 	artificer := ((catalog gadgetFamilyNamed: 'Hive') variantNamed: 'Artificer')
 			expertiseRule.
-	self assert: artificer targetTrackLabel isNil
+	self assert: artificer targetTrackLabel equals: 'Buff Amount'
 ]
 
 { #category : 'tests' }
