@@ -601,6 +601,63 @@ CIThatGameLaunchInventoryTest >> testExoticGenerationSeparatesCoreOverridesMinor
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testExpertiseProgressionRequiresProficiencyAndRespectsAccountCap [
+	| catalog rule |
+	catalog := CIGameItemTypes buildCatalog.
+	rule := catalog attributeCatalogue ruleAt: 'expertise.progression'.
+	self assert: rule maximumExpertiseLevel equals: 30.
+	self assert: rule maximumProficiencyRank equals: 10.
+	self
+		assert: (rule
+				canUpgradeFromGrade: 0
+				expertiseLevel: 1
+				proficiencyRank: 10).
+	self
+		deny: (rule
+				canUpgradeFromGrade: 0
+				expertiseLevel: 30
+				proficiencyRank: 9).
+	self
+		deny: (rule
+				canUpgradeFromGrade: 0
+				expertiseLevel: 0
+				proficiencyRank: 10).
+	self
+		deny: (rule
+				canUpgradeFromGrade: 15
+				expertiseLevel: 15
+				proficiencyRank: 10).
+	self
+		assert: (rule
+				canUpgradeFromGrade: 29
+				expertiseLevel: 30
+				proficiencyRank: 10).
+	self
+		deny: (rule
+				canUpgradeFromGrade: 30
+				expertiseLevel: 30
+				proficiencyRank: 10).
+	self
+		should: [ rule
+				canUpgradeFromGrade: 0
+				expertiseLevel: 31
+				proficiencyRank: 10 ]
+		raise: Error.
+	self
+		should: [ rule
+				canUpgradeFromGrade: 0
+				expertiseLevel: 30
+				proficiencyRank: 11 ]
+		raise: Error.
+	self
+		should: [ rule
+				canUpgradeFromGrade: -1
+				expertiseLevel: 30
+				proficiencyRank: 10 ]
+		raise: Error
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testFixedNamedWeaponAttributesGenerateWithoutAReplacementRoll [
 	| catalog generator cases weapon roll fixed item |
 	catalog := CIGameItemTypes buildCatalog.

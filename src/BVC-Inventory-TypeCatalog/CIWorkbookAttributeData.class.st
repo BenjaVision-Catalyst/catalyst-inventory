@@ -43,6 +43,17 @@ CIWorkbookAttributeData class >> linkWeaponClassGenerationRulesIn: catalog [
 ]
 
 { #category : 'registration' }
+CIWorkbookAttributeData class >> registerExpertiseProgressionIn: catalogue [
+	catalogue
+		registerRule: (CIExpertiseProgressionRule
+				id: 'expertise.progression'
+				description: 'An item type at maximum Proficiency can advance individual item Grades up to the account Expertise Level.'
+				parameters: {#maximumExpertiseLevel -> 30.
+						#maximumProficiencyRank -> 10} asDictionary
+				evidence: 'Ubisoft Title Update 15, Intelligence Annex: Expertise, and The Pact balance changes')
+]
+
+{ #category : 'registration' }
 CIWorkbookAttributeData class >> registerIn: catalogue [
 	self attributeCaps , self watchBonuses , self resistanceThresholds
 		do: [ :spec | 
@@ -84,7 +95,8 @@ CIWorkbookAttributeData class >> registerSupportingRulesIn: catalogue [
 						id: spec first
 						description: spec second
 						parameters: parameters
-						evidence: spec third) ]
+						evidence: spec third) ].
+	self registerExpertiseProgressionIn: catalogue
 ]
 
 { #category : 'workbook data' }
