@@ -11,6 +11,32 @@ CIWorkbookAttributeData class >> attributeCaps [
 ]
 
 { #category : 'registration' }
+CIWorkbookAttributeData class >> linkWeaponClassGenerationRulesIn: catalog [
+	| rules regularIds |
+	rules := Dictionary new.
+	#(#(assaultRifle 'assaultRifle' 'healthDamage' 'Health damage' 0.55 'Weapons!P2:R2') #(lmg 'lmg' 'damageToTargetsOutOfCover' 'Damage to targets out of cover' 0.65 'Weapons!P3:R3') #(smg 'smg' 'criticalHitChance' 'Critical hit chance' 0.50 'Weapons!P4:R4') #(shotgun 'shotgun' 'damageToArmor' 'Damage to armor' 0.45 'Weapons!P5:R5') #(rifle 'rifle' 'criticalHitDamage' 'Critical hit damage' 0.60 'Weapons!P6:R6') #(marksmanRifle 'mmr' 'headshotDamage' 'Headshot damage' 0 'Weapons!P7:R7') #(pistol 'pistol' nil nil 1.0 'Weapons!P8:R8'))
+		do: [ :row | 
+			rules
+				at: row first
+				put: (CIWeaponClassGenerationRule
+						weaponClass: row first
+						attribute: (catalog attributeCatalogue
+								definitionAt: 'weapon.class.' , row second)
+						stat: row third
+						label: row fourth
+						innateHeadshotDamage: row fifth
+						evidence: row sixth) ].
+	regularIds := ((CIThatGameLaunchCatalog weaponSpecs
+			select: [ :row | row third = row fourth ]) collect: #first) asSet.
+	catalog weaponReferences
+		do: [ :reference | 
+			(reference kind = #statistics
+				and: [ regularIds includes: reference itemDefinitionIdentifier ])
+				ifTrue: [ (catalog typeAt: reference itemDefinitionIdentifier)
+						classGenerationRule: (rules at: reference weaponClass) ] ]
+]
+
+{ #category : 'registration' }
 CIWorkbookAttributeData class >> registerIn: catalogue [
 	self attributeCaps , self watchBonuses , self resistanceThresholds
 		do: [ :spec | 

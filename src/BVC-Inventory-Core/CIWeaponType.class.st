@@ -6,7 +6,8 @@ Class {
 		'coreStats',
 		'handlingStats',
 		'socketIdentifiers',
-		'damageFalloff'
+		'damageFalloff',
+		'classGenerationRule'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -35,6 +36,37 @@ CIWeaponType >> baseMagazineCapacity [
 				and: [ (value allButLast: ' rounds' size) allSatisfy: #isDigit ] ])
 		ifFalse: [ ^ nil ].
 	^ (value allButLast: ' rounds' size) asNumber
+]
+
+{ #category : 'accessing' }
+CIWeaponType >> classGenerationRule [
+	^ classGenerationRule
+]
+
+{ #category : 'initialization' }
+CIWeaponType >> classGenerationRule: rule [
+	classGenerationRule := rule
+]
+
+{ #category : 'inventory' }
+CIWeaponType >> comparisonStatsForValues: values [
+	| stats |
+	stats := {CIInventoryComparisonStat
+				identifier: 'weaponDamage'
+				label: 'Weapon damage'
+				value: (values at: 'weaponDamage')}.
+	classGenerationRule
+		ifNotNil: [ classGenerationRule statIdentifier
+				ifNotNil: [ :key | 
+					values
+						at: key
+						ifPresent: [ :value | 
+							stats := stats
+									copyWith: (CIInventoryComparisonStat
+											identifier: key
+											label: classGenerationRule statLabel
+											value: value) ] ] ].
+	^ stats
 ]
 
 { #category : 'initialization' }
@@ -142,11 +174,7 @@ CIWeaponType >> inventoryItem: id values: values talentIdentifier: aTalentIdenti
 					at: #talentIdentifier put: aTalentIdentifier;
 					at: #talentIdentifiers
 						put: (aTalentIdentifier ifNil: [ #() ] ifNotNil: [ {aTalentIdentifier} ]);
-					at: #comparisonStats
-						put: {CIInventoryComparisonStat
-									identifier: 'weaponDamage'
-									label: 'Weapon damage'
-									value: (values at: 'weaponDamage')};
+					at: #comparisonStats put: (self comparisonStatsForValues: values);
 					at: #modSlots
 						put: (socketIdentifiers
 								collect: [ :socket | 
@@ -160,20 +188,32 @@ CIWeaponType >> inventoryItem: id values: values talentIdentifier: aTalentIdenti
 
 { #category : 'descriptions' }
 CIWeaponType >> inventoryItemDescription [
-	^ MAContainer
-		withAll: {MANumberDescription new
+	| fields maximum |
+	fields := OrderedCollection
+			with: (MANumberDescription new
 					accessor: (MADictionaryAccessor key: 'weaponDamage');
 					label: 'Weapon damage';
 					min: 0.0;
 					max: self weaponDamageMaximum;
 					beRequired;
-					yourself}
-				, (socketIdentifiers
-						collect: [ :socket |
-							MAStringDescription new
-								accessor: (MADictionaryAccessor key: socket);
-								label: socket;
-								yourself ])
+					yourself).
+	classGenerationRule
+		ifNotNil: [ maximum := classGenerationRule maximumFor: #standardMaximum.
+			maximum
+				ifNotNil: [ fields
+						add: (MANumberDescription new
+								accessor: (MADictionaryAccessor key: classGenerationRule statIdentifier);
+								label: classGenerationRule statLabel;
+								max: maximum;
+								yourself) ] ].
+	socketIdentifiers
+		do: [ :socket | 
+			fields
+				add: (MAStringDescription new
+						accessor: (MADictionaryAccessor key: socket);
+						label: socket;
+						yourself) ].
+	^ MAContainer withAll: fields
 ]
 
 { #category : 'private' }

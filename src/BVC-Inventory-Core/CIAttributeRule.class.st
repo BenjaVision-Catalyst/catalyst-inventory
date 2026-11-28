@@ -30,6 +30,15 @@ CIAttributeRule >> evidence [
 	^ evidence copy
 ]
 
+{ #category : 'evaluating' }
+CIAttributeRule >> expertiseOperationForVariant: variantName [
+	| exception |
+	exception := parameters at: #exception ifAbsent: [ nil ].
+	(exception notNil and: [ exception asString = variantName ])
+		ifTrue: [ ^ parameters at: #exceptionOperation ].
+	^ parameters at: #operation ifAbsent: [ nil ]
+]
+
 { #category : 'accessing' }
 CIAttributeRule >> id [
 	^ id copy

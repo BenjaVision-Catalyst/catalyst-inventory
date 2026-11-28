@@ -8,7 +8,8 @@ Class {
 		'overchargeEffects',
 		'expertiseScaling',
 		'behaviorProfile',
-		'overchargeRule'
+		'overchargeRule',
+		'expertiseRule'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -32,6 +33,16 @@ CIGadgetVariantDefinition >> behaviorProfile [
 { #category : 'initialization' }
 CIGadgetVariantDefinition >> behaviorProfile: profile [
 	behaviorProfile := profile
+]
+
+{ #category : 'accessing' }
+CIGadgetVariantDefinition >> expertiseRule [
+	^ expertiseRule
+]
+
+{ #category : 'initialization' }
+CIGadgetVariantDefinition >> expertiseRule: rule [
+	expertiseRule := rule
 ]
 
 { #category : 'accessing' }

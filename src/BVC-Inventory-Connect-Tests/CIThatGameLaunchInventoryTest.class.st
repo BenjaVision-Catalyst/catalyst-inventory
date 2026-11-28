@@ -691,6 +691,31 @@ CIThatGameLaunchInventoryTest >> testGearTalentTimersAndThresholds [
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testGeneratedWeaponClassRollSurvivesInventoryRestart [
+	| weapon owner retained |
+	self startInventory.
+	owner := 'weapon-class-roll-owner'.
+	weapon := service
+			grantItem: 'pp19'
+			type: 'weapon.launch.pp19'
+			values: {'weaponDamage' -> 0.10.
+					'criticalHitChance' -> 0.19} asDictionary
+			forVerifiedUser: owner.
+	service stop.
+	service := nil.
+	self startInventory.
+	retained := (service
+			rowsForVerifiedUser: owner
+			offset: 0
+			limit: 32) first.
+	self assert: retained talentIdentifier equals: weapon talentIdentifier.
+	self
+		assert: retained comparisonStats last statIdentifier
+		equals: 'criticalHitChance'.
+	self assert: retained comparisonStats last value equals: 0.19
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testGunnerEncounterUsesSelectedPerksAndDocumentedTiming [
 	| owner encounter grant |
 	self startInventory.
@@ -2461,6 +2486,73 @@ CIThatGameLaunchInventoryTest >> testSpikeHeadshotsAndPrimerRoundsUseWorkbookMag
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testStandardWeaponClassGenerationUsesOnlyDocumentedCaps [
+	| catalog generator ar lmg rifle mmr pistol exotic item create |
+	catalog := CIGameItemTypes buildCatalog.
+	generator := CIItemGenerator new.
+	create := [ :id :key :value | 
+		generator
+			generate: 'weapon'
+			type: id
+			values: {'weaponDamage' -> 0.10.
+					key -> value} asDictionary
+			from: catalog
+			using: [ 0 ] ].
+	ar := catalog typeAt: 'weapon.launch.akM'.
+	lmg := catalog typeAt: 'weapon.launch.mg5'.
+	rifle := catalog typeAt: 'weapon.launch.classicM1a'.
+	mmr := catalog typeAt: 'weapon.launch.model700'.
+	pistol := catalog typeAt: 'weapon.launch.d50'.
+	exotic := catalog typeAt: 'weapon.launch.capacitor'.
+	self assert: (ar classGenerationRule maximumFor: #standardMaximum) equals: 0.21.
+	self
+		assert: (ar classGenerationRule maximumFor: #prototypeMaximum)
+		equals: 0.315.
+	self assert: ar classGenerationRule innateHeadshotDamage equals: 0.55.
+	self
+		assert: (lmg classGenerationRule maximumFor: #standardMaximum)
+		equals: 0.12.
+	self assert: (rifle classGenerationRule maximumFor: #standardMaximum) isNil.
+	self
+		assert: (mmr classGenerationRule maximumFor: #standardMaximum)
+		equals: 1.11.
+	self assert: (mmr classGenerationRule maximumFor: #prototypeMaximum) isNil.
+	self assert: mmr classGenerationRule innateHeadshotDamage equals: 0.
+	self assert: pistol classGenerationRule statIdentifier isNil.
+	self assert: exotic classGenerationRule isNil.
+	item := create
+			value: ar id
+			value: 'healthDamage'
+			value: 0.21.
+	self assert: item comparisonStats last statIdentifier equals: 'healthDamage'.
+	self assert: item comparisonStats last value equals: 0.21.
+	self
+		should: [ create
+				value: ar id
+				value: 'healthDamage'
+				value: 0.211 ]
+		raise: Error.
+	self
+		should: [ create
+				value: ar id
+				value: 'criticalHitChance'
+				value: 0.10 ]
+		raise: Error.
+	self
+		should: [ create
+				value: rifle id
+				value: 'criticalHitDamage'
+				value: 0.17 ]
+		raise: Error.
+	self
+		should: [ create
+				value: exotic id
+				value: 'healthDamage'
+				value: 0.21 ]
+		raise: Error
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testTacticalLinksUseSelectedPerksAndTargetConditions [
 	| catalog encounter sharpshooter survivalist demolitionist firewall inactive |
 	catalog := CIGameItemTypes buildCatalog.
@@ -2935,6 +3027,39 @@ CIThatGameLaunchInventoryTest >> testWeaponTalentBoundariesAndPerfectVariants [
 				critical: true
 				at: 1 ].
 	self assert: reload reloadSpeedBonus equals: 2
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testWorkbookExpertiseScalesByGradeAndPreservesUnresolvedMappings [
+	| catalog variants rules pulse scanner achilles striker artificer assault |
+	catalog := CIGameItemTypes buildCatalog.
+	variants := catalog gadgetFamilies flatCollect: #variants.
+	rules := variants collect: #expertiseRule.
+	self assert: rules size equals: 43.
+	self deny: (rules includes: nil).
+	self assert: (rules count: [ :rule | rule targetTrackLabel isNil ]) equals: 3.
+	rules do: [ :rule | self assert: (rule contributionAtGrade: 3) closeTo: 0.03 ].
+	pulse := catalog gadgetFamilyNamed: 'Pulse'.
+	scanner := (pulse variantNamed: 'Scanner') expertiseRule.
+	self assert: scanner targetTrackLabel equals: 'Duration'.
+	self assert: scanner evidence equals: 'Skill List!M65'.
+	self assert: scanner operation isNil.
+	self assert: (scanner contributionAtGrade: 0) equals: 0.
+	self should: [ scanner contributionAtGrade: -1 ] raise: Error.
+	self should: [ scanner contributionAtGrade: 0.5 ] raise: Error.
+	achilles := (pulse variantNamed: 'Achilles') expertiseRule.
+	self assert: achilles operation equals: #amplifier.
+	self assert: achilles targetTrackLabel isNil.
+	assault := ((catalog gadgetFamilyNamed: 'Turret') variantNamed: 'Assault')
+			expertiseRule.
+	self assert: assault operation equals: #additive.
+	self assert: assault targetTrackLabel equals: 'Damage'.
+	striker := ((catalog gadgetFamilyNamed: 'Shield') variantNamed: 'Striker')
+			expertiseRule.
+	self assert: striker targetTrackLabel isNil.
+	artificer := ((catalog gadgetFamilyNamed: 'Hive') variantNamed: 'Artificer')
+			expertiseRule.
+	self assert: artificer targetTrackLabel isNil
 ]
 
 { #category : 'tests' }
