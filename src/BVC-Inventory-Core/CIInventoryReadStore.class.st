@@ -70,6 +70,19 @@ CIInventoryReadStore >> gearSetSlotFor: row [
 ]
 
 { #category : 'writing' }
+CIInventoryReadStore >> grantGearMod: itemId definition: modId tier: tier value: value from: catalog forOwner: identity [
+	| mod item |
+	self validateNewItem: itemId forOwner: identity.
+	mod := catalog modCatalogue definitionAt: modId.
+	item := CIOwnedGearMod
+			item: itemId
+			fromMod: mod
+			tier: tier
+			value: value.
+	^ self storeGeneratedItem: item forOwner: identity
+]
+
+{ #category : 'writing' }
 CIInventoryReadStore >> grantItem: itemIdentifier type: typeIdentifier values: values from: catalog forOwner: identity [
 	^ self
 		grantItem: itemIdentifier
@@ -114,6 +127,42 @@ CIInventoryReadStore >> grantLoot: itemIdentifier pool: poolIdentifier valuesFro
 CIInventoryReadStore >> initialize [
 	super initialize.
 	rowsByOwner := Dictionary new
+]
+
+{ #category : 'writing' }
+CIInventoryReadStore >> installMod: modItemId on: equipmentId socket: socketId from: catalog forOwner: identity [
+	| rows equipment owned definition replacement |
+	rows := self allRowsForOwner: identity.
+	equipment := rows
+			detect: [ :row | 
+				row itemIdentifier = equipmentId
+					and: [ row isKindOf: CIInventoryEquipmentSummary ] ]
+			ifNone: [ self error: 'Equipment is not owned' ].
+	owned := rows
+			detect: [ :row | 
+				row itemIdentifier = modItemId
+					and: [ (row isKindOf: CIWeaponModUnlock) or: [ row isKindOf: CIOwnedGearMod ] ] ]
+			ifNone: [ self error: 'Mod is not owned or unlocked' ].
+	definition := catalog modCatalogue definitionAt: owned definitionIdentifier.
+	((catalog modCatalogue
+		compatibleModsFor: equipment definitionIdentifier
+		socket: socketId) includes: definition)
+		ifFalse: [ self error: 'Mod is incompatible with this socket' ].
+	(owned isKindOf: CIOwnedGearMod)
+		ifTrue: [ rows
+				do: [ :row | 
+					(row isKindOf: CIInventoryEquipmentSummary)
+						ifTrue: [ (row modSlots
+								anySatisfy: [ :slot | 
+									slot equippedModIdentifier = modItemId
+										and: [ row ~~ equipment or: [ slot slotIdentifier ~= socketId ] ] ])
+								ifTrue: [ self error: 'Gear mod is already installed' ] ] ] ].
+	replacement := equipment withMod: modItemId inSocket: socketId.
+	self
+		replaceRows: (rows
+				collect: [ :row | row == equipment ifTrue: [ replacement ] ifFalse: [ row ] ])
+		forOwner: identity.
+	^ replacement copy
 ]
 
 { #category : 'private' }
@@ -163,6 +212,25 @@ CIInventoryReadStore >> provisionStarterGadgetsFrom: catalog forOwner: identity 
 					updated add: item ] ].
 	updated size = rows size
 		ifFalse: [ self replaceRows: updated forOwner: identity ]
+]
+
+{ #category : 'writing' }
+CIInventoryReadStore >> removeModFrom: equipmentId socket: socketId forOwner: identity [
+	| rows equipment replacement |
+	rows := self allRowsForOwner: identity.
+	equipment := rows
+			detect: [ :row | 
+				row itemIdentifier = equipmentId
+					and: [ row isKindOf: CIInventoryEquipmentSummary ] ]
+			ifNone: [ self error: 'Equipment is not owned' ].
+	(equipment modSlots anySatisfy: [ :slot | slot slotIdentifier = socketId ])
+		ifFalse: [ self error: 'Unknown equipment socket' ].
+	replacement := equipment withMod: nil inSocket: socketId.
+	self
+		replaceRows: (rows
+				collect: [ :row | row == equipment ifTrue: [ replacement ] ifFalse: [ row ] ])
+		forOwner: identity.
+	^ replacement copy
 ]
 
 { #category : 'writing' }
@@ -264,6 +332,24 @@ CIInventoryReadStore >> storeGeneratedItem: item forOwner: identity [
 							ifFalse: [ row ] ] ].
 	self replaceRows: (rows copyWith: item) forOwner: identity.
 	^ item copy
+]
+
+{ #category : 'writing' }
+CIInventoryReadStore >> unlockWeaponMod: modId from: catalog forOwner: identity [
+	| mod row rows |
+	mod := catalog modCatalogue definitionAt: modId.
+	mod kind = #weaponAttachment
+		ifFalse: [ self error: 'Expected a reusable weapon attachment' ].
+	rows := self allRowsForOwner: identity.
+	row := rows
+			detect: [ :item | (item isKindOf: CIWeaponModUnlock) and: [ item definitionIdentifier = modId ] ]
+			ifNone: [ nil ].
+	row ifNotNil: [ ^ row copy ].
+	row := CIWeaponModUnlock
+			item: 'unlock.' , modId
+			definition: modId
+			name: mod name.
+	^ self storeGeneratedItem: row forOwner: identity
 ]
 
 { #category : 'private' }

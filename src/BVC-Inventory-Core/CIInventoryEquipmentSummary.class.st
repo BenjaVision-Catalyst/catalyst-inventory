@@ -194,6 +194,17 @@ CIInventoryEquipmentSummary >> readOnly: description [
 	^ description
 ]
 
+{ #category : 'private' }
+CIInventoryEquipmentSummary >> replaceModSocket: aSocket [
+	(modSlots anySatisfy: [ :slot | slot slotIdentifier = aSocket slotIdentifier ])
+		ifTrue: [ modSlots := modSlots
+					collect: [ :slot | 
+						slot slotIdentifier = aSocket slotIdentifier
+							ifTrue: [ aSocket ]
+							ifFalse: [ slot ] ] ]
+		ifFalse: [ modSlots := modSlots copyWith: aSocket ]
+]
+
 { #category : 'accessing' }
 CIInventoryEquipmentSummary >> talentIdentifier [
 	^ talentIdentifier copy
@@ -208,4 +219,15 @@ CIInventoryEquipmentSummary >> tierId [
 { #category : 'accessing' }
 CIInventoryEquipmentSummary >> utilityAttributes [
 	^ utilityAttributes collect: #copy
+]
+
+{ #category : 'modding' }
+CIInventoryEquipmentSummary >> withMod: aModIdentifier inSocket: socketIdentifier [
+	| slot updated |
+	slot := CIInventoryModSlotSummary
+			slot: socketIdentifier
+			equippedMod: aModIdentifier.
+	updated := self copy.
+	updated replaceModSocket: slot.
+	^ updated
 ]

@@ -143,6 +143,145 @@ CIThatGameLaunchInventoryTest >> testLootAwardPersistsSelectionAndGeneratedTalen
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testWeaponAttachmentUnlocksAndOwnedGearModsPersist [
+	| catalogue mods owner path store vest gloves mod unlock reloaded rows values |
+	catalogue := CIGameItemTypes buildCatalog.
+	mods := catalogue modCatalogue.
+	owner := 'mod-test-owner'.
+	path := (directory / 'mods.ston') fullName.
+	store := CIInventorySnapshotStore at: path.
+	vest := 'gear.launch.vossAndVale.chest'.
+	gloves := 'gear.launch.vossAndVale.gloves'.
+	values := Dictionary new
+			at: 'weaponDamage' put: 0.1;
+			yourself.
+	store
+		grantItem: 'vest'
+		type: vest
+		values: values
+		from: catalogue
+		forOwner: owner.
+	store
+		grantItem: 'gloves'
+		type: gloves
+		values: values
+		from: catalogue
+		forOwner: owner.
+	self
+		assert: (mods definitionAt: 'gearMod.criticalHitChance') maximum
+		equals: 0.06.
+	self
+		assert: ((mods definitionAt: 'gearMod.criticalHitChance') maximumAtTier: 2) isNil.
+	self
+		should: [ store
+				grantGearMod: 'bad'
+				definition: 'gearMod.criticalHitChance'
+				tier: 2
+				value: 0.07
+				from: catalogue
+				forOwner: owner ]
+		raise: Error.
+	mod := store
+			grantGearMod: 'rolled'
+			definition: 'gearMod.criticalHitChance'
+			tier: 2
+			value: 0.04
+			from: catalogue
+			forOwner: owner.
+	store
+		installMod: mod itemIdentifier
+		on: 'vest'
+		socket: 'gearMod'
+		from: catalogue
+		forOwner: owner.
+	self
+		should: [ store
+				installMod: mod itemIdentifier
+				on: 'gloves'
+				socket: 'gearMod'
+				from: catalogue
+				forOwner: owner ]
+		raise: Error.
+	self
+		should: [ store
+				installMod: mod itemIdentifier
+				on: 'vest'
+				socket: 'gearMod'
+				from: catalogue
+				forOwner: 'other' ]
+		raise: Error.
+	mods
+		registerSocket: (CIItemSocket id: 'optic' interface: #shortOpticsRail)
+		forItem: 'weapon.launch.akM'.
+	mods
+		registerSocket: (CIItemSocket id: 'optic' interface: #longOpticsRail)
+		forItem: 'weapon.launch.tacticalMk16'.
+	store
+		grantItem: 'weapon-a'
+		type: 'weapon.launch.akM'
+		values: values
+		from: catalogue
+		forOwner: owner.
+	store
+		grantItem: 'weapon-b'
+		type: 'weapon.launch.akM'
+		values: values
+		from: catalogue
+		forOwner: owner.
+	store
+		grantItem: 'weapon-c'
+		type: 'weapon.launch.tacticalMk16'
+		values: values
+		from: catalogue
+		forOwner: owner.
+	unlock := store
+			unlockWeaponMod: 'attachment.lowReflexSight'
+			from: catalogue
+			forOwner: owner.
+	self
+		assert: (store
+				unlockWeaponMod: unlock definitionIdentifier
+				from: catalogue
+				forOwner: owner) itemIdentifier
+		equals: unlock itemIdentifier.
+	#('weapon-a' 'weapon-b')
+		do: [ :id | 
+			store
+				installMod: unlock itemIdentifier
+				on: id
+				socket: 'optic'
+				from: catalogue
+				forOwner: owner ].
+	self
+		should: [ store
+				installMod: unlock itemIdentifier
+				on: 'weapon-c'
+				socket: 'optic'
+				from: catalogue
+				forOwner: owner ]
+		raise: Error.
+	reloaded := CIInventorySnapshotStore at: path.
+	rows := reloaded allRowsForOwner: owner.
+	self assert: (rows count: [ :row | row isKindOf: CIWeaponModUnlock ]) equals: 1.
+	self
+		assert: (rows detect: [ :row | row itemIdentifier = 'rolled' ]) rolledValue
+		equals: 0.04.
+	self
+		assert: (rows detect: [ :row | row itemIdentifier = 'rolled' ]) tierId
+		equals: 2.
+	self
+		assert: (rows detect: [ :row | row itemIdentifier = 'vest' ]) modSlots first
+				equippedModIdentifier
+		equals: 'rolled'.
+	#('weapon-a' 'weapon-b')
+		do: [ :id | 
+			self
+				assert: (rows detect: [ :row | row itemIdentifier = id ]) modSlots first
+						equippedModIdentifier
+				equals: unlock itemIdentifier ]
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testWorkbookLootSourcesKeepUnknownOdds [
 	| catalog loot pools entry |
 	catalog := CIGameItemTypes buildCatalog.

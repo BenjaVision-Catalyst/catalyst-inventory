@@ -26,11 +26,17 @@ CIItemGenerator >> completeValues: suppliedValues for: type [
 
 { #category : 'generating' }
 CIItemGenerator >> generate: itemIdentifier type: typeIdentifier values: suppliedValues from: catalog using: randomSample [
-	| type values |
+	| type values item |
 	type := catalog typeAt: typeIdentifier.
 	values := self completeValues: suppliedValues for: type.
-	^ type
-		inventoryItem: itemIdentifier
-		values: values
-		talentIdentifier: (catalog rollTalentFor: typeIdentifier using: randomSample)
+	item := type
+			inventoryItem: itemIdentifier
+			values: values
+			talentIdentifier: (catalog rollTalentFor: typeIdentifier using: randomSample).
+	(item isKindOf: CIInventoryEquipmentSummary)
+		ifTrue: [ (catalog modCatalogue socketsFor: typeIdentifier)
+				do: [ :socket | 
+					(item modSlots anySatisfy: [ :slot | slot slotIdentifier = socket id ])
+						ifFalse: [ item := item withMod: nil inSocket: socket id ] ] ].
+	^ item
 ]

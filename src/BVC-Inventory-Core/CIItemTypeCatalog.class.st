@@ -5,7 +5,8 @@ Class {
 		'typesById',
 		'talentsById',
 		'talentPoolsByTypeId',
-		'lootCatalogue'
+		'lootCatalogue',
+		'modCatalogue'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -22,6 +23,11 @@ CIItemTypeCatalog >> initialize [
 { #category : 'accessing' }
 CIItemTypeCatalog >> lootCatalogue [
 	^ lootCatalogue ifNil: [ lootCatalogue := CILootCatalogue new ]
+]
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> modCatalogue [
+	^ modCatalogue ifNil: [ modCatalogue := CIModCatalogue new ]
 ]
 
 { #category : 'accessing' }

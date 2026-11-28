@@ -67,6 +67,18 @@ CIInventoryService >> equipSavedSet: setIdentifier forVerifiedUser: identity [
 ]
 
 { #category : 'writing' }
+CIInventoryService >> grantGearMod: itemId definition: modId tier: tier value: value forVerifiedUser: identity [
+	^ savedSetsLock
+		critical: [ readStore
+				grantGearMod: itemId
+				definition: modId
+				tier: tier
+				value: value
+				from: itemTypeCatalog
+				forOwner: identity ]
+]
+
+{ #category : 'writing' }
 CIInventoryService >> grantItem: itemIdentifier type: typeIdentifier values: values forVerifiedUser: identity [
 	^ savedSetsLock
 		critical: [ readStore
@@ -88,6 +100,17 @@ CIInventoryService >> grantLoot: itemIdentifier pool: poolIdentifier valuesFrom:
 				from: itemTypeCatalog
 				forOwner: identity
 				using: [ Random new next ] ]
+]
+
+{ #category : 'writing' }
+CIInventoryService >> installMod: modItemId on: equipmentId socket: socketId forVerifiedUser: identity [
+	^ savedSetsLock
+		critical: [ readStore
+				installMod: modItemId
+				on: equipmentId
+				socket: socketId
+				from: itemTypeCatalog
+				forOwner: identity ]
 ]
 
 { #category : 'writing' }
@@ -188,6 +211,15 @@ CIInventoryService >> provisionStarterGadgetsForVerifiedUser: identity [
 ]
 
 { #category : 'writing' }
+CIInventoryService >> removeModFrom: equipmentId socket: socketId forVerifiedUser: identity [
+	^ savedSetsLock
+		critical: [ readStore
+				removeModFrom: equipmentId
+				socket: socketId
+				forOwner: identity ]
+]
+
+{ #category : 'writing' }
 CIInventoryService >> renameSavedSet: setIdentifier to: proposedName forVerifiedUser: identity [
 	| name units |
 	name := proposedName trimBoth.
@@ -269,6 +301,15 @@ CIInventoryService >> stop [
 	readStore := nil.
 	itemTypeCatalog := nil.
 	super stop
+]
+
+{ #category : 'writing' }
+CIInventoryService >> unlockWeaponMod: modId forVerifiedUser: identity [
+	^ savedSetsLock
+		critical: [ readStore
+				unlockWeaponMod: modId
+				from: itemTypeCatalog
+				forOwner: identity ]
 ]
 
 { #category : 'private' }
