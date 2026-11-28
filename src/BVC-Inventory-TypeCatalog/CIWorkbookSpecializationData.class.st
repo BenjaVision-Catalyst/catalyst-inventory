@@ -63,6 +63,17 @@ CIWorkbookSpecializationData class >> registerEventParametersIn: catalog [
 ]
 
 { #category : 'registration' }
+CIWorkbookSpecializationData class >> registerGadgetBehaviorsIn: catalog [
+	#(#('Sharpshooter' 'sharpshooter.tactician' #(enemy scan nil #(markHostileTarget) false #('Scan Range') nil)) #('Survivalist' 'survivalist.mender' #(ally follow nil #(repairArmor) false #('Healing' 'PvP Healing' 'Radius' 'Cloud Duration') nil)) #('Technician' 'technician.artificer' #(friendlyGadget boosterDrone nil #(boostGadget refreshGadget repairGadget) true #('Buff Amount' 'Buff Duration' 'Skill Repair' 'Skill Refresh' 'Range') nil)) #('Gunner' 'gunner.banshee' #(enemy forwardArc true #(disorient) false #('Disorient Duration' 'Radius' 'Cone Angle') nil)) #('Demolitionist' 'demolitionist.artilleryturret' #(targetedLocation indirectFire nil #(launchOrdnance) false #('Ammo' 'Damage' 'Blast Radius' 'Bleed Damage' 'Bleed Duration' 'PvP Damage' 'PvP Bleed Damage') nil)) #('Firewall' 'firewall.strikershield' #(ownerOrAllyBehindShield shield nil #(damageBonusPerEnemy) false #('Damage bonus / (per enemy)' 'Buff Angle' 'Buff Range') 'weapon.signature.firewall.k8jetstreamflamethrower')))
+		do: [ :row | 
+			| perk variant |
+			perk := (catalog specializationNamed: row first) perkAt: row second.
+			variant := (catalog typeAt: perk rewardIdentifier) workbookVariantDefinition.
+			variant
+				behaviorProfile: (CIWorkbookGadgetBehavior fromWorkbookRow: row third evidence: perk evidence) ]
+]
+
+{ #category : 'registration' }
 CIWorkbookSpecializationData class >> registerGadgetUpgradesIn: catalog [
 	#(#('Sharpshooter' 'sharpshooter.tactician' #(#('sharpshooter.graphenebattery' 'Duration' 0.15 fraction 'Duration') #('sharpshooter.carbonfiberframe' 'Scan Range' 0.20 fraction nil))) #('Survivalist' 'survivalist.mender' #(#('survivalist.magneticdisc' 'Health' 0.15 fraction nil) #('survivalist.larreatridentatainfusion' 'Healing' 0.15 fraction 'Healing'))) #('Technician' 'technician.artificer' #(#('technician.upgradedsensorpackage' 'Range' 0.10 fraction 'Range') #('technician.liquidcooling' 'Duration' 0.10 fraction nil))) #('Gunner' 'gunner.banshee' #(#('gunner.microwaveamplifier' 'Effect Duration' 0.15 fraction 'Disorient Duration') #('gunner.directionaltransmitter' 'Radius' 0.15 fraction 'Radius'))) #('Demolitionist' 'demolitionist.artilleryturret' #(#('demolitionist.cyclonemagazine' 'Extra Mortar Ammo' 1 count 'Ammo') #('demolitionist.shdcpuv2' 'Damage' 0.10 fraction 'Damage'))) #('Firewall' 'firewall.strikershield' #(#('firewall.shockhardenedframe' 'Shield Health' 0.08 fraction 'Health') #('firewall.macromolecularcoverings' 'Active Regeneration' 0.08 fraction 'Active / Regeneration'))))
 		do: [ :group | 
@@ -82,6 +93,18 @@ CIWorkbookSpecializationData class >> registerGadgetUpgradesIn: catalog [
 							resolvedTrack: track.
 					(specialization perkAt: row first)
 						eventParameters: {#gadgetUpgrade -> upgrade} asDictionary ] ]
+]
+
+{ #category : 'registration' }
+CIWorkbookSpecializationData class >> registerGrenadeEffectsIn: catalog [
+	#(#('Sharpshooter' 'sharpshooter.flashbanggrenade' #(anyTarget largeArea nil nil nil)) #('Survivalist' 'survivalist.incendiarygrenade' #(anyTarget area nil nil nil)) #('Technician' 'technician.empgrenade' #(electricalAbility area nil nil nil)) #('Gunner' 'gunner.riotfoamgrenade' #(enemy area nil 3 'https://www.ubisoft.com/en-gb/game/the-division/the-division-2/news-updates/3pepSvWluJRxzkWZeEWv56/episode-1-patch-notes')) #('Demolitionist' 'demolitionist.fragmentationgrenade' #(anyTarget area true nil nil)) #('Firewall' 'firewall.clustergrenade' #(anyTarget secondaryDetonations nil nil nil)))
+		do: [ :row | 
+			| perk profile |
+			perk := (catalog specializationNamed: row first) perkAt: row second.
+			profile := CIWorkbookGrenadeEffects
+					fromWorkbookRow: row third
+					statuses: perk equipmentReward appliedStatuses.
+			(catalog typeAt: perk rewardIdentifier) effectProfile: profile ]
 ]
 
 { #category : 'registration' }
@@ -126,6 +149,8 @@ CIWorkbookSpecializationData class >> registerIn: catalog [
 	self registerOrdinaryAmmoAccrualsIn: catalog.
 	self registerGadgetUpgradesIn: catalog.
 	self registerEquipmentRewardsIn: catalog.
+	self registerGrenadeEffectsIn: catalog.
+	self registerGadgetBehaviorsIn: catalog.
 	self registerSidearmItemsIn: catalog
 ]
 

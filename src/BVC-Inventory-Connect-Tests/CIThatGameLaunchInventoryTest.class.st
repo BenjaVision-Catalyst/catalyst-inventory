@@ -1882,6 +1882,108 @@ CIThatGameLaunchInventoryTest >> testSpecializationEquipmentRewardsRetainWorkboo
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSpecializationGadgetBehaviorsUseWorkbookTargetRulesAndTierStats [
+	| catalog variant banshee profile stats loadout result artificer striker |
+	catalog := CIGameItemTypes buildCatalog.
+	variant := [ :id | (catalog typeAt: 'gadget.workbook.' , id) workbookVariantDefinition ].
+	self
+		assert: (variant value: 'drone.tactician') behaviorProfile effects
+		equals: #(markHostileTarget).
+	self
+		assert: (variant value: 'seeker.mender') behaviorProfile targetKind
+		equals: #ally.
+	self
+		assert: (variant value: 'turret.artillery') behaviorProfile delivery
+		equals: #indirectFire.
+	banshee := variant value: 'pulse.banshee'.
+	profile := banshee behaviorProfile.
+	self assert: profile ignoresCover.
+	self assert: profile evidence equals: 'Specializations!K31:L31'.
+	loadout := catalog
+			specializationLoadoutNamed: 'Gunner'
+			selected: #('gunner.banshee' 'gunner.microwaveamplifier' 'gunner.directionaltransmitter').
+	stats := banshee
+			knownStatsAtTier: 1
+			withSpecializationUpgrades: (loadout resolvedGadgetUpgradesForType: 'gadget.workbook.pulse.banshee').
+	result := profile
+			effectsForTargetKind: #enemy
+			ownedByAgent: false
+			holstered: false
+			withinAffectedArea: true
+			stats: stats.
+	self assert: (result at: #effects) equals: #(disorient).
+	self assert: ((result at: #stats) at: 'Disorient Duration') closeTo: 5.06.
+	self assert: ((result at: #stats) at: 'Radius') closeTo: 34.5.
+	self
+		assertEmpty: (profile
+				effectsForTargetKind: #ally
+				ownedByAgent: false
+				holstered: false
+				withinAffectedArea: true
+				stats: stats).
+	self
+		assertEmpty: (profile
+				effectsForTargetKind: #enemy
+				ownedByAgent: false
+				holstered: false
+				withinAffectedArea: false
+				stats: stats).
+	artificer := variant value: 'hive.artificer'.
+	profile := artificer behaviorProfile.
+	stats := artificer knownStatsAtTier: 0.
+	self
+		assertEmpty: (profile
+				effectsForTargetKind: #friendlyGadget
+				ownedByAgent: false
+				holstered: true
+				withinAffectedArea: true
+				stats: stats).
+	result := profile
+			effectsForTargetKind: #friendlyGadget
+			ownedByAgent: true
+			holstered: true
+			withinAffectedArea: true
+			stats: stats.
+	self
+		assert: (result at: #effects)
+		equals: #(boostGadget refreshGadget repairGadget).
+	self assert: ((result at: #stats) at: 'Skill Refresh') equals: 3.
+	self
+		deny: (profile
+				effectsForTargetKind: #friendlyGadget
+				ownedByAgent: false
+				holstered: false
+				withinAffectedArea: true
+				stats: stats) isEmpty.
+	striker := variant value: 'shield.striker'.
+	profile := striker behaviorProfile.
+	self
+		assert: (profile
+				allowsSignatureWeapon: 'weapon.signature.firewall.k8jetstreamflamethrower').
+	self deny: (profile allowsSignatureWeapon: 'weapon.signature.gunner.minigun').
+	self
+		assert: (profile
+				damageBonusForEnemiesInFront: 3
+				recipientIsOwner: false
+				allyBehind: true
+				stats: (striker knownStatsAtTier: 0))
+		closeTo: 0.15.
+	self
+		assert: (profile
+				damageBonusForEnemiesInFront: 3
+				recipientIsOwner: false
+				allyBehind: false
+				stats: (striker knownStatsAtTier: 0))
+		equals: 0.
+	self
+		assert: (profile
+				damageBonusForEnemiesInFront: 3
+				recipientIsOwner: true
+				allyBehind: false
+				stats: (striker knownStatsAtTier: 1)) isNil
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testSpecializationGadgetUpgradesResolveNineTracksAndKeepThreeConflicts [
 	| catalog upgrades conflicts mortar |
 	catalog := CIGameItemTypes buildCatalog.
@@ -3096,6 +3198,47 @@ CIThatGameLaunchInventoryTest >> testWorkbookGadgetTiersKeepMissingAndOvercharge
 	self assert: (repair rawValueAtTier: 1) isNil.
 	self assert: (repair magnitudeAtTier: 1) isNil.
 	self should: [ scanner knownStatsAtTier: 7 ] raise: Error
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testWorkbookGrenadeProfilesResolveEffectsOnlyForEligibleTargets [
+	| catalog effect emp riot fragment cluster |
+	catalog := CIGameItemTypes buildCatalog.
+	effect := [ :key | (catalog typeAt: 'grenade.specialization.' , key) effectProfile ].
+	self
+		assert: ((effect value: 'sharpshooter.flashbanggrenade')
+				statusesForTargetKind: #ally
+				withinAffectedArea: true)
+		equals: #(blind).
+	self
+		assert: ((effect value: 'survivalist.incendiarygrenade')
+				statusesForTargetKind: #enemy
+				withinAffectedArea: true)
+		equals: #(burn).
+	emp := effect value: 'technician.empgrenade'.
+	self
+		assert: (emp statusesForTargetKind: #electricalAbility withinAffectedArea: true)
+		equals: #(disrupt).
+	self assertEmpty: (emp statusesForTargetKind: #enemy withinAffectedArea: true).
+	self
+		assertEmpty: (emp statusesForTargetKind: #electricalAbility withinAffectedArea: false).
+	self
+		assert: (emp statusesForTargetKind: #electricalAbility atDistance: 2) isNil.
+	riot := effect value: 'gunner.riotfoamgrenade'.
+	self
+		assert: (riot statusesForTargetKind: #enemy atDistance: 3)
+		equals: #(ensnare).
+	self assertEmpty: (riot statusesForTargetKind: #enemy atDistance: 3.01).
+	self assertEmpty: (riot statusesForTargetKind: #ally atDistance: 2).
+	self assert: (riot radiusEvidence includesSubstring: 'episode-1-patch-notes').
+	fragment := effect value: 'demolitionist.fragmentationgrenade'.
+	self assert: fragment dealsDamage.
+	self
+		assert: (fragment statusesForTargetKind: #enemy withinAffectedArea: true)
+		equals: #(bleed).
+	cluster := effect value: 'firewall.clustergrenade'.
+	self assert: cluster delivery equals: #secondaryDetonations.
+	self assert: cluster radiusMetres isNil
 ]
 
 { #category : 'tests' }

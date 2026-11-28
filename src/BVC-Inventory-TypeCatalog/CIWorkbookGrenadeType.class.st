@@ -5,7 +5,8 @@ Class {
 	#name : 'CIWorkbookGrenadeType',
 	#superclass : 'CIItemType',
 	#instVars : [
-		'rewardPerk'
+		'rewardPerk',
+		'effectProfile'
 	],
 	#category : 'BVC-Inventory-TypeCatalog',
 	#package : 'BVC-Inventory-TypeCatalog'
@@ -17,6 +18,16 @@ CIWorkbookGrenadeType class >> forSpecializationPerk: perk [
 		id: 'grenade.specialization.' , perk id
 		name: perk name
 		icon: nil) initializeRewardPerk: perk
+]
+
+{ #category : 'accessing' }
+CIWorkbookGrenadeType >> effectProfile [
+	^ effectProfile
+]
+
+{ #category : 'initialization' }
+CIWorkbookGrenadeType >> effectProfile: profile [
+	effectProfile := profile
 ]
 
 { #category : 'initialization' }

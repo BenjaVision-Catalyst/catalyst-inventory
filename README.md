@@ -67,6 +67,9 @@ Reward entries include their catalog definition ID and, once owned, the
 player's inventory item ID. The reply uses the same size limit and optional
 ZLIB framing as the inventory profile.
 
+The [workbook behavior audit](docs/workbook-behavior-audit.md) tracks GT catalog
+coverage and unresolved source rules.
+
 The [family milestone](docs/gear-family-v2.md) adds cumulative two-, three-,
 and four-piece thresholds and a proposed launch roster of manufacturers.
 

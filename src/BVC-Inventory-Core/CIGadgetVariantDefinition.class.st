@@ -6,7 +6,8 @@ Class {
 		'name',
 		'tracks',
 		'overchargeEffects',
-		'expertiseScaling'
+		'expertiseScaling',
+		'behaviorProfile'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -20,6 +21,16 @@ CIGadgetVariantDefinition class >> family: family variant: label tracks: stats o
 		tracks: stats
 		overcharge: effects
 		expertise: expertise
+]
+
+{ #category : 'accessing' }
+CIGadgetVariantDefinition >> behaviorProfile [
+	^ behaviorProfile
+]
+
+{ #category : 'initialization' }
+CIGadgetVariantDefinition >> behaviorProfile: profile [
+	behaviorProfile := profile
 ]
 
 { #category : 'accessing' }
