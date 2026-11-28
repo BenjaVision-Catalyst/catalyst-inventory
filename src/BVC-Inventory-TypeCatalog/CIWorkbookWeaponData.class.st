@@ -177,6 +177,18 @@ CIWorkbookWeaponData class >> registerIn: catalog [
 ]
 
 { #category : 'registration' }
+CIWorkbookWeaponData class >> registerPerfectlyExtraIn: catalog [
+	catalog
+		registerTalent: (CIItemTalent
+				id: 'perfectlyExtra'
+				name: 'Perfectly Extra'
+				eligibility: #weapon
+				parameters: {#magazineCapacityBonus -> 0.50.
+						#evidence -> 'Weapons Named + Exotics!E52'} asDictionary
+				comment: 'Increases magazine capacity by 50%.')
+]
+
+{ #category : 'registration' }
 CIWorkbookWeaponData class >> registerSheriffIn: catalog [
 	| statistics named weapon typeId source |
 	typeId := 'weapon.workbook.theSheriff'.
@@ -218,11 +230,16 @@ CIWorkbookWeaponData class >> registerSupportedNamedWeaponSourcesIn: catalog [
 
 { #category : 'registration' }
 CIWorkbookWeaponData class >> registerSupportedNamedWeaponsIn: catalog [
-	#(#('C17' 'C8' 'perfectOptimist') #('C53' 'C17' 'perfectInSync') #('C87' 'C26' 'perfectFastHands') #('C150' 'C45' 'perfectPreservation'))
+	self registerPerfectlyExtraIn: catalog.
+	#(#('C17' 'C8' 'perfectOptimist') #('C53' 'C17' 'perfectInSync') #('C87' 'C26' 'perfectFastHands') #('C150' 'C45' 'perfectPreservation') #('C159' 'C52' 'perfectlyExtra' 'weapon.workbook.rockNRoll'))
 		do: [ :spec | 
 			| statistics named weapon |
 			statistics := catalog weaponReferenceAt: 'Weapons!' , spec first.
 			named := catalog weaponReferenceAt: 'Weapons Named + Exotics!' , spec second.
+			(spec at: 4 ifAbsent: [ nil ])
+				ifNotNil: [ :identifier | 
+					statistics linkItemDefinition: identifier.
+					named linkItemDefinition: identifier ].
 			statistics itemDefinitionIdentifier = named itemDefinitionIdentifier
 				ifFalse: [ self error: 'Named weapon statistics link differs from detail link' ].
 			weapon := CIWorkbookNamedWeaponType statistics: statistics named: named.

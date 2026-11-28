@@ -1816,6 +1816,33 @@ CIThatGameLaunchInventoryTest >> testRedLotusCombatStacksDecayAndRefreshWithLoad
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testRockNRollGeneratesWithPerfectlyExtraIncludedInMagazineCapacity [
+	| catalog weapon talent item acs12 |
+	catalog := CIGameItemTypes buildCatalog.
+	weapon := catalog typeAt: 'weapon.workbook.rockNRoll'.
+	acs12 := catalog weaponReferenceAt: 'Weapons!C156'.
+	talent := catalog talentAt: 'perfectlyExtra'.
+	self assert: weapon statisticsReference weaponClass equals: #shotgun.
+	self assert: (talent parameters at: #magazineCapacityBonus) equals: 0.50.
+	self
+		assert: (talent parameters at: #evidence)
+		equals: 'Weapons Named + Exotics!E52'.
+	self assert: (acs12 fieldAt: #baseMagazine) asNumber equals: 20.
+	self assert: weapon baseMagazineCapacity equals: 30.
+	self
+		assert: weapon baseMagazineCapacity
+		equals: (acs12 fieldAt: #baseMagazine) asNumber
+				* (1 + (talent parameters at: #magazineCapacityBonus)).
+	item := CIItemGenerator new
+			generate: 'rockNRoll'
+			type: weapon id
+			values: {'weaponDamage' -> 0.10} asDictionary
+			from: catalog
+			using: [ 0 ].
+	self assert: item talentIdentifier equals: 'perfectlyExtra'
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testRoundAfterRoundQualifiesAfterTwentySecondsAndCountsOnlyNewIntervals [
 	| catalog encounter loadout rule expected |
 	catalog := CIGameItemTypes buildCatalog.
