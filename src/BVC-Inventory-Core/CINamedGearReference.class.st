@@ -7,7 +7,8 @@ Class {
 		'kind',
 		'fields',
 		'fieldReferences',
-		'itemDefinitionIdentifier'
+		'itemDefinitionIdentifier',
+		'gadgetTalentRule'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -26,6 +27,16 @@ CINamedGearReference >> evidenceForField: key [
 { #category : 'accessing' }
 CINamedGearReference >> fieldAt: key [
 	^ (fields at: key ifAbsent: [ nil ]) ifNotNil: #copy
+]
+
+{ #category : 'accessing' }
+CINamedGearReference >> gadgetTalentRule [
+	^ gadgetTalentRule
+]
+
+{ #category : 'accessing' }
+CINamedGearReference >> gadgetTalentRule: aRule [
+	gadgetTalentRule := aRule
 ]
 
 { #category : 'initialization' }

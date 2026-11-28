@@ -3066,6 +3066,51 @@ CIThatGameLaunchInventoryTest >> testTacticalLinksUseSelectedPerksAndTargetCondi
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testTransferenceOverclockUsesRecipientLockout [
+	| reference rule effects |
+	reference := CIGameItemTypes buildCatalog
+			namedGearReferenceAt: 'BTSU Datagloves'.
+	rule := reference gadgetTalentRule.
+	self assert: rule evidence equals: 'Gear Named + Exotics!F101:G101'.
+	self assert: (rule hiveHasteAtGadgetTier: 0) equals: 0.
+	self assert: (rule hiveHasteAtGadgetTier: 3) closeTo: 0.45.
+	self assert: (rule hiveHasteAtGadgetTier: #overcharge) isNil.
+	effects := rule
+			effectsOnHiveDetonationFor: #self
+			detonatorGadgetTier: 3
+			secondsSinceLastTransfer: 0.
+	self assert: (effects at: #refreshGadgetCooldowns).
+	self assert: (effects at: #overchargeSeconds) equals: 15.
+	self
+		assert: (rule
+				effectsOnHiveDetonationFor: #ally
+				detonatorGadgetTier: 6
+				secondsSinceLastTransfer: nil)
+		equals: effects.
+	self
+		assertEmpty: (rule
+				effectsOnHiveDetonationFor: #ally
+				detonatorGadgetTier: 5
+				secondsSinceLastTransfer: nil).
+	self
+		assertEmpty: (rule
+				effectsOnHiveDetonationFor: #enemy
+				detonatorGadgetTier: 6
+				secondsSinceLastTransfer: nil).
+	self
+		assertEmpty: (rule
+				effectsOnHiveDetonationFor: #ally
+				detonatorGadgetTier: 6
+				secondsSinceLastTransfer: 119.99).
+	self
+		assert: (rule
+				effectsOnHiveDetonationFor: #ally
+				detonatorGadgetTier: 6
+				secondsSinceLastTransfer: 120)
+		equals: effects
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testUnwaveringRefreshAndSwapLockoutApplyAcrossWeapons [
 	| catalog talent shared first second |
 	catalog := CIGameItemTypes buildCatalog.
