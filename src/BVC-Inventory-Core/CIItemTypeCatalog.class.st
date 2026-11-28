@@ -9,7 +9,8 @@ Class {
 		'modCatalogue',
 		'gearFamiliesById',
 		'gadgetFamiliesByName',
-		'attributeCatalogue'
+		'attributeCatalogue',
+		'gearReferencesByName'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -62,6 +63,19 @@ CIItemTypeCatalog >> modCatalogue [
 ]
 
 { #category : 'accessing' }
+CIItemTypeCatalog >> namedGearReferenceAt: label [
+	gearReferencesByName
+		ifNil: [ self error: 'No named gear references registered' ].
+	^ gearReferencesByName at: label
+]
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> namedGearReferences [
+	gearReferencesByName ifNil: [ ^ #() ].
+	^ (gearReferencesByName values sorted: [ :a :b | a name < b name ]) asArray
+]
+
+{ #category : 'accessing' }
 CIItemTypeCatalog >> register: aType [
 	| identifier |
 	identifier := aType id.
@@ -90,6 +104,15 @@ CIItemTypeCatalog >> registerGearFamily: family [
 		ifTrue: [ self error: 'Duplicate gear family' ].
 	registry at: family id put: family.
 	^ family
+]
+
+{ #category : 'registration' }
+CIItemTypeCatalog >> registerNamedGearReference: reference [
+	gearReferencesByName ifNil: [ gearReferencesByName := Dictionary new ].
+	(gearReferencesByName includesKey: reference name)
+		ifTrue: [ self error: 'Duplicate named gear reference' ].
+	gearReferencesByName at: reference name put: reference.
+	^ reference
 ]
 
 { #category : 'registration' }

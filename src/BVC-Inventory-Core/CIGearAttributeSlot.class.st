@@ -113,6 +113,7 @@ CIGearAttributeSlot >> summaryFor: roll [
 					ifFalse: [ (role = #core and: [ unit = #fraction ])
 							ifTrue: [ 'offensive' ]
 							ifFalse: [ 'defensive' ] ] ].
+	unit = #skillTier ifTrue: [ category := 'utility' ].
 	summary := CIInventoryGearAttributeSummary
 			identifier: (definition id findTokens: '.') last
 			label: definition label

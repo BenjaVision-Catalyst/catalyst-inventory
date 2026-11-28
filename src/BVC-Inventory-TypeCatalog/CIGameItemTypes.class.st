@@ -42,6 +42,8 @@ CIGameItemTypes class >> buildCatalog [
 	CIWorkbookGadgetData registerItemTypesIn: catalog.
 	CIWorkbookAttributeData registerIn: catalog attributeCatalogue.
 	CIWorkbookNamedGearData registerIn: catalog.
+	CIWorkbookNamedGearReferences registerIn: catalog.
+	CIWorkbookNamedGearData registerAdditionalIn: catalog.
 	^ catalog
 ]
 

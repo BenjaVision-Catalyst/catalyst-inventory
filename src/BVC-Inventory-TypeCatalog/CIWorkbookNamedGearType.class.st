@@ -19,6 +19,16 @@ CIWorkbookNamedGearType class >> id: anId name: aName layout: itemLayout sockets
 		sockets: sockets) initializeLayout: itemLayout information: information
 ]
 
+{ #category : 'instance creation' }
+CIWorkbookNamedGearType class >> id: anId name: aName slot: gearSlot layout: itemLayout sockets: sockets information: information [
+	^ (self
+		id: anId
+		name: aName
+		slot: gearSlot
+		attributes: #()
+		sockets: sockets) initializeLayout: itemLayout information: information
+]
+
 { #category : 'accessing' }
 CIWorkbookNamedGearType >> generationLayout [
 	^ layout

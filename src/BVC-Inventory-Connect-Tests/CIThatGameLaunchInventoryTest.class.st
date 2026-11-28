@@ -856,6 +856,67 @@ CIThatGameLaunchInventoryTest >> testNamedGearLayoutsEnforceFixedRollsExclusions
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testNamedGearReferencesPreserveSplitRowsAndExposeSupportedLayouts [
+	| catalog reference rows store minor1 minor2 values courier gloves |
+	catalog := CIGameItemTypes buildCatalog.
+	rows := catalog namedGearReferences.
+	self assert: (rows count: [ :each | each kind = #named ]) equals: 65.
+	self assert: (rows count: [ :each | each kind = #exotic ]) equals: 32.
+	self
+		assert: (rows count: [ :each | each itemDefinitionIdentifier notNil ])
+		equals: 10.
+	reference := catalog namedGearReferenceAt: 'Vile'.
+	self assert: (reference fieldAt: #talent) equals: 'Toxic Delivery'.
+	self
+		assert: (reference evidenceForField: #name)
+		equals: 'Gear Named + Exotics!D69'.
+	self
+		assert: (reference evidenceForField: #talent)
+		equals: 'Gear Named + Exotics!F68'.
+	reference := catalog namedGearReferenceAt: 'Forge'.
+	self assert: reference slot equals: 'Holster'.
+	self assert: reference itemDefinitionIdentifier isNil.
+	reference := catalog namedGearReferenceAt: 'The Courier'.
+	self
+		assert: reference itemDefinitionIdentifier
+		equals: 'gear.workbook.theCourier'.
+	store := CIInventoryReadStore new.
+	minor1 := CIGearAttributeRoll
+			attribute: 'gear.minor.criticalHitChance'
+			value: 0.05.
+	minor2 := CIGearAttributeRoll
+			attribute: 'gear.minor.criticalHitDamage'
+			value: 0.10.
+	values := Dictionary new
+			at: 'core' put: 50000;
+			at: 'minor1' put: minor1;
+			at: 'minor2' put: minor2;
+			yourself.
+	courier := store
+			grantItem: 'courier'
+			type: reference itemDefinitionIdentifier
+			values: values
+			from: catalog
+			forOwner: 'owner'
+			using: [ self error: 'Fixed talent must not draw' ].
+	self assert: courier talentIdentifier equals: 'perfectCreepingDeath'.
+	self assert: courier gearSlotIdentifier equals: 'Backpack'.
+	self assert: courier modSlots size equals: 1.
+	gloves := store
+			grantItem: 'gloves'
+			type: 'gear.workbook.firmHandshake'
+			values: (Dictionary new
+					at: 'core' put: 0.10;
+					at: 'minor2' put: minor1;
+					yourself)
+			from: catalog
+			forOwner: 'owner'.
+	self assert: gloves gearSlotIdentifier equals: 'Gloves'.
+	self assert: gloves rolledAttributes first value equals: 0.16.
+	self assertEmpty: gloves modSlots
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testPvPGearTalentProfilesPreserveConflictsAndUseDocumentedOverrides [
 	| catalog normal perfect conflicting missing owner row encounter cover |
 	catalog := CIGameItemTypes buildCatalog.
