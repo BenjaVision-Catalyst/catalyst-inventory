@@ -1716,6 +1716,88 @@ CIThatGameLaunchInventoryTest >> testSpecializationPassivesHonorTargetKindKillAn
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSpecializationWeaponModRewardsRetainExactWorkbookSocketInterfaces [
+	| catalog rows |
+	catalog := CIGameItemTypes buildCatalog.
+	rows := #(#('attachment.workbook7' 'sharpshooter.digitalscope' #(longOpticsRail) shortOpticsRail) #('attachment.workbook43' 'survivalist.infantry556mag' #(magazine556) magazine762) #('attachment.workbook87' 'technician.linkedlaserpointer' #(longUnderbarrelRail) shortUnderbarrelRail) #('attachment.workbook27' 'gunner.largepouchlmgs' #(ammunitionBelt) integratedMagazine) #('attachment.workbook92' 'demolitionist.smalllaserpointer' #(longUnderbarrelRail shortUnderbarrelRail) sideMount) #('attachment.workbook86' 'firewall.tacticalshortgrip' #(longUnderbarrelRail) shortUnderbarrelRail)).
+	rows
+		do: [ :row | 
+			| definition perk |
+			definition := catalog modCatalogue definitionAt: row first.
+			perk := catalog specializationPerkGrantingReward: row first.
+			self assert: perk id equals: row second.
+			row third
+				do: [ :interface | 
+					self
+						assert: (definition
+								fitsSocket: (CIItemSocket
+										id: 'socket'
+										interface: interface
+										fixedMod: nil)
+								on: 'test-weapon') ].
+			self
+				deny: (definition
+						fitsSocket: (CIItemSocket
+								id: 'socket'
+								interface: row fourth
+								fixedMod: nil)
+						on: 'test-weapon') ].
+	self
+		assert: (catalog specializationPerkGrantingReward: 'attachment.workbook26') isNil
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSpecializationWeaponModUnlocksRequireSelectedPerkAndSurviveRespec [
+	| owner modId unlock duplicate |
+	self startInventory.
+	owner := 'specialization-weapon-mod-owner'.
+	modId := 'attachment.workbook7'.
+	self
+		should: [ service unlockWeaponMod: modId forVerifiedUser: owner ]
+		raise: Error.
+	self
+		should: [ service
+				selectSpecialization: 'Sharpshooter'
+				perks: #('sharpshooter.digitalscope')
+				forVerifiedUser: owner ]
+		raise: Error.
+	service
+		selectSpecialization: 'Sharpshooter'
+		perks: #('universal.thisismyrifle')
+		forVerifiedUser: owner.
+	self
+		should: [ service unlockWeaponMod: modId forVerifiedUser: owner ]
+		raise: Error.
+	service
+		selectSpecialization: 'Sharpshooter'
+		perks: #('sharpshooter.digitalscope' 'universal.thisismyrifle')
+		forVerifiedUser: owner.
+	self
+		should: [ service unlockWeaponMod: modId forVerifiedUser: 'another-owner' ]
+		raise: Error.
+	unlock := service unlockWeaponMod: modId forVerifiedUser: owner.
+	self assert: unlock definitionIdentifier equals: modId.
+	service
+		selectSpecialization: 'Gunner'
+		perks: #()
+		forVerifiedUser: owner.
+	service stop.
+	service := nil.
+	self startInventory.
+	self
+		assert: (service specializationLoadoutForVerifiedUser: owner) definition name
+		equals: 'Gunner'.
+	duplicate := service unlockWeaponMod: modId forVerifiedUser: owner.
+	self assert: duplicate itemIdentifier equals: unlock itemIdentifier.
+	self
+		assert: ((service
+				rowsForVerifiedUser: owner
+				offset: 0
+				limit: 32) count: [ :each | each definitionIdentifier = modId ])
+		equals: 1
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testSpecializationsPreserveWorkbookPerksAndValidateSelections [
 	| catalog technician amped selected gear damage digital |
 	catalog := CIGameItemTypes buildCatalog.

@@ -388,7 +388,7 @@ CIInventoryReadStore >> storeGeneratedItem: item forOwner: identity [
 
 { #category : 'writing' }
 CIInventoryReadStore >> unlockWeaponMod: modId from: catalog forOwner: identity [
-	| mod row rows |
+	| mod row rows perk selection |
 	mod := catalog modCatalogue definitionAt: modId.
 	mod kind = #weaponAttachment
 		ifFalse: [ self error: 'Expected a reusable weapon attachment' ].
@@ -397,6 +397,13 @@ CIInventoryReadStore >> unlockWeaponMod: modId from: catalog forOwner: identity 
 			detect: [ :item | (item isKindOf: CIWeaponModUnlock) and: [ item definitionIdentifier = modId ] ]
 			ifNone: [ nil ].
 	row ifNotNil: [ ^ row copy ].
+	perk := catalog specializationPerkGrantingReward: modId.
+	perk
+		ifNotNil: [ selection := self specializationForOwner: identity.
+			(selection notNil
+				and: [ (selection resolveIn: catalog) rewardIdentifiers includes: modId ])
+				ifFalse: [ self
+						error: 'Select the required specialization perk to unlock this attachment' ] ].
 	row := CIWeaponModUnlock
 			item: 'unlock.' , modId
 			definition: modId

@@ -203,6 +203,16 @@ CIItemTypeCatalog >> specializationNamed: label [
 	^ specializationsByName at: label
 ]
 
+{ #category : 'specializations' }
+CIItemTypeCatalog >> specializationPerkGrantingReward: aRewardIdentifier [
+	aRewardIdentifier ifNil: [ ^ nil ].
+	self specializations
+		do: [ :specialization | 
+			specialization perks
+				do: [ :perk | perk rewardIdentifier = aRewardIdentifier ifTrue: [ ^ perk ] ] ].
+	^ nil
+]
+
 { #category : 'accessing' }
 CIItemTypeCatalog >> specializations [
 	specializationsByName ifNil: [ ^ #() ].
