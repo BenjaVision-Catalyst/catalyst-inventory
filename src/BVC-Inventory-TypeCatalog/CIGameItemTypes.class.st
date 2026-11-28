@@ -50,6 +50,7 @@ CIGameItemTypes class >> buildCatalog [
 	CIWorkbookSpecializationData registerIn: catalog.
 	CIWorkbookGadgetData registerExpertiseRulesIn: catalog.
 	CIWorkbookAttributeData linkWeaponClassGenerationRulesIn: catalog.
+	CIWorkbookWeaponData registerVariantGenerationRulesIn: catalog.
 	^ catalog
 ]
 

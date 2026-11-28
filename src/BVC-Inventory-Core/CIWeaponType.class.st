@@ -7,7 +7,9 @@ Class {
 		'handlingStats',
 		'socketIdentifiers',
 		'damageFalloff',
-		'classGenerationRule'
+		'classGenerationRule',
+		'fixedAttributes',
+		'minorAttributeRule'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -51,22 +53,39 @@ CIWeaponType >> classGenerationRule: rule [
 { #category : 'inventory' }
 CIWeaponType >> comparisonStatsForValues: values [
 	| stats |
-	stats := {CIInventoryComparisonStat
-				identifier: 'weaponDamage'
-				label: 'Weapon damage'
-				value: (values at: 'weaponDamage')}.
+	stats := OrderedCollection
+			with: (CIInventoryComparisonStat
+					identifier: 'weaponDamage'
+					label: self weaponDamageField label
+					value: (values at: 'weaponDamage')).
 	classGenerationRule
 		ifNotNil: [ classGenerationRule statIdentifier
 				ifNotNil: [ :key | 
 					values
 						at: key
 						ifPresent: [ :value | 
-							stats := stats
-									copyWith: (CIInventoryComparisonStat
-											identifier: key
-											label: classGenerationRule statLabel
-											value: value) ] ] ].
-	^ stats
+							stats
+								add: (CIInventoryComparisonStat
+										identifier: key
+										label: classGenerationRule statLabel
+										value: value) ] ] ].
+	self fixedAttributes
+		do: [ :attribute | 
+			attribute statIdentifier = 'weaponDamage'
+				ifFalse: [ stats
+						add: (CIInventoryComparisonStat
+								identifier: attribute statIdentifier
+								label: attribute label
+								value: attribute magnitude) ] ].
+	values
+		at: 'minorAttributeIdentifier'
+		ifPresent: [ :id | 
+			stats
+				add: (CIInventoryComparisonStat
+						identifier: id
+						label: (minorAttributeRule attributeAt: id) label
+						value: (values at: 'minorAttributeValue')) ].
+	^ stats asArray
 ]
 
 { #category : 'initialization' }
@@ -87,6 +106,22 @@ CIWeaponType >> damageFalloff: points [
 			lastDistance := point first.
 			lastDamage := point second ].
 	damageFalloff := points collect: #copy as: Array
+]
+
+{ #category : 'accessing' }
+CIWeaponType >> fixedAttributes [
+	^ fixedAttributes ifNil: [ #() ] ifNotNil: #copy
+]
+
+{ #category : 'initialization' }
+CIWeaponType >> fixedAttributes: rule [
+	fixedAttributes := rule asArray copy
+]
+
+{ #category : 'accessing' }
+CIWeaponType >> fixedAttributesWhileWeaponInUse: active [
+	^ self fixedAttributes
+		select: [ :attribute | attribute appliesWhileWeaponInUse: active ]
 ]
 
 { #category : 'initialization' }
@@ -182,21 +217,15 @@ CIWeaponType >> inventoryItem: id values: values talentIdentifier: aTalentIdenti
 										slot: socket
 										equippedMod: (values at: socket ifAbsent: [ nil ]) ]);
 					yourself).
-	item availableEquipmentSlotIdentifiers: {slotIdentifier}.
+	item
+		availableEquipmentSlotIdentifiers: (slotIdentifier ifNil: [ #() ] ifNotNil: [ {slotIdentifier} ]).
 	^ item
 ]
 
 { #category : 'descriptions' }
 CIWeaponType >> inventoryItemDescription [
 	| fields maximum |
-	fields := OrderedCollection
-			with: (MANumberDescription new
-					accessor: (MADictionaryAccessor key: 'weaponDamage');
-					label: 'Weapon damage';
-					min: 0.0;
-					max: self weaponDamageMaximum;
-					beRequired;
-					yourself).
+	fields := OrderedCollection with: self weaponDamageField.
 	classGenerationRule
 		ifNotNil: [ maximum := classGenerationRule maximumFor: #standardMaximum.
 			maximum
@@ -206,6 +235,16 @@ CIWeaponType >> inventoryItemDescription [
 								label: classGenerationRule statLabel;
 								max: maximum;
 								yourself) ] ].
+	minorAttributeRule
+		ifNotNil: [ fields
+				add: (MAStringDescription new
+						accessor: (MADictionaryAccessor key: 'minorAttributeIdentifier');
+						label: 'Minor attribute';
+						yourself);
+				add: (MANumberDescription new
+						accessor: (MADictionaryAccessor key: 'minorAttributeValue');
+						label: 'Minor attribute value';
+						yourself) ].
 	socketIdentifiers
 		do: [ :socket | 
 			fields
@@ -214,6 +253,16 @@ CIWeaponType >> inventoryItemDescription [
 						label: socket;
 						yourself) ].
 	^ MAContainer withAll: fields
+]
+
+{ #category : 'accessing' }
+CIWeaponType >> minorAttributeRule [
+	^ minorAttributeRule
+]
+
+{ #category : 'initialization' }
+CIWeaponType >> minorAttributeRule: rule [
+	minorAttributeRule := rule
 ]
 
 { #category : 'private' }
@@ -225,6 +274,39 @@ CIWeaponType >> optimalRangeMetres [
 { #category : 'accessing' }
 CIWeaponType >> talentEligibility [
 	^ #weapon
+]
+
+{ #category : 'validation' }
+CIWeaponType >> validateInventoryItemValues: values [
+	| hasIdentifier hasMagnitude |
+	super validateInventoryItemValues: values.
+	minorAttributeRule ifNil: [ ^ self ].
+	hasIdentifier := values includesKey: 'minorAttributeIdentifier'.
+	hasMagnitude := values includesKey: 'minorAttributeValue'.
+	hasIdentifier = hasMagnitude
+		ifFalse: [ self error: 'An exotic minor attribute requires both its identifier and value' ].
+	hasIdentifier
+		ifTrue: [ minorAttributeRule
+				validateIdentifier: (values at: 'minorAttributeIdentifier')
+				magnitude: (values at: 'minorAttributeValue') ]
+]
+
+{ #category : 'inventory' }
+CIWeaponType >> weaponDamageField [
+	| fixedDamage minimum maximum label |
+	fixedDamage := self fixedAttributes
+			detect: [ :each | each statIdentifier = 'weaponDamage' ]
+			ifNone: [ nil ].
+	minimum := fixedDamage ifNil: [ 0.0 ] ifNotNil: #magnitude.
+	maximum := fixedDamage ifNil: [ self weaponDamageMaximum ] ifNotNil: #magnitude.
+	label := fixedDamage ifNil: [ 'Weapon damage' ] ifNotNil: #label.
+	^ MANumberDescription new
+		accessor: (MADictionaryAccessor key: 'weaponDamage');
+		label: label;
+		min: minimum;
+		max: maximum;
+		beRequired;
+		yourself
 ]
 
 { #category : 'private' }

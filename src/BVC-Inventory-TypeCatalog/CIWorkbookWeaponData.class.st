@@ -46,6 +46,58 @@ CIWorkbookWeaponData class >> namedPart8 [
 ]
 
 { #category : 'registration' }
+CIWorkbookWeaponData class >> registerCapacitorCoreOverrideIn: catalog [
+	| weapon named source attribute cap |
+	weapon := catalog typeAt: 'weapon.launch.capacitor'.
+	named := catalog weaponReferenceAt: 'Weapons Named + Exotics!C113'.
+	source := named evidenceForField: #exoticMods.
+	cap := CIAttributeValue
+			status: #documented
+			raw: '12%'
+			magnitude: 0.12
+			unit: #fraction
+			evidence: source.
+	attribute := CIAttributeDefinition
+			id: 'weapon.variant.capacitor.damageToArmor'
+			label: 'Damage to armor'
+			context: #weaponClassCore
+			group: 'Fixed secondary core'
+			values: {#standardMaximum -> cap} asDictionary
+			notes: #().
+	catalog attributeCatalogue register: attribute.
+	weapon
+		classGenerationRule: (CIWeaponClassGenerationRule
+				weaponClass: #assaultRifle
+				attribute: attribute
+				stat: 'damageToArmor'
+				label: 'Damage to armor'
+				innateHeadshotDamage: weapon classGenerationRule innateHeadshotDamage
+				evidence: source)
+]
+
+{ #category : 'registration' }
+CIWorkbookWeaponData class >> registerExoticMinorRulesIn: catalog [
+	| definitions |
+	definitions := catalog attributeCatalogue definitionsIn: #weaponMinor.
+	catalog weaponReferences
+		do: [ :reference | 
+			| typeId minor exclusions |
+			typeId := reference itemDefinitionIdentifier.
+			minor := reference fieldAt: #minor.
+			(reference kind = #exotic
+				and: [ typeId notNil
+						and: [ #('Any Basic' 'Any Basic (Excluding Damage to Armor)') includes: minor ] ])
+				ifTrue: [ exclusions := minor = 'Any Basic (Excluding Damage to Armor)'
+							ifTrue: [ #('weapon.minor.damageToArmor') ]
+							ifFalse: [ #() ].
+					(catalog typeAt: typeId)
+						minorAttributeRule: (CIExoticWeaponMinorRule
+								basicAttributes: definitions
+								excluding: exclusions
+								evidence: (reference evidenceForField: #minor)) ] ]
+]
+
+{ #category : 'registration' }
 CIWorkbookWeaponData class >> registerFixedMountNotesIn: catalog [
 	#(#('C63' 'C63' muzzle #(#(stability percent 0.30)) nil) #('C64' 'C63' muzzle #(#(stability percent 0.30)) nil) #('C70' 'C70' optics #(#(criticalHitChance percent 0.05)) 'attachment.workbook8') #('C71' 'C70' optics #(#(criticalHitChance percent 0.05)) nil) #('C72' 'C70' optics #(#(criticalHitChance percent 0.05)) nil))
 		do: [ :row | 
@@ -62,6 +114,31 @@ CIWorkbookWeaponData class >> registerFixedMountNotesIn: catalog [
 						inheritedEvidence: (target == original
 								ifFalse: [ target evidenceForField: #columnP ])
 						attachment: attachment) ]
+]
+
+{ #category : 'registration' }
+CIWorkbookWeaponData class >> registerFixedNamedWeaponItemsIn: catalog [
+	#(#('C8' 'C4' 'firstSight' #('innateHeadshotDamage' 'Innate headshot damage' 0.85 fraction intrinsic always)) #('C165' 'C59' 'backupBoomstick' #('weaponDamage' 'Shotgun damage' 0.17 fraction primaryCore always)) #('C195' 'C64' 'theMop' #('armorOnKill' 'Armor on kill' 0.10 fraction secondary always)) #('C269' 'C76' 'theWhiteDeath' #('headshotDamage' 'Headshot damage' 1.37 fraction secondary always)) #('C268' 'C77' 'ohCarol' #('headshotDamage' 'Headshot damage' 1.37 fraction secondary always)) #('C318' 'C97' 'tdiKardCustom' #('skillTier' 'Skill tier while active' 1 count secondary whileActiveWeapon)))
+		do: [ :row | 
+			| statistics named weapon typeId |
+			statistics := catalog weaponReferenceAt: 'Weapons!' , row first.
+			named := catalog weaponReferenceAt: 'Weapons Named + Exotics!' , row second.
+			typeId := 'weapon.workbook.' , row third.
+			statistics linkItemDefinition: typeId.
+			named linkItemDefinition: typeId.
+			weapon := row third = 'backupBoomstick'
+					ifTrue: [ CIWorkbookNamedWeaponType
+							statistics: statistics
+							named: named
+							slot: nil ]
+					ifFalse: [ CIWorkbookNamedWeaponType statistics: statistics named: named ].
+			weapon
+				fixedAttributes: {CIWeaponFixedAttribute
+							fromWorkbookRow: row fourth
+							evidence: (row fourth fifth = #intrinsic
+									ifTrue: [ statistics evidenceForField: #headshotDamage ]
+									ifFalse: [ named evidenceForField: #talentOrAttribute ])}.
+			catalog register: weapon ]
 ]
 
 { #category : 'registration' }
@@ -118,6 +195,13 @@ CIWorkbookWeaponData class >> registerSupportedNamedWeaponsIn: catalog [
 			catalog register: weapon.
 			catalog talentPool: {spec third} for: weapon id ].
 	self registerSupportedNamedWeaponSourcesIn: catalog
+]
+
+{ #category : 'registration' }
+CIWorkbookWeaponData class >> registerVariantGenerationRulesIn: catalog [
+	self registerFixedNamedWeaponItemsIn: catalog.
+	self registerCapacitorCoreOverrideIn: catalog.
+	self registerExoticMinorRulesIn: catalog
 ]
 
 { #category : 'workbook data' }

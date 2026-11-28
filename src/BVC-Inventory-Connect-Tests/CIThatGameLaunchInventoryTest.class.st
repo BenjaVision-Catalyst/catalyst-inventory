@@ -506,6 +506,116 @@ CIThatGameLaunchInventoryTest >> testEquippedCreepingDeathSpreadsWithCooldown [
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testExoticGenerationSeparatesCoreOverridesMinorRollsAndFactoryMods [
+	| catalog generator capacitor values item testSubject |
+	catalog := CIGameItemTypes buildCatalog.
+	generator := CIItemGenerator new.
+	capacitor := catalog typeAt: 'weapon.launch.capacitor'.
+	self
+		assert: (capacitor classGenerationRule maximumFor: #standardMaximum)
+		equals: 0.12.
+	self
+		assert: (capacitor classGenerationRule maximumFor: #prototypeMaximum) isNil.
+	self
+		assert: capacitor classGenerationRule evidence
+		equals: 'Weapons Named + Exotics!F112'.
+	self
+		assert: capacitor minorAttributeRule evidence
+		equals: 'Weapons Named + Exotics!G112'.
+	self
+		deny: (capacitor minorAttributeRule attributeIdentifiers
+				includes: 'weapon.minor.damageToArmor').
+	self
+		assert: ((catalog typeAt: 'weapon.launch.chatterbox') minorAttributeRule
+				attributeIdentifiers includes: 'weapon.minor.damageToArmor').
+	values := {'weaponDamage' -> 0.10.
+			'damageToArmor' -> 0.11.
+			'minorAttributeIdentifier' -> 'weapon.minor.rateOfFire'.
+			'minorAttributeValue' -> 0.05} asDictionary.
+	item := generator
+			generate: 'capacitor'
+			type: capacitor id
+			values: values
+			from: catalog
+			using: [ 0 ].
+	self
+		assert: (item comparisonStats collect: #statIdentifier)
+		equals: #('weaponDamage' 'damageToArmor' 'weapon.minor.rateOfFire').
+	self assert: (item comparisonStats collect: #value) equals: #(0.10 0.11 0.05).
+	self assert: (item modSlots anySatisfy: #isLocked).
+	values at: 'minorAttributeValue' put: 0.06.
+	self
+		should: [ generator
+				generate: 'bad'
+				type: capacitor id
+				values: values
+				from: catalog
+				using: [ 0 ] ]
+		raise: Error.
+	values at: 'minorAttributeValue' put: 0.05.
+	values at: 'minorAttributeIdentifier' put: 'weapon.minor.damageToArmor'.
+	self
+		should: [ generator
+				generate: 'duplicate'
+				type: capacitor id
+				values: values
+				from: catalog
+				using: [ 0 ] ]
+		raise: Error.
+	values removeKey: 'minorAttributeIdentifier'.
+	self
+		should: [ generator
+				generate: 'partial'
+				type: capacitor id
+				values: values
+				from: catalog
+				using: [ 0 ] ]
+		raise: Error.
+	testSubject := catalog typeAt: 'weapon.workbook.testSubject'.
+	self
+		assert: (testSubject classGenerationRule maximumFor: #standardMaximum)
+		equals: 0.21
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testFixedNamedWeaponAttributesGenerateWithoutAReplacementRoll [
+	| catalog generator cases weapon roll fixed item |
+	catalog := CIGameItemTypes buildCatalog.
+	generator := CIItemGenerator new.
+	cases := #(#('firstSight' 'innateHeadshotDamage' 0.85 'Weapons!O8') #('backupBoomstick' 'weaponDamage' 0.17 'Weapons Named + Exotics!E59') #('theMop' 'armorOnKill' 0.10 'Weapons Named + Exotics!E64') #('theWhiteDeath' 'headshotDamage' 1.37 'Weapons Named + Exotics!E76') #('ohCarol' 'headshotDamage' 1.37 'Weapons Named + Exotics!E77') #('tdiKardCustom' 'skillTier' 1 'Weapons Named + Exotics!E97')).
+	cases
+		do: [ :row | 
+			weapon := catalog typeAt: 'weapon.workbook.' , row first.
+			fixed := weapon fixedAttributes first.
+			self assert: fixed evidence equals: row fourth.
+			roll := row second = 'weaponDamage'
+					ifTrue: [ Dictionary new ]
+					ifFalse: [ {'weaponDamage' -> 0.1} asDictionary ].
+			item := generator
+					generate: 'named'
+					type: weapon id
+					values: roll
+					from: catalog
+					using: [ 0 ].
+			self assert: item comparisonStats last statIdentifier equals: row second.
+			self assert: item comparisonStats last value equals: row third.
+			self assert: item talentIdentifier isNil.
+			roll at: row second put: 0.05.
+			self
+				should: [ generator
+						generate: 'overwrite'
+						type: weapon id
+						values: roll
+						from: catalog
+						using: [ 0 ] ]
+				raise: Error ].
+	self assertEmpty: (weapon fixedAttributesWhileWeaponInUse: false).
+	self
+		assert: (weapon fixedAttributesWhileWeaponInUse: true) first magnitude
+		equals: 1
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testFullSpecializationSelectionsFitQualificationReplyBudget [
 	| owner catalog shared picks profile reply |
 	self startInventory.
@@ -1021,6 +1131,40 @@ CIThatGameLaunchInventoryTest >> testLootAwardPersistsSelectionAndGeneratedTalen
 	self assert: reloaded lootPoolIdentifier equals: 'testLoot'.
 	self assert: reloaded talentIdentifier equals: award talentIdentifier.
 	self assert: reloaded comparisonStats first value equals: 0.1
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testNamedFixedAndExoticMinorAttributesSurviveInventoryRestart [
+	| owner rows named exotic |
+	self startInventory.
+	owner := 'variant-attribute-restart'.
+	service
+		grantItem: 'mop'
+		type: 'weapon.workbook.theMop'
+		values: {'weaponDamage' -> 0.1} asDictionary
+		forVerifiedUser: owner.
+	service
+		grantItem: 'cap'
+		type: 'weapon.launch.capacitor'
+		values: {'weaponDamage' -> 0.12.
+				'damageToArmor' -> 0.10.
+				'minorAttributeIdentifier' -> 'weapon.minor.reloadSpeed'.
+				'minorAttributeValue' -> 0.11} asDictionary
+		forVerifiedUser: owner.
+	service stop.
+	service := nil.
+	self startInventory.
+	rows := service
+			rowsForVerifiedUser: owner
+			offset: 0
+			limit: 32.
+	named := rows detect: [ :row | row itemIdentifier = 'mop' ].
+	exotic := rows detect: [ :row | row itemIdentifier = 'cap' ].
+	self assert: named comparisonStats last value equals: 0.10.
+	self
+		assert: exotic comparisonStats last statIdentifier
+		equals: 'weapon.minor.reloadSpeed'.
+	self assert: exotic comparisonStats last value equals: 0.11
 ]
 
 { #category : 'tests' }
@@ -2519,7 +2663,7 @@ CIThatGameLaunchInventoryTest >> testStandardWeaponClassGenerationUsesOnlyDocume
 	self assert: (mmr classGenerationRule maximumFor: #prototypeMaximum) isNil.
 	self assert: mmr classGenerationRule innateHeadshotDamage equals: 0.
 	self assert: pistol classGenerationRule statIdentifier isNil.
-	self assert: exotic classGenerationRule isNil.
+	self assert: exotic classGenerationRule statIdentifier equals: 'damageToArmor'.
 	item := create
 			value: ar id
 			value: 'healthDamage'
