@@ -1134,6 +1134,38 @@ CIThatGameLaunchInventoryTest >> testRedLotusCombatStacksDecayAndRefreshWithLoad
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testRoundAfterRoundQualifiesAfterTwentySecondsAndCountsOnlyNewIntervals [
+	| catalog encounter loadout rule expected |
+	catalog := CIGameItemTypes buildCatalog.
+	loadout := catalog
+			specializationLoadoutNamed: 'Sharpshooter'
+			selected: #('sharpshooter.roundafterround').
+	encounter := CISpecializationEncounter
+			forLoadout: loadout
+			mode: #pve
+			startedAt: 0.
+	self
+		assert: (encounter roundAfterRoundAmmoAccrualAfterCoverSeconds: 19.99) isNil.
+	rule := encounter roundAfterRoundAmmoAccrualAfterCoverSeconds: 20.
+	self assert: rule condition equals: #inCover.
+	self assert: rule qualificationSeconds equals: 20.
+	self assert: rule intervalSeconds equals: 10.
+	expected := {#marksmanRifle -> 5.
+			#rifle -> 5} asDictionary.
+	self assert: rule roundsByTarget equals: expected.
+	self assertEmpty: (rule roundsAccruedFromActiveSeconds: 0 through: 9.99).
+	self
+		assert: (rule roundsAccruedFromActiveSeconds: 9.99 through: 10)
+		equals: expected.
+	self assertEmpty: (rule roundsAccruedFromActiveSeconds: 10 through: 10).
+	self
+		assert: (rule roundsAccruedFromActiveSeconds: 10 through: 30.5)
+		equals: {#marksmanRifle -> 10.
+				#rifle -> 10} asDictionary.
+	self assert: (encounter roundAfterRoundAmmoAccrualAfterCoverSeconds: 0) isNil
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testSavedSpecializationChangesGadgetTierAndSurvivesRestart [
 	| owner catalog gadget loadout stats graph |
 	self startInventory.
@@ -1219,6 +1251,38 @@ CIThatGameLaunchInventoryTest >> testScorpioVenomThresholdsAndStackNineRefresh [
 			at: 10.
 	self assert: outcome stackCount equals: 1.
 	self assertEmpty: outcome triggeredStatuses
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testScrapingByOnlyAccruesCurrentWeaponAmmoDuringCombatCoverToCover [
+	| catalog loadout encounter inactive rule |
+	catalog := CIGameItemTypes buildCatalog.
+	loadout := catalog
+			specializationLoadoutNamed: 'Survivalist'
+			selected: #('survivalist.scrapingby').
+	encounter := CISpecializationEncounter
+			forLoadout: loadout
+			mode: #pve
+			startedAt: 0.
+	inactive := CISpecializationEncounter
+			forLoadout: (catalog specializationLoadoutNamed: 'Survivalist' selected: #())
+			mode: #pve
+			startedAt: 0.
+	self
+		assert: (encounter scrapingByAmmoAccrualDuringCoverToCover: true inCombat: false) isNil.
+	self
+		assert: (encounter scrapingByAmmoAccrualDuringCoverToCover: false inCombat: true) isNil.
+	self
+		assert: (inactive scrapingByAmmoAccrualDuringCoverToCover: true inCombat: true) isNil.
+	rule := encounter scrapingByAmmoAccrualDuringCoverToCover: true inCombat: true.
+	self assert: rule condition equals: #coverToCoverInCombat.
+	self assert: rule intervalSeconds equals: 1.
+	self assertEmpty: (rule roundsAccruedFromActiveSeconds: 0 through: 0.99).
+	self
+		assert: (rule roundsAccruedFromActiveSeconds: 0.99 through: 2.2)
+		equals: {#currentWeapon -> 10} asDictionary.
+	self assertEmpty: (rule roundsAccruedFromActiveSeconds: 2.2 through: 2.9).
+	self should: [ rule roundsAccruedFromActiveSeconds: 1 through: 0 ] raise: Error
 ]
 
 { #category : 'tests' }

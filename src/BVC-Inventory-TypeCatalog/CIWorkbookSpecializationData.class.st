@@ -78,7 +78,24 @@ CIWorkbookSpecializationData class >> registerIn: catalog [
 						collect: [ :row | CISpecializationPerk fromWorkbookRow: row ])).
 	self registerEventParametersIn: catalog.
 	self registerSignatureAmmoParametersIn: catalog.
-	self registerArmorKitEffectsIn: catalog
+	self registerArmorKitEffectsIn: catalog.
+	self registerOrdinaryAmmoAccrualsIn: catalog
+]
+
+{ #category : 'registration' }
+CIWorkbookSpecializationData class >> registerOrdinaryAmmoAccrualsIn: catalog [
+	#(#('Sharpshooter' 'sharpshooter.roundafterround' inCover 20 10 #(#(marksmanRifle 5) #(rifle 5))) #('Survivalist' 'survivalist.scrapingby' coverToCoverInCombat 0 1 #(#(currentWeapon 5))))
+		do: [ :row | 
+			| rounds accrual |
+			rounds := (row sixth collect: [ :target | target first -> target second ])
+					asDictionary.
+			accrual := CISpecializationAmmoAccrual
+					condition: row third
+					qualificationSeconds: row fourth
+					intervalSeconds: row fifth
+					roundsByTarget: rounds.
+			((catalog specializationNamed: row first) perkAt: row second)
+				eventParameters: {#ammoAccrual -> accrual} asDictionary ]
 ]
 
 { #category : 'registration' }

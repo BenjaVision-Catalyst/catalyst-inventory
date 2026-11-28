@@ -263,6 +263,25 @@ CISpecializationEncounter >> reloadSpeedBonusForNextReloadAt: seconds [
 ]
 
 { #category : 'combat' }
+CISpecializationEncounter >> roundAfterRoundAmmoAccrualAfterCoverSeconds: continuousCoverSeconds [
+	| parameters accrual |
+	parameters := self parametersFor: 'sharpshooter.roundafterround'.
+	parameters ifNil: [ ^ nil ].
+	accrual := parameters at: #ammoAccrual.
+	^ (accrual qualifiesAfterSeconds: continuousCoverSeconds)
+		ifTrue: [ accrual ]
+		ifFalse: [ nil ]
+]
+
+{ #category : 'combat' }
+CISpecializationEncounter >> scrapingByAmmoAccrualDuringCoverToCover: moving inCombat: inCombat [
+	| parameters |
+	(moving and: [ inCombat ]) ifFalse: [ ^ nil ].
+	parameters := self parametersFor: 'survivalist.scrapingby'.
+	^ parameters ifNotNil: [ parameters at: #ammoAccrual ]
+]
+
+{ #category : 'combat' }
 CISpecializationEncounter >> signatureAmmoForDestroyedHostileTarget: targetKind fromSignatureWeapon: signatureWeapon [
 	| triggers |
 	triggers := (#(skillProxy drone robotics) includes: targetKind)
