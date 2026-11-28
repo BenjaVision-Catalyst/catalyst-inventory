@@ -1773,7 +1773,7 @@ CIThatGameLaunchInventoryTest >> testNamedGearReferencesPreserveSplitRowsAndExpo
 	self assert: (rows count: [ :each | each kind = #exotic ]) equals: 32.
 	self
 		assert: (rows count: [ :each | each itemDefinitionIdentifier notNil ])
-		equals: 11.
+		equals: 12.
 	reference := catalog namedGearReferenceAt: 'Vile'.
 	self assert: (reference fieldAt: #talent) equals: 'Toxic Delivery'.
 	self
@@ -4006,6 +4006,48 @@ CIThatGameLaunchInventoryTest >> testTamperProofArmsAndCoolsDownPerDeployment [
 						value: #hive
 						value: readyAt + 20
 						value: radius) isNil ]
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testTechSupportUsesWorkbookDamageDurationsAndFixedNamedTalent [
+	| catalog reference named values item |
+	catalog := CIGameItemTypes buildCatalog.
+	reference := catalog talentReferenceAt: 'Gear Talents!D27'.
+	{{reference talentIdentifier.
+			25}.
+		{reference perfectTalentIdentifier.
+			27}}
+		do: [ :row | 
+			| talent encounter |
+			talent := catalog talentAt: row first.
+			encounter := CIGearTalentEncounter talent: talent.
+			self assert: (encounter totalSkillDamageBonusAt: 0) equals: 0.
+			encounter recordGadgetKillAt: 1.
+			self assert: (encounter totalSkillDamageBonusAt: row second) equals: 0.25.
+			self assert: (encounter totalSkillDamageBonusAt: row second + 1) equals: 0.
+			encounter recordGadgetKillAt: 40.
+			encounter recordGadgetKillAt: 41.
+			self
+				assert: (encounter totalSkillDamageBonusAt: 40 + row second)
+				equals: 0.25.
+			self assert: (encounter totalSkillDamageBonusAt: 41 + row second) equals: 0.
+			self assert: (talent parametersForMode: #pvp) isNil ].
+	named := catalog namedGearReferenceAt: 'Percussive Maintenance'.
+	values := {'minor1'
+				-> (CIGearAttributeRoll attribute: 'gear.minor.criticalHitChance' value: 0.05).
+			'minor2'
+				-> (CIGearAttributeRoll attribute: 'gear.minor.criticalHitDamage' value: 0.10)}
+			asDictionary.
+	item := CIInventoryReadStore new
+			grantItem: 'percussive'
+			type: named itemDefinitionIdentifier
+			values: values
+			from: catalog
+			forOwner: 'owner'
+			using: [ self error: 'Fixed talent must not draw' ].
+	self assert: item talentIdentifier equals: reference perfectTalentIdentifier.
+	self assert: item gearSlotIdentifier equals: 'Backpack'.
+	self assert: item modSlots size equals: 1
 ]
 
 { #category : 'tests' }

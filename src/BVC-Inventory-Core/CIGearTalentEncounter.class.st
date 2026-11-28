@@ -112,7 +112,7 @@ CIGearTalentEncounter >> gadgetCooldownReductionFractionOnEnemyKillAt: seconds [
 { #category : 'initialization' }
 CIGearTalentEncounter >> initializeTalent: aTalent [
 	| rule |
-	rule := #(#(obliterate 'obliterate' 'perfectObliterate' 'Gear Talents!D7:F7') #(unbreakable 'unbreakable' 'perfectUnbreakable' 'Gear Talents!D14:F14') #(overwatch 'overwatch' 'perfectOverwatch' 'Gear Talents!D11:F11') #(composure 'composure' 'perfectComposure' 'Gear Talents!D33:F33, Gear Named + Exotics!F25:G25') #(combinedArms 'combinedArms' 'perfectCombinedArms' 'Gear Talents!D26:F26') #(calculated 'calculated' 'perfectlyCalculated' 'Gear Talents!D45:F45, Gear Named + Exotics!F19:G19') #(skilled 'skilled' 'perfectlySkilled' 'Gear Talents!D21:F21, Gear Named + Exotics!F38:G38') #(tamperProof 'tamperProof' 'perfectlyTamperProof' 'Gear Talents!D24:I24, Gear Named + Exotics!F22:G22') #(tagTeam 'tagTeam' 'tagTeam' 'Gear Talents!D22:F22') #(creepingDeath 'creepingDeath' 'perfectCreepingDeath' 'Gear Talents!D47:F47'))
+	rule := #(#(obliterate 'obliterate' 'perfectObliterate' 'Gear Talents!D7:F7') #(unbreakable 'unbreakable' 'perfectUnbreakable' 'Gear Talents!D14:F14') #(overwatch 'overwatch' 'perfectOverwatch' 'Gear Talents!D11:F11') #(composure 'composure' 'perfectComposure' 'Gear Talents!D33:F33, Gear Named + Exotics!F25:G25') #(combinedArms 'combinedArms' 'perfectCombinedArms' 'Gear Talents!D26:F26') #(calculated 'calculated' 'perfectlyCalculated' 'Gear Talents!D45:F45, Gear Named + Exotics!F19:G19') #(techSupport 'techSupport' 'perfectTechSupport' 'Gear Talents!D27:F27, Gear Named + Exotics!F16:G16') #(skilled 'skilled' 'perfectlySkilled' 'Gear Talents!D21:F21, Gear Named + Exotics!F38:G38') #(tamperProof 'tamperProof' 'perfectlyTamperProof' 'Gear Talents!D24:I24, Gear Named + Exotics!F22:G22') #(tagTeam 'tagTeam' 'tagTeam' 'Gear Talents!D22:F22') #(creepingDeath 'creepingDeath' 'perfectCreepingDeath' 'Gear Talents!D47:F47'))
 			detect: [ :spec | aTalent id = spec second or: [ aTalent id = spec third ] ]
 			ifNone: [ self error: 'Unsupported gear talent' ].
 	mechanic := rule first.
@@ -178,6 +178,13 @@ CIGearTalentEncounter >> recordGadgetDeploymentEnded: deploymentIdentifier at: s
 	self advanceTo: seconds.
 	mechanic = #tamperProof
 		ifTrue: [ tamperProofReadyAt removeKey: deploymentIdentifier ifAbsent: [  ] ]
+]
+
+{ #category : 'combat' }
+CIGearTalentEncounter >> recordGadgetKillAt: seconds [
+	self advanceTo: seconds.
+	mechanic = #techSupport
+		ifTrue: [ buffUntil := seconds + (parameters at: #durationSeconds) ]
 ]
 
 { #category : 'combat' }
@@ -274,6 +281,8 @@ CIGearTalentEncounter >> totalSkillDamageBonusAt: seconds [
 	(mechanic = #combinedArms
 		and: [ buffUntil notNil and: [ seconds < buffUntil ] ])
 		ifTrue: [ ^ parameters at: #skillDamageOnWeaponHit ].
+	(mechanic = #techSupport and: [ buffUntil notNil and: [ seconds < buffUntil ] ])
+		ifTrue: [ ^ parameters at: #skillDamageOnGadgetKill ].
 	^ 0
 ]
 

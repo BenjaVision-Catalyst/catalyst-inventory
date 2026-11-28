@@ -310,7 +310,8 @@ CIGameItemTypes class >> registerTalentDefinitionsIn: catalog [
 						comment: spec fifth) ].
 	self registerGadgetOverchargeTalentsIn: catalog.
 	self registerPvPGearTalentProfilesIn: catalog.
-	CIWorkbookTalentData registerTamperProofIn: catalog
+	CIWorkbookTalentData registerTamperProofIn: catalog.
+	CIWorkbookTalentData registerTechSupportIn: catalog
 ]
 
 { #category : 'catalog' }
