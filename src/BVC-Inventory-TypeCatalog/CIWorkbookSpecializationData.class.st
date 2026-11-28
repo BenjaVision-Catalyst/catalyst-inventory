@@ -44,6 +44,10 @@ CIWorkbookSpecializationData class >> registerEquipmentRewardsIn: catalog [
 			reward kind = #grenade
 				ifTrue: [ type := CIWorkbookGrenadeType forSpecializationPerk: perk.
 					catalog register: type.
+					perk rewardIdentifier: type id ].
+			reward kind = #signatureWeapon
+				ifTrue: [ type := CIWorkbookSignatureWeaponType forSpecializationPerk: perk.
+					catalog register: type.
 					perk rewardIdentifier: type id ] ]
 ]
 

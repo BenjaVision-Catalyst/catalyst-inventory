@@ -63,6 +63,15 @@ CIInventoryService >> claimSpecializationSidearmForPerk: perkIdentifier values: 
 				forOwner: identity ]
 ]
 
+{ #category : 'specializations' }
+CIInventoryService >> claimSpecializationSignatureWeaponForPerk: perkIdentifier forVerifiedUser: identity [
+	^ savedSetsLock
+		critical: [ readStore
+				claimSpecializationSignatureWeaponForPerk: perkIdentifier
+				from: itemTypeCatalog
+				forOwner: identity ]
+]
+
 { #category : 'reading' }
 CIInventoryService >> classifiedEncounterForVerifiedUser: identity mode: mode [
 	^ CIClassifiedEncounter

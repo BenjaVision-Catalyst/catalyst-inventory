@@ -89,6 +89,23 @@ CIInventoryReadStore >> claimSpecializationSidearmForPerk: perkIdentifier values
 		forOwner: identity
 ]
 
+{ #category : 'specializations' }
+CIInventoryReadStore >> claimSpecializationSignatureWeaponForPerk: perkIdentifier from: catalog forOwner: identity [
+	| perk reward |
+	perk := self
+			selectedSpecializationRewardPerk: perkIdentifier
+			from: catalog
+			forOwner: identity.
+	reward := perk equipmentReward.
+	(reward notNil and: [ reward kind = #signatureWeapon ])
+		ifFalse: [ self error: 'This perk does not grant a signature weapon' ].
+	^ self
+		claimSpecializationRewardType: perk rewardIdentifier
+		values: Dictionary new
+		from: catalog
+		forOwner: identity
+]
+
 { #category : 'private' }
 CIInventoryReadStore >> copyRow: row inSlot: slot outfit: isOutfit [
 	| candidate |

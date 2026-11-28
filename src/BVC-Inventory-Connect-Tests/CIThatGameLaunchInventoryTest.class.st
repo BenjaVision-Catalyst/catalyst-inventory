@@ -1692,6 +1692,79 @@ CIThatGameLaunchInventoryTest >> testSignatureAmmoSingleKillsHonorQualificationA
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSignatureWeaponClaimsRequireMatchingSelectionAndSurviveRestart [
+	| owner perk item retry |
+	self startInventory.
+	owner := 'signature-weapon-claim-owner'.
+	perk := 'gunner.minigun'.
+	self
+		should: [ service claimSpecializationSignatureWeaponForPerk: perk forVerifiedUser: owner ]
+		raise: Error.
+	service
+		selectSpecialization: 'Gunner'
+		perks: {perk.
+				'gunner.riotfoamgrenade'}
+		forVerifiedUser: owner.
+	self
+		should: [ service
+				claimSpecializationSignatureWeaponForPerk: 'gunner.riotfoamgrenade'
+				forVerifiedUser: owner ]
+		raise: Error.
+	self
+		should: [ service
+				claimSpecializationSignatureWeaponForPerk: perk
+				forVerifiedUser: 'other-owner' ]
+		raise: Error.
+	item := service
+			claimSpecializationSignatureWeaponForPerk: perk
+			forVerifiedUser: owner.
+	self
+		assert: item definitionIdentifier
+		equals: 'weapon.signature.gunner.minigun'.
+	service stop.
+	service := nil.
+	self startInventory.
+	retry := service
+			claimSpecializationSignatureWeaponForPerk: perk
+			forVerifiedUser: owner.
+	self assert: retry itemIdentifier equals: item itemIdentifier.
+	self deny: (retry permitsCapturedEquipmentSlot: 'RangedWeapon').
+	self
+		assert: (service
+				rowsForVerifiedUser: owner
+				offset: 0
+				limit: 32) size
+		equals: 1
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSignatureWeaponRewardsClaimWithSourceNamesAndUnspecifiedCombatStats [
+	| catalog store owner cases |
+	catalog := CIGameItemTypes buildCatalog.
+	store := CIInventoryReadStore new.
+	owner := 'signature-weapon-reward-types'.
+	cases := #(#('Sharpshooter' 'sharpshooter.tac50crifle' 'TAC-50 C Rifle' 'Specializations!G18') #('Survivalist' 'survivalist.crossbow' 'Crossbow' 'Specializations!K18') #('Technician' 'technician.p017launcher' 'P-017 Launcher' 'Specializations!G38') #('Gunner' 'gunner.minigun' 'Minigun' 'Specializations!K37') #('Demolitionist' 'demolitionist.m32a1multishotgrenadelauncher' 'M32A1 Multi-shot Grenade Launcher' 'Specializations!G57') #('Firewall' 'firewall.k8jetstreamflamethrower' 'K8-JetStream Flamethrower' 'Specializations!K57')).
+	cases
+		do: [ :row | 
+			| item type perk |
+			store
+				specialization: (CISpecializationSelection specialization: row first perks: {row second})
+				forOwner: owner.
+			item := store
+					claimSpecializationSignatureWeaponForPerk: row second
+					from: catalog
+					forOwner: owner.
+			self assert: item displayName equals: row third.
+			self deny: (item permitsCapturedEquipmentSlot: 'RangedWeapon').
+			type := catalog typeAt: item definitionIdentifier.
+			perk := type rewardPerk.
+			self assert: perk evidence equals: row fourth.
+			self assert: perk equipmentReward weaponStatistics isNil.
+			self assertEmpty: (catalog talentPoolFor: type id) ].
+	self assert: (store allRowsForOwner: owner) size equals: 6
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testSpecializationConditionalPerksHonorRangeCooldownAndPvP [
 	| catalog loadout field pve pvp demolitionist targets |
 	catalog := CIGameItemTypes buildCatalog.
