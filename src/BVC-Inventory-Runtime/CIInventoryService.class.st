@@ -45,7 +45,7 @@ CIInventoryService >> deleteSavedSet: setIdentifier forVerifiedUser: identity [
 	^ self
 		withSavedSet: setIdentifier
 		forVerifiedUser: identity
-		do: [ :entry :section :sets |
+		do: [ :entry :section :sets | 
 			self
 				replaceSavedSets: ((sets at: section) reject: [ :each | each == entry ])
 				in: section
@@ -58,7 +58,7 @@ CIInventoryService >> equipSavedSet: setIdentifier forVerifiedUser: identity [
 	^ self
 		withSavedSet: setIdentifier
 		forVerifiedUser: identity
-		do: [ :entry :section :sets |
+		do: [ :entry :section :sets | 
 			self
 				applySavedSet: entry
 				forOwner: identity
@@ -118,7 +118,7 @@ CIInventoryService >> overwriteSavedSet: setIdentifier forVerifiedUser: identity
 	^ self
 		withSavedSet: setIdentifier
 		forVerifiedUser: identity
-		do: [ :entry :section :sets |
+		do: [ :entry :section :sets | 
 			| entries |
 			entries := (sets at: section) copy.
 			entries
@@ -146,6 +146,29 @@ CIInventoryService >> profileGraphForVerifiedUser: identity [
 ]
 
 { #category : 'writing' }
+CIInventoryService >> provisionLaunchInventoryForVerifiedUser: identity [
+	^ savedSetsLock
+		critical: [ | staging oldRows knownDefinitions newRows |
+			oldRows := readStore allRowsForOwner: identity.
+			knownDefinitions := (oldRows collect: #definitionIdentifier) asSet.
+			staging := CIInventoryReadStore new.
+			staging replaceRows: oldRows forOwner: identity.
+			CIThatGameLaunchCatalog spawnSpecs
+				do: [ :spec | 
+					(knownDefinitions includes: spec key)
+						ifFalse: [ staging
+								grantItem: UUID new asString
+								type: spec key
+								values: spec value
+								from: itemTypeCatalog
+								forOwner: identity ] ].
+			newRows := staging allRowsForOwner: identity.
+			newRows size > oldRows size
+				ifTrue: [ readStore replaceRows: newRows forOwner: identity ].
+			newRows size - oldRows size ]
+]
+
+{ #category : 'writing' }
 CIInventoryService >> provisionStarterGadgetsForVerifiedUser: identity [
 	^ savedSetsLock
 		critical: [ readStore provisionStarterGadgetsFrom: itemTypeCatalog forOwner: identity ]
@@ -162,7 +185,7 @@ CIInventoryService >> renameSavedSet: setIdentifier to: proposedName forVerified
 	^ self
 		withSavedSet: setIdentifier
 		forVerifiedUser: identity
-		do: [ :entry :section :sets |
+		do: [ :entry :section :sets | 
 			| entries |
 			entries := sets at: section.
 			(entries
@@ -205,19 +228,25 @@ CIInventoryService >> replaceSavedSets: entries in: section of: sets forOwner: i
 
 { #category : 'reading' }
 CIInventoryService >> rowsForVerifiedUser: anIdentifier offset: anOffset limit: aLimit [
-	^ readStore
-		rowsForOwner: anIdentifier
-		offset: anOffset
-		limit: aLimit
+	^ savedSetsLock
+		critical: [ readStore
+				rowsForOwner: anIdentifier
+				offset: anOffset
+				limit: aLimit ]
 ]
 
 { #category : 'lifecycle' }
 CIInventoryService >> start [
-	super start.
+	| snapshotPath |
+	snapshotPath := self configuration
+			ifNotNil: [ :settings | settings inventorySnapshotPath ].
+	readStore := snapshotPath
+			ifNil: [ CIInventoryReadStore new ]
+			ifNotNil: [ CIInventorySnapshotStore at: snapshotPath ].
 	itemTypeCatalog := CIGameItemTypes buildCatalog.
-	readStore := CIInventoryReadStore new.
 	savedSetsByOwner := Dictionary new.
-	savedSetsLock := Semaphore forMutualExclusion
+	savedSetsLock := Semaphore forMutualExclusion.
+	super start
 ]
 
 { #category : 'lifecycle' }
@@ -235,7 +264,7 @@ CIInventoryService >> withSavedSet: setIdentifier forVerifiedUser: identity do: 
 		critical: [ | sets |
 			sets := savedSetsByOwner at: identity ifAbsent: [ ^ nil ].
 			#('gear' 'apparel')
-				do: [ :section |
+				do: [ :section | 
 					| entry |
 					entry := (sets at: section ifAbsent: [ #() ])
 							detect: [ :each | (each at: 'itemIdentifier') = setIdentifier ]

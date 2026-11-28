@@ -74,7 +74,8 @@ CIInventoryGatewayQualificationApplication class >> proofNames: proofs users: us
 
 { #category : 'qualification' }
 CIInventoryGatewayQualificationApplication class >> qualifyIn: directory [
-	| runtime config services gateway settings host worker users inventory alice bob deadline listenerPort equipmentPhase |
+	| runtime config services gateway settings host worker users inventory alice bob deadline listenerPort equipmentPhase launchMode |
+	launchMode := (directory / 'launch-inventory-qualification') exists.
 	runtime := CRRuntime new.
 	settings := Dictionary new
 			at: 'role' put: 'server';
@@ -113,6 +114,7 @@ CIInventoryGatewayQualificationApplication class >> qualifyIn: directory [
 			CIInventoryConfiguration new
 				identifier: #inventory;
 				label: 'Inventory';
+				inventorySnapshotPath: (launchMode ifTrue: [ (directory / 'inventory.ston') fullName ]);
 				authoritative: true;
 				yourself.
 			gateway}.
@@ -134,7 +136,7 @@ CIInventoryGatewayQualificationApplication class >> qualifyIn: directory [
 				yourself).
 	config deployment
 		serviceDeployments: (services
-				collect: [ :service |
+				collect: [ :service | 
 					CRServiceDeploymentConfiguration new
 						serviceIdentifier: service identifier;
 						label: service label;
@@ -143,8 +145,10 @@ CIInventoryGatewayQualificationApplication class >> qualifyIn: directory [
 	config failureEvidenceConfiguration captureDebugArtifacts: false.
 	alice := CUUser new
 			name: UUID new asString;
-			ensureIdentity;
 			yourself.
+	launchMode
+		ifTrue: [ self retainLaunchFixtureIdentityOf: alice in: directory ]
+		ifFalse: [ alice ensureIdentity ].
 	bob := CUUser new
 			name: UUID new asString;
 			ensureIdentity;
@@ -158,7 +162,7 @@ CIInventoryGatewayQualificationApplication class >> qualifyIn: directory [
 				ifTrue: [ self error: 'Runtime failed to converge' ].
 			(Delay forMilliseconds: 20) wait ].
 	worker := CRPharoWorker allInstances
-			detect: [ :each |
+			detect: [ :each | 
 				each runtime == runtime
 					and: [ (each services serviceAtIdentifier: #inventory) notNil ] ].
 	users := worker services serviceAtIdentifier: #users.
@@ -166,11 +170,18 @@ CIInventoryGatewayQualificationApplication class >> qualifyIn: directory [
 	CUUsers allUsers
 		add: alice;
 		add: bob.
-	inventory
-		replaceReadRows: ((directory / 'gadget-qualification') exists
-				ifTrue: [ self starterItems first: 5 ]
-				ifFalse: [ self starterItems ])
-		forOwner: alice userIdentifier.
+	launchMode
+		ifTrue: [ (inventory
+				rowsForVerifiedUser: alice userIdentifier
+				offset: 0
+				limit: 1)
+				ifEmpty: [ inventory replaceReadRows: self starterItems forOwner: alice userIdentifier ].
+			inventory provisionLaunchInventoryForVerifiedUser: alice userIdentifier ]
+		ifFalse: [ inventory
+				replaceReadRows: ((directory / 'gadget-qualification') exists
+						ifTrue: [ self starterItems first: 5 ]
+						ifFalse: [ self starterItems ])
+				forOwner: alice userIdentifier ].
 	(directory / 'gadget-qualification') exists
 		ifTrue: [ inventory provisionStarterGadgetsForVerifiedUser: alice userIdentifier.
 			inventory provisionStarterGadgetsForVerifiedUser: alice userIdentifier ].
@@ -256,11 +267,22 @@ CIInventoryGatewayQualificationApplication class >> qualifyIn: directory [
 ]
 
 { #category : 'qualification' }
+CIInventoryGatewayQualificationApplication class >> retainLaunchFixtureIdentityOf: alice in: directory [
+	| ownerFile |
+	ownerFile := directory / 'launch-inventory-owner'.
+	ownerFile exists
+		ifTrue: [ alice userIdentifier: ownerFile contents trimBoth ]
+		ifFalse: [ alice ensureIdentity.
+			ownerFile
+				writeStreamDo: [ :stream | stream nextPutAll: alice userIdentifier ] ]
+]
+
+{ #category : 'qualification' }
 CIInventoryGatewayQualificationApplication class >> starterItems [
 	| items |
 	items := OrderedCollection new.
 	#(#('responseHead' 'Response Helmet' 'Head') #('responseEyes' 'Response Goggles' 'Eyes') #('responseChest' 'Response Aid Vest' 'Chest') #('responseFeet' 'Response Boots' 'Feet'))
-		do: [ :spec |
+		do: [ :spec | 
 			| metadata |
 			metadata := Dictionary new
 					at: #presentationKind put: 'gear';
@@ -289,7 +311,7 @@ CIInventoryGatewayQualificationApplication class >> starterItems [
 						name: 'Extra-grip shoes'
 						icon: nil)).
 	#(#('Credits' 'Credits' 240) #('Tokens' 'Tokens' 34) #('Marks' 'Marks' 8) #('DepotKey' 'Depot Key' 2) #('RelayKey' 'Relay Key' 1) #('Water' 'Water' 7) #('Rations' 'Rations' 5) #('Fruit' 'Fruit' 12) #('Tea' 'Tea' 3) #('Bread' 'Bread' 4) #('Granite' 'Granite' 42) #('Shale' 'Shale' 19) #('Quartz' 'Quartz' 8) #('Flint' 'Flint' 6) #('Oak' 'Oak' 18) #('Birch' 'Birch' 14) #('Pine' 'Pine' 25) #('Seeds' 'Seeds' 16) #('Compost' 'Compost' 9) #('Sprouts' 'Sprouts' 4) #('Bricks' 'Bricks' 60) #('Panels' 'Panels' 13) #('Fasteners' 'Fasteners' 85) #('Glass' 'Glass' 11))
-		do: [ :spec |
+		do: [ :spec | 
 			items
 				add: (CIInventoryResourceStackSummary
 						stack: spec first
@@ -306,7 +328,7 @@ CIInventoryGatewayQualificationApplication class >> swapStarterGadgetsFor: ident
 			rowsForVerifiedUser: identity
 			offset: 0
 			limit: 32)
-			collect: [ :row |
+			collect: [ :row | 
 				| copy |
 				copy := row copy.
 				row itemIdentifier = 'starter-scout-drone'
@@ -394,7 +416,7 @@ CIInventoryGatewayQualificationApplication >> execute: request asVerifiedUser: i
 	reply := Dictionary new
 			at: 'fields'
 				put: (description children asArray
-						collect: [ :field |
+						collect: [ :field | 
 							Dictionary new
 								at: 'key' put: field accessor readSelector asString;
 								at: 'label' put: field label;

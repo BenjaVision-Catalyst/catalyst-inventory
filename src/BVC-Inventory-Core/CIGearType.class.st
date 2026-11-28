@@ -80,6 +80,11 @@ CIGearType >> inspectorSectionsAtUtilityTier: tier item: item [
 						each equippedModIdentifier ifNil: [ 'Empty' ]} ]}}
 ]
 
+{ #category : 'spawning' }
+CIGearType >> inventoryFamilyMetadata [
+	^ Dictionary new
+]
+
 { #category : 'instance creation' }
 CIGearType >> inventoryItem: itemIdentifier values: values [
 	^ self
@@ -103,7 +108,7 @@ CIGearType >> inventoryItem: itemIdentifier values: values talentIdentifier: aTa
 					value: amount
 					format: spec fourth
 					hasMaximum: amount = (spec at: 6) ].
-	metadata := Dictionary new
+	metadata := self inventoryFamilyMetadata
 			at: #presentationKind put: 'gear';
 			at: #inventoryTypeCount put: 1;
 			at: #talentIdentifier put: aTalentIdentifier;

@@ -24,6 +24,17 @@ assigns the next available name, captures the owner's equipped slots, and
 returns the updated Magritte profile. Saved sets use the Runtime service's
 in-memory store for the lifetime of that service.
 
+For GT inventory persistence, set `CIInventoryConfiguration>>inventorySnapshotPath:`
+to a file on storage available to the authoritative Inventory service after a
+restart. The service commits owned inventory rows and their rolled talent IDs
+to that file on each change. Use one authoritative service per snapshot path.
+
+To exercise the launch inventory with the authenticated qualification gateway,
+create a `launch-inventory-qualification` marker in its fixture directory.
+The gateway provisions all launch items for Alice along with the existing
+fixture inventory. Reuse that directory to restart with the same Alice
+identity and inventory snapshot.
+
 Equip uses operation 105 with the saved-set UUID as a UTF-8 payload. The
 service resolves the set within the authenticated player's Gear Sets and
 Outfits, skips slots already correct, and preserves slots whose saved item is

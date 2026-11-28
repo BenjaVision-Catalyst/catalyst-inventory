@@ -508,10 +508,16 @@ CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets
 
 { #category : 'projection' }
 CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets: savedSets catalog: catalog modStorageAllowance: allowance [
-	| graph descriptions objects cards itemsById tier |
+	| graph descriptions objects cards itemsById tier visibleItems |
+	visibleItems := items first: (items size min: 32).
+	(items allButFirst: visibleItems size)
+		do: [ :item | 
+			((item isKindOf: CIInventoryEquipmentSummary)
+				and: [ item equippedSlotIdentifier notNil ])
+				ifTrue: [ visibleItems := visibleItems copyWith: item ] ].
 	graph := self
 			forVerifiedUser: identity
-			rows: (items first: (items size min: 32))
+			rows: visibleItems
 			savedSets: savedSets.
 	self
 		addModStorageTo: graph
@@ -526,7 +532,7 @@ CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets
 	items do: [ :item | itemsById at: item itemIdentifier put: item ].
 	tier := self utilityTierForRows: items.
 	cards
-		do: [ :card |
+		do: [ :card | 
 			| values item type sections |
 			values := card at: 'values'.
 			(values includesKey: 'isEmptySlot')
@@ -549,7 +555,7 @@ CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets
 			^ graph ].
 	descriptions
 		detect: [ :each | (each at: 'id') = 'equipmentCard' ]
-		ifFound: [ :description |
+		ifFound: [ :description | 
 			description
 				at: 'children'
 				put: ((description at: 'children') copyWith: 'inspector') ].

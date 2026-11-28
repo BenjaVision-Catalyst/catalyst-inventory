@@ -34,6 +34,7 @@ CIGameItemTypes class >> buildCatalog [
 		configureTalentPoolFor: 'weapon.ranged.pathfinder'
 		profile: #assaultRifle
 		in: catalog.
+	CIThatGameLaunchCatalog registerIn: catalog.
 	^ catalog
 ]
 
