@@ -9,7 +9,9 @@ Class {
 		'criticalStacks',
 		'skillDamageUntil',
 		'weaponDamageUntil',
-		'lastTime'
+		'lastTime',
+		'sadistKills',
+		'unwaveringSwapState'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -43,6 +45,26 @@ CIWeaponTalentEncounter >> armorRepairOnKillFrom: itemId headshot: headshot [
 		talent: talent id
 ]
 
+{ #category : 'combat' }
+CIWeaponTalentEncounter >> burnResistanceReductionOnEnemyDamageFrom: itemId [
+	(mechanic = #primerRounds and: [ itemId = weaponIdentifier ])
+		ifFalse: [ ^ nil ].
+	^ CICombatStatReduction
+		stat: #burnResistance
+		fraction: (parameters at: #burnResistanceReduction)
+		durationSeconds: (parameters at: #durationSeconds)
+]
+
+{ #category : 'combat' }
+CIWeaponTalentEncounter >> consumeStatusOnEnemyHitFrom: itemId at: seconds [
+	self advanceTo: seconds.
+	(mechanic = #sadist
+		and: [ itemId = weaponIdentifier
+				and: [ sadistKills = (parameters at: #killThreshold) ] ]) ifFalse: [ ^ nil ].
+	sadistKills := 0.
+	^ parameters at: #status
+]
+
 { #category : 'accessing' }
 CIWeaponTalentEncounter >> damageBonusesAt: seconds [
 	| weaponBonus skillBonus scale |
@@ -54,6 +76,9 @@ CIWeaponTalentEncounter >> damageBonusesAt: seconds [
 				ifTrue: [ weaponBonus := parameters at: #weaponDamageOnSkillUseOrHit ].
 			(skillDamageUntil notNil and: [ seconds < skillDamageUntil ])
 				ifTrue: [ skillBonus := parameters at: #skillDamageOnWeaponHit ] ].
+	(mechanic = #spike
+		and: [ skillDamageUntil notNil and: [ seconds < skillDamageUntil ] ])
+		ifTrue: [ skillBonus := parameters at: #gadgetDamage ].
 	scale := (weaponBonus > 0 and: [ skillBonus > 0 ])
 			ifTrue: [ parameters at: #dualBuffMultiplier ]
 			ifFalse: [ 1 ].
@@ -69,7 +94,7 @@ CIWeaponTalentEncounter >> evidence [
 { #category : 'initialization' }
 CIWeaponTalentEncounter >> initializeWeapon: itemId talent: aTalent [
 	| rule |
-	rule := #(#(optimist 'optimist' 'perfectOptimist' 'Weapon Talents!B5:D5') #(ranger 'ranger' 'perfectRanger' 'Weapon Talents!B13:D13') #(preservation 'preservation' 'perfectPreservation' 'Weapon Talents!B4:D4') #(fastHands 'fastHands' 'perfectFastHands' 'Weapon Talents!B8:D8') #(inSync 'inSync' 'perfectInSync' 'Weapon Talents!B22:D22') #(optimist 'perfectOptimist.dicerosSpecial' 'perfectOptimist.dicerosSpecial' 'Weapons Named + Exotics!E99') #(preservation 'perfectPreservation.p320XCompact' 'perfectPreservation.p320XCompact' 'Weapons Named + Exotics!E95'))
+	rule := #(#(optimist 'optimist' 'perfectOptimist' 'Weapon Talents!B5:D5') #(ranger 'ranger' 'perfectRanger' 'Weapon Talents!B13:D13') #(preservation 'preservation' 'perfectPreservation' 'Weapon Talents!B4:D4') #(fastHands 'fastHands' 'perfectFastHands' 'Weapon Talents!B8:D8') #(inSync 'inSync' 'perfectInSync' 'Weapon Talents!B22:D22') #(optimist 'perfectOptimist.dicerosSpecial' 'perfectOptimist.dicerosSpecial' 'Weapons Named + Exotics!E99') #(preservation 'perfectPreservation.p320XCompact' 'perfectPreservation.p320XCompact' 'Weapons Named + Exotics!E95') #(unwavering 'perfectUnwavering.sharpshooter93r' 'perfectUnwavering.sharpshooter93r' 'Weapons Named + Exotics!E90') #(sadist 'perfectSadist.survivalistD50' 'perfectSadist.survivalistD50' 'Weapons Named + Exotics!E91') #(spike 'perfectSpike.maxim9' 'perfectSpike.maxim9' 'Weapons Named + Exotics!E94') #(primerRounds 'primerRounds.firestarter' 'primerRounds.firestarter' 'Weapons Named + Exotics!E60'))
 			detect: [ :spec | aTalent id = spec second or: [ aTalent id = spec third ] ]
 			ifNone: [ self error: 'Unsupported weapon talent' ].
 	weaponIdentifier := itemId copy.
@@ -78,17 +103,41 @@ CIWeaponTalentEncounter >> initializeWeapon: itemId talent: aTalent [
 	parameters := aTalent parameters.
 	parameters at: #evidence put: rule fourth.
 	criticalStacks := 0.
+	sadistKills := 0.
+	mechanic = #unwavering
+		ifTrue: [ self useUnwaveringSwapState: CIUnwaveringSwapState new ].
 	^ self
 ]
 
 { #category : 'combat' }
 CIWeaponTalentEncounter >> recordEnemyHitFrom: itemId critical: critical at: seconds [
+	^ self
+		recordEnemyHitFrom: itemId
+		critical: critical
+		headshot: false
+		at: seconds
+]
+
+{ #category : 'combat' }
+CIWeaponTalentEncounter >> recordEnemyHitFrom: itemId critical: critical headshot: headshot at: seconds [
 	self advanceTo: seconds.
 	itemId = weaponIdentifier ifFalse: [ ^ self ].
 	(mechanic = #fastHands and: [ critical ])
 		ifTrue: [ criticalStacks := criticalStacks + 1 min: (parameters at: #maxStacks) ].
 	mechanic = #inSync
+		ifTrue: [ skillDamageUntil := seconds + (parameters at: #durationSeconds) ].
+	(mechanic = #spike and: [ headshot ])
 		ifTrue: [ skillDamageUntil := seconds + (parameters at: #durationSeconds) ]
+]
+
+{ #category : 'combat' }
+CIWeaponTalentEncounter >> recordEnemyKillFrom: itemId at: seconds [
+	self advanceTo: seconds.
+	itemId = weaponIdentifier ifFalse: [ ^ self ].
+	mechanic = #sadist
+		ifTrue: [ sadistKills := sadistKills + 1 min: (parameters at: #killThreshold) ].
+	unwaveringSwapState
+		ifNotNil: [ unwaveringSwapState recordKillFrom: itemId at: seconds ]
 ]
 
 { #category : 'combat' }
@@ -98,10 +147,34 @@ CIWeaponTalentEncounter >> recordGadgetUseOrDamageAt: seconds [
 		ifTrue: [ weaponDamageUntil := seconds + (parameters at: #durationSeconds) ]
 ]
 
+{ #category : 'combat' }
+CIWeaponTalentEncounter >> recordWeaponSwapFrom: previous to: next at: seconds [
+	self advanceTo: seconds.
+	unwaveringSwapState
+		ifNotNil: [ unwaveringSwapState
+				recordSwapFrom: previous
+				to: next
+				at: seconds ]
+]
+
 { #category : 'accessing' }
 CIWeaponTalentEncounter >> reloadSpeedBonus [
 	mechanic = #fastHands ifFalse: [ ^ 0 ].
 	^ criticalStacks * (parameters at: #reloadSpeedPerCriticalHit)
+]
+
+{ #category : 'initialization' }
+CIWeaponTalentEncounter >> useUnwaveringSwapState: state [
+	mechanic = #unwavering
+		ifFalse: [ self error: 'This talent does not use Unwavering swap state' ].
+	unwaveringSwapState := state.
+	state registerWeapon: weaponIdentifier parameters: parameters
+]
+
+{ #category : 'combat' }
+CIWeaponTalentEncounter >> weaponDamageBonusAgainstBleeding: bleeding [
+	(mechanic = #sadist and: [ bleeding ]) ifFalse: [ ^ 0 ].
+	^ parameters at: #damageAgainstBleeding
 ]
 
 { #category : 'combat' }
@@ -125,4 +198,12 @@ CIWeaponTalentEncounter >> weaponDamageMultiplierAtDistance: metres [
 		ifFalse: [ self error: 'Invalid target distance' ].
 	intervals := (metres / (parameters at: #distanceStepMetres)) floor.
 	^ 1 + (intervals * (parameters at: #damageAmplificationPerStep))
+]
+
+{ #category : 'combat' }
+CIWeaponTalentEncounter >> weaponHandlingBonusAt: seconds [
+	self advanceTo: seconds.
+	^ unwaveringSwapState
+		ifNil: [ 0 ]
+		ifNotNil: [ unwaveringSwapState handlingBonusFor: weaponIdentifier at: seconds ]
 ]

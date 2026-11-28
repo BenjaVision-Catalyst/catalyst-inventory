@@ -1211,6 +1211,27 @@ CIThatGameLaunchInventoryTest >> testRoundAfterRoundQualifiesAfterTwentySecondsA
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSadistArmsOneBleedOnTheNextHitFromTheSameWeapon [
+	| catalog encounter |
+	catalog := CIGameItemTypes buildCatalog.
+	encounter := CIWeaponTalentEncounter
+			weapon: 'd50'
+			talent: (catalog talentAt: 'perfectSadist.survivalistD50').
+	self assert: (encounter weaponDamageBonusAgainstBleeding: true) equals: 0.25.
+	self assert: (encounter weaponDamageBonusAgainstBleeding: false) equals: 0.
+	encounter recordEnemyKillFrom: 'd50' at: 0.
+	encounter recordEnemyKillFrom: 'd50' at: 1.
+	encounter recordEnemyKillFrom: 'other' at: 2.
+	self assert: (encounter consumeStatusOnEnemyHitFrom: 'd50' at: 2) isNil.
+	encounter recordEnemyKillFrom: 'd50' at: 3.
+	self assert: (encounter consumeStatusOnEnemyHitFrom: 'other' at: 4) isNil.
+	self
+		assert: (encounter consumeStatusOnEnemyHitFrom: 'd50' at: 4)
+		equals: #bleed.
+	self assert: (encounter consumeStatusOnEnemyHitFrom: 'd50' at: 5) isNil
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testSavedSpecializationChangesGadgetTierAndSurvivesRestart [
 	| owner catalog gadget loadout stats graph |
 	self startInventory.
@@ -2076,6 +2097,40 @@ CIThatGameLaunchInventoryTest >> testSpecializationsPreserveWorkbookPerksAndVali
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSpikeHeadshotsAndPrimerRoundsUseWorkbookMagnitudesAndDurations [
+	| catalog spike primer reduction |
+	catalog := CIGameItemTypes buildCatalog.
+	spike := CIWeaponTalentEncounter
+			weapon: 'maxim'
+			talent: (catalog talentAt: 'perfectSpike.maxim9').
+	spike
+		recordEnemyHitFrom: 'maxim'
+		critical: true
+		at: 0.
+	spike
+		recordEnemyHitFrom: 'other'
+		critical: false
+		headshot: true
+		at: 1.
+	self assert: ((spike damageBonusesAt: 1) at: #skillDamage) equals: 0.
+	spike
+		recordEnemyHitFrom: 'maxim'
+		critical: false
+		headshot: true
+		at: 3.
+	self assert: ((spike damageBonusesAt: 17.9) at: #skillDamage) equals: 0.25.
+	self assert: ((spike damageBonusesAt: 18) at: #skillDamage) equals: 0.
+	primer := CIWeaponTalentEncounter
+			weapon: 'firestarter'
+			talent: (catalog talentAt: 'primerRounds.firestarter').
+	self assert: (primer burnResistanceReductionOnEnemyDamageFrom: 'other') isNil.
+	reduction := primer burnResistanceReductionOnEnemyDamageFrom: 'firestarter'.
+	self assert: reduction stat equals: #burnResistance.
+	self assert: reduction fraction equals: 0.50.
+	self assert: reduction durationSeconds equals: 5
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testTacticalLinksUseSelectedPerksAndTargetConditions [
 	| catalog encounter sharpshooter survivalist demolitionist firewall inactive |
 	catalog := CIGameItemTypes buildCatalog.
@@ -2148,6 +2203,43 @@ CIThatGameLaunchInventoryTest >> testTacticalLinksUseSelectedPerksAndTargetCondi
 	self
 		should: [ firewall damageBonusForAlly: true targetDistanceFromOwner: -1 ]
 		raise: Error
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testUnwaveringRefreshAndSwapLockoutApplyAcrossWeapons [
+	| catalog talent shared first second |
+	catalog := CIGameItemTypes buildCatalog.
+	talent := catalog talentAt: 'perfectUnwavering.sharpshooter93r'.
+	first := CIWeaponTalentEncounter weapon: 'first93r' talent: talent.
+	second := CIWeaponTalentEncounter weapon: 'second93r' talent: talent.
+	shared := CIUnwaveringSwapState new.
+	first useUnwaveringSwapState: shared.
+	second useUnwaveringSwapState: shared.
+	first
+		recordWeaponSwapFrom: 'ordinary'
+		to: 'first93r'
+		at: 0.
+	self assert: (first weaponHandlingBonusAt: 0) equals: 4.
+	first recordEnemyKillFrom: 'second93r' at: 3.
+	first recordEnemyKillFrom: 'first93r' at: 4.
+	self assert: (first weaponHandlingBonusAt: 5) equals: 4.
+	self assert: (first weaponHandlingBonusAt: 9) equals: 0.
+	first
+		recordWeaponSwapFrom: 'first93r'
+		to: 'second93r'
+		at: 10.
+	self assert: (first weaponHandlingBonusAt: 10) equals: 0.
+	self assert: (second weaponHandlingBonusAt: 10) equals: 0.
+	second
+		recordWeaponSwapFrom: 'second93r'
+		to: 'ordinary'
+		at: 11.
+	second
+		recordWeaponSwapFrom: 'ordinary'
+		to: 'second93r'
+		at: 16.
+	self assert: (second weaponHandlingBonusAt: 16) equals: 4.
+	self assert: (first weaponHandlingBonusAt: 16) equals: 0
 ]
 
 { #category : 'tests' }
