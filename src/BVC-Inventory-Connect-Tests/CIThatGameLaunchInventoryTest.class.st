@@ -67,6 +67,77 @@ CIThatGameLaunchInventoryTest >> tearDown [
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testCapacitorAndLibertyHitStacksUseWorkbookParameters [
+	| catalog capacitor liberty |
+	catalog := CIGameItemTypes buildCatalog.
+	capacitor := CIExoticWeaponEncounter
+			weapon: 'capacitor'
+			talent: (catalog talentAt: 'capacitance')
+			magazineCapacity: 41.
+	50 timesRepeat: [ capacitor recordEnemyHitFrom: 'capacitor' at: 0 ].
+	self assert: (capacitor capacitorSkillDamageBonusAt: 5) closeTo: 0.60.
+	self assert: (capacitor capacitorSkillDamageBonusAt: 6) closeTo: 0.585.
+	self assert: (capacitor capacitorSkillDamageBonusAt: 7) closeTo: 0.57.
+	self assert: (capacitor capacitorSkillDamageBonusAt: 7) closeTo: 0.57.
+	capacitor recordEnemyHitFrom: 'capacitor' at: 7.
+	self assert: (capacitor capacitorSkillDamageBonusAt: 12) closeTo: 0.585.
+	self assert: (capacitor capacitorWeaponDamageBonusAtSkillTier: 6) closeTo: 0.45.
+	liberty := CIExoticWeaponEncounter
+			weapon: 'liberty'
+			talent: (catalog talentAt: 'libertyOrDeath')
+			magazineCapacity: 8.
+	35 timesRepeat: [ liberty recordEnemyHitFrom: 'liberty' at: 0 ].
+	self assert: liberty libertyWeaponDamageBonus closeTo: 0.60.
+	self assert: (liberty consumeLibertyStacksOnHeadshotFrom: 'other') equals: 0.
+	self
+		assert: (liberty consumeLibertyStacksOnHeadshotFrom: 'liberty')
+		closeTo: 0.90.
+	self assert: liberty libertyWeaponDamageBonus equals: 0
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testChatterboxReloadAndRefillUseEffectiveMagazine [
+	| catalog owner row encounter distances |
+	self startInventory.
+	catalog := CIGameItemTypes buildCatalog.
+	owner := 'chatterbox-combat'.
+	row := CIItemGenerator new
+			generate: 'chatterbox'
+			type: 'weapon.launch.chatterbox'
+			values: (Dictionary new
+					at: 'weaponDamage' put: 0.1;
+					yourself)
+			from: catalog
+			using: [ 0 ].
+	row equippedSlotIdentifier: 'RangedWeapon'.
+	service replaceReadRows: {row} forOwner: owner.
+	encounter := service
+			exoticWeaponEncounterFor: 'chatterbox'
+			forVerifiedUser: owner.
+	distances := {'a' -> 4.
+			'b' -> 15.
+			'c' -> 16} asDictionary.
+	self
+		deny: (encounter recordReloadFrom: 'another' enemiesAtDistances: distances).
+	self assert: encounter rateOfFireBonus equals: 0.
+	self
+		assert: (encounter recordReloadFrom: 'chatterbox' enemiesAtDistances: distances).
+	self assert: encounter rateOfFireBonus equals: 0.50.
+	self
+		assert: (encounter magazineRefillOnKillFrom: 'chatterbox' remaining: 8)
+		equals: 30.
+	self
+		assert: (encounter magazineRefillOnKillFrom: 'chatterbox' remaining: 55)
+		equals: 5.
+	self assert: encounter rateOfFireBonus equals: 0.50.
+	1 to: 8 do: [ :index | distances at: index put: 3 ].
+	encounter recordReloadFrom: 'chatterbox' enemiesAtDistances: distances.
+	self assert: encounter rateOfFireBonus equals: 1.25.
+	encounter recordMagazineEndedFrom: 'chatterbox'.
+	self assert: encounter rateOfFireBonus equals: 0
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testClassifiedUpgradesFollowEquippedSlots [
 	| catalog evaluator rows chest backup red jupiter |
 	catalog := CIGameItemTypes buildCatalog.

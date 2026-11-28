@@ -73,6 +73,32 @@ CIInventoryService >> equipSavedSet: setIdentifier forVerifiedUser: identity [
 ]
 
 { #category : 'reading' }
+CIInventoryService >> exoticWeaponEncounterFor: weaponId forVerifiedUser: identity [
+	^ savedSetsLock
+		critical: [ | rows weapon talent type mods capacity |
+			rows := readStore allRowsForOwner: identity.
+			weapon := rows
+					detect: [ :row | row itemIdentifier = weaponId ]
+					ifNone: [ self error: 'Weapon is not owned' ].
+			((weapon isKindOf: CIInventoryWeaponToolSummary)
+				and: [ weapon equippedSlotIdentifier notNil ])
+				ifFalse: [ self error: 'An exotic weapon must be equipped' ].
+			talent := weapon talentIdentifier
+					ifNil: [ self error: 'The equipped weapon has no talent' ]
+					ifNotNil: [ :id | itemTypeCatalog talentAt: id ].
+			type := itemTypeCatalog typeAt: weapon definitionIdentifier.
+			mods := CIEquipmentModEvaluator new
+					evaluateEquipment: {weapon}
+					owned: rows
+					catalogue: itemTypeCatalog modCatalogue.
+			capacity := mods magazineCapacityFor: weapon base: type baseMagazineCapacity.
+			CIExoticWeaponEncounter
+				weapon: weapon itemIdentifier
+				talent: talent
+				magazineCapacity: capacity ]
+]
+
+{ #category : 'reading' }
 CIInventoryService >> familyEvaluationForVerifiedUser: identity mode: mode [
 	^ savedSetsLock
 		critical: [ CILoadoutFamilyEvaluator new
