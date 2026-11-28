@@ -21,6 +21,32 @@ CIInventoryReadStore >> allRowsForOwner: identity [
 	^ (rowsByOwner at: identity ifAbsent: [ #() ]) copy
 ]
 
+{ #category : 'specializations' }
+CIInventoryReadStore >> claimSpecializationGadgetForPerk: perkIdentifier from: catalog forOwner: identity [
+	| selection perk typeIdentifier type owned |
+	selection := self specializationForOwner: identity.
+	selection
+		ifNil: [ self error: 'Select the gadget reward perk before claiming it' ].
+	perk := (selection resolveIn: catalog) selectedPerks
+			detect: [ :each | each id = perkIdentifier ]
+			ifNone: [ self error: 'Select the gadget reward perk before claiming it' ].
+	typeIdentifier := perk rewardIdentifier.
+	type := typeIdentifier
+			ifNotNil: [ catalog typeAt: typeIdentifier ifAbsent: [ nil ] ].
+	(type respondsTo: #workbookVariantDefinition)
+		ifFalse: [ self error: 'This perk does not grant a workbook gadget' ].
+	owned := (self allRowsForOwner: identity)
+			detect: [ :row | row definitionIdentifier = typeIdentifier ]
+			ifNone: [ nil ].
+	owned ifNotNil: [ ^ owned copy ].
+	^ self
+		grantItem: 'specialization.reward.' , typeIdentifier
+		type: typeIdentifier
+		values: Dictionary new
+		from: catalog
+		forOwner: identity
+]
+
 { #category : 'private' }
 CIInventoryReadStore >> copyRow: row inSlot: slot outfit: isOutfit [
 	| candidate |

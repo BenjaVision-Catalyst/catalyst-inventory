@@ -35,6 +35,15 @@ CIInventoryService >> applySavedSet: savedSet forOwner: identity outfit: isOutfi
 	^ reply
 ]
 
+{ #category : 'specializations' }
+CIInventoryService >> claimSpecializationGadgetForPerk: perkIdentifier forVerifiedUser: identity [
+	^ savedSetsLock
+		critical: [ readStore
+				claimSpecializationGadgetForPerk: perkIdentifier
+				from: itemTypeCatalog
+				forOwner: identity ]
+]
+
 { #category : 'reading' }
 CIInventoryService >> classifiedEncounterForVerifiedUser: identity mode: mode [
 	^ CIClassifiedEncounter

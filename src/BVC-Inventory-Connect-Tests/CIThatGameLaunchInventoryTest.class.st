@@ -91,6 +91,27 @@ CIThatGameLaunchInventoryTest >> tearDown [
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testAllWorkbookSpecializationGadgetRewardsResolveToTheirRegisteredItemTypes [
+	| catalog store owner rows |
+	catalog := CIGameItemTypes buildCatalog.
+	store := CIInventoryReadStore new.
+	owner := 'all-specialization-gadget-rewards'.
+	rows := #(#('Sharpshooter' 'sharpshooter.tactician' 'gadget.workbook.drone.tactician') #('Survivalist' 'survivalist.mender' 'gadget.workbook.seeker.mender') #('Technician' 'technician.artificer' 'gadget.workbook.hive.artificer') #('Gunner' 'gunner.banshee' 'gadget.workbook.pulse.banshee') #('Demolitionist' 'demolitionist.artilleryturret' 'gadget.workbook.turret.artillery') #('Firewall' 'firewall.strikershield' 'gadget.workbook.shield.striker')).
+	rows
+		do: [ :row | 
+			| item |
+			store
+				specialization: (CISpecializationSelection specialization: row first perks: {row second})
+				forOwner: owner.
+			item := store
+					claimSpecializationGadgetForPerk: row second
+					from: catalog
+					forOwner: owner.
+			self assert: item definitionIdentifier equals: row third ].
+	self assert: (store allRowsForOwner: owner) size equals: 6
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testArmorKitOwnerEffectsPreserveWorkbookValuesAndMissingValues [
 	| catalog cases |
 	catalog := CIGameItemTypes buildCatalog.
@@ -1392,6 +1413,51 @@ CIThatGameLaunchInventoryTest >> testSelectedGadgetUpgradesReachInventoryInspect
 		assert: ((service workbookGadgetStatsFor: 'tactician' forVerifiedUser: owner)
 				at: 'Duration')
 		equals: 300
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSelectedSpecializationGadgetsCanBeClaimedOnceAndSurviveRestart [
+	| owner perk item retry |
+	self startInventory.
+	owner := 'specialization-gadget-claim-owner'.
+	perk := 'sharpshooter.tactician'.
+	self
+		should: [ service claimSpecializationGadgetForPerk: perk forVerifiedUser: owner ]
+		raise: Error.
+	service
+		selectSpecialization: 'Sharpshooter'
+		perks: #('sharpshooter.tactician' 'sharpshooter.graphenebattery')
+		forVerifiedUser: owner.
+	self
+		should: [ service claimSpecializationGadgetForPerk: perk forVerifiedUser: 'other-owner' ]
+		raise: Error.
+	self
+		should: [ service
+				claimSpecializationGadgetForPerk: 'sharpshooter.graphenebattery'
+				forVerifiedUser: owner ]
+		raise: Error.
+	item := service claimSpecializationGadgetForPerk: perk forVerifiedUser: owner.
+	self
+		assert: item definitionIdentifier
+		equals: 'gadget.workbook.drone.tactician'.
+	self assert: item equippedSlotIdentifier isNil.
+	self
+		assert: ((service workbookGadgetStatsFor: item itemIdentifier forVerifiedUser: owner)
+				at: 'Duration')
+		closeTo: 345.
+	retry := service claimSpecializationGadgetForPerk: perk forVerifiedUser: owner.
+	self assert: retry itemIdentifier equals: item itemIdentifier.
+	service stop.
+	service := nil.
+	self startInventory.
+	retry := service claimSpecializationGadgetForPerk: perk forVerifiedUser: owner.
+	self assert: retry itemIdentifier equals: item itemIdentifier.
+	self
+		assert: (service
+				rowsForVerifiedUser: owner
+				offset: 0
+				limit: 32) size
+		equals: 1
 ]
 
 { #category : 'tests' }
