@@ -6,7 +6,8 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'slotIdentifier',
-		'equippedModIdentifier'
+		'equippedModIdentifier',
+		'locked'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -15,6 +16,11 @@ Class {
 { #category : 'instance creation' }
 CIInventoryModSlotSummary class >> slot: aSlotIdentifier equippedMod: aModIdentifier [
 	^ self new initializeSlot: aSlotIdentifier equippedMod: aModIdentifier
+]
+
+{ #category : 'instance creation' }
+CIInventoryModSlotSummary class >> slot: identifier factoryMod: modId [
+	^ (self slot: identifier equippedMod: modId) lock
 ]
 
 { #category : 'accessing' }
@@ -31,6 +37,17 @@ CIInventoryModSlotSummary >> initializeSlot: aSlotIdentifier equippedMod: aModId
 		ifFalse: [ self error: 'Invalid equipped mod identifier' ].
 	slotIdentifier := aSlotIdentifier copy.
 	equippedModIdentifier := aModIdentifier copy.
+	^ self
+]
+
+{ #category : 'accessing' }
+CIInventoryModSlotSummary >> isLocked [
+	^ locked == true
+]
+
+{ #category : 'initialization' }
+CIInventoryModSlotSummary >> lock [
+	locked := true.
 	^ self
 ]
 

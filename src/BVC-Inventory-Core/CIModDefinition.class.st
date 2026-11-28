@@ -11,7 +11,9 @@ Class {
 		'maximum',
 		'tierCaps',
 		'evidence',
-		'acquisition'
+		'acquisition',
+		'workbookMount',
+		'modelRestriction'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -60,7 +62,7 @@ CIModDefinition >> id [
 
 { #category : 'initialization' }
 CIModDefinition >> initializeId: identifier name: label kind: mode interfaces: mounts models: allowedModels effects: modifiers maximum: max tierCaps: maxima evidence: reference acquisition: source [
-	(#(weaponAttachment gearMod) includes: mode)
+	(#(weaponAttachment gearMod factoryAttachment) includes: mode)
 		ifFalse: [ self error: 'Unknown mod kind' ].
 	id := identifier copy.
 	name := label copy.
@@ -91,6 +93,11 @@ CIModDefinition >> maximumAtTier: tier [
 ]
 
 { #category : 'accessing' }
+CIModDefinition >> modelRestriction [
+	^ modelRestriction ifNotNil: #copy
+]
+
+{ #category : 'accessing' }
 CIModDefinition >> name [
 	^ name copy
 ]
@@ -106,4 +113,15 @@ CIModDefinition >> validateRoll: value tier: tier [
 	limit := (self maximumAtTier: tier) ifNil: [ maximum ].
 	(limit notNil and: [ value > limit ])
 		ifTrue: [ self error: 'Gear mod exceeds the documented maximum' ]
+]
+
+{ #category : 'accessing' }
+CIModDefinition >> workbookMount [
+	^ workbookMount ifNotNil: #copy
+]
+
+{ #category : 'initialization' }
+CIModDefinition >> workbookMount: mountDescription modelRestriction: restrictionDescription [
+	workbookMount := mountDescription ifNotEmpty: #copy.
+	modelRestriction := restrictionDescription ifNotNil: #copy
 ]

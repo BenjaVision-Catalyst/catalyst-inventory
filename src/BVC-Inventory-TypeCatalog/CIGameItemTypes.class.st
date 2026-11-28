@@ -157,42 +157,7 @@ CIGameItemTypes class >> registerLootPool: identifier name: sourceName kind: kin
 CIGameItemTypes class >> registerModsIn: catalog [
 	| mods |
 	mods := catalog modCatalogue.
-	mods
-		register: (CIModDefinition
-				id: 'attachment.lowReflexSight'
-				name: 'Low Reflex Sight'
-				kind: #weaponAttachment
-				interfaces: #(shortOpticsRail microOpticsRail)
-				models: #()
-				effects: #(#(headshotDamage percent 0.15) #(optimalRange percent -0.25))
-				maximum: nil
-				tierCaps: Dictionary new
-				evidence: 'Weapon Mods!B16:F16'
-				acquisition: 'Foggy Bottom side mission: Columbia Plaza Broadcast').
-	mods
-		register: (CIModDefinition
-				id: 'attachment.ruggedMiniReflexSight'
-				name: 'Rugged Mini Reflex Sight'
-				kind: #weaponAttachment
-				interfaces: #(longOpticsRail shortOpticsRail microOpticsRail)
-				models: #()
-				effects: #(#(criticalHitChance percent 0.05))
-				maximum: nil
-				tierCaps: Dictionary new
-				evidence: 'Weapon Mods!B15:F15'
-				acquisition: 'Main Pool').
-	mods
-		register: (CIModDefinition
-				id: 'gearMod.criticalHitChance'
-				name: 'Critical Hit Chance'
-				kind: #gearMod
-				interfaces: #(gearMod)
-				models: #()
-				effects: #(#(criticalHitChance percent))
-				maximum: 0.06
-				tierCaps: Dictionary new
-				evidence: 'Attribute Info!A38:E38'
-				acquisition: nil).
+	CIWorkbookModData registerIn: mods.
 	CIThatGameLaunchCatalog gearFamilies
 		do: [ :family | 
 			(CIThatGameLaunchCatalog gearSlots
@@ -286,6 +251,21 @@ CIGameItemTypes class >> talentDefinitions [
 { #category : 'talents' }
 CIGameItemTypes class >> talentPoolProfiles [
 	^ #(#(assaultRifle 'optimist' 'fastHands' 'preservation' 'inSync') #(smg 'optimist' 'fastHands' 'preservation') #(lmg 'optimist' 'fastHands' 'preservation') #(shotgun 'optimist' 'preservation' 'inSync') #(rifle 'optimist' 'ranger' 'preservation' 'inSync') #(marksmanRifle 'ranger' 'preservation' 'inSync') #(pistol 'optimist' 'preservation' 'inSync') #(vest 'obliterate' 'unbreakable' 'overwatch') #(backpack 'composure' 'combinedArms' 'creepingDeath') #(capacitor 'capacitance') #(chatterbox 'incessantChatter') #(bluescreen 'disruptorRounds') #(scorpio 'septicShock') #(doctorHome 'doctorHome') #(nemesis 'electromagneticAccelerator') #(liberty 'libertyOrDeath') #(redLotusVest 'pressTheAdvantage') #(redLotusBackpack 'riskManagement') #(jupiterVest 'proliferation') #(jupiterBackpack 'symptomAggravator'))
+]
+
+{ #category : 'catalog' }
+CIGameItemTypes class >> traversalPack [
+	^ (CIGearType
+		id: 'gear.traversal.pack'
+		name: 'Traversal Pack'
+		slot: 'Backpack'
+		attributes: #(#('armor' 'Armor' 'defensive' 'signedNumber' 60 100) #('hazard' 'Hazard resistance' 'defensive' 'signedPercent' 0.04 0.12) #('reload' 'Reload speed' 'offensive' 'signedPercent' 0.03 0.10))
+		sockets: #('defensive' 'utility'))
+		inspectorIdentity: {'inspectorManufacturer' -> 'Crosswind Systems'.
+				'inspectorArmour' -> 40} asDictionary;
+		yourself
+]
+rvation' 'inSync') #(marksmanRifle 'ranger' 'preservation' 'inSync') #(pistol 'optimist' 'preservation' 'inSync') #(vest 'obliterate' 'unbreakable' 'overwatch') #(backpack 'composure' 'combinedArms' 'creepingDeath') #(capacitor 'capacitance') #(chatterbox 'incessantChatter') #(bluescreen 'disruptorRounds') #(scorpio 'septicShock') #(doctorHome 'doctorHome') #(nemesis 'electromagneticAccelerator') #(liberty 'libertyOrDeath') #(redLotusVest 'pressTheAdvantage') #(redLotusBackpack 'riskManagement') #(jupiterVest 'proliferation') #(jupiterBackpack 'symptomAggravator'))
 ]
 
 { #category : 'catalog' }

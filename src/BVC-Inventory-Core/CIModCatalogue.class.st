@@ -14,6 +14,7 @@ CIModCatalogue >> compatibleModsFor: itemDefinitionId socket: socketId [
 	| sockets socket |
 	sockets := socketsByItem at: itemDefinitionId ifAbsent: [ ^ #() ].
 	socket := sockets at: socketId ifAbsent: [ ^ #() ].
+	socket fixedModIdentifier ifNotNil: [ ^ #() ].
 	^ ((definitions values
 		select: [ :mod | mod fitsSocket: socket on: itemDefinitionId ])
 		sorted: [ :a :b | a id < b id ]) asArray
