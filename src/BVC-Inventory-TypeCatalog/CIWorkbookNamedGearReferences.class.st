@@ -57,5 +57,7 @@ CIWorkbookNamedGearReferences class >> registerIn: catalog [
 	self exoticPart2
 		do: [ :spec | catalog registerNamedGearReference: (CINamedGearReference fromWorkbookRow: spec) ].
 	(catalog namedGearReferenceAt: 'BTSU Datagloves')
-		gadgetTalentRule: CITransferenceOverclockRule new
+		gadgetTalentRule: CITransferenceOverclockRule new.
+	(catalog namedGearReferenceAt: 'Birdie''s Quick Fix Pack')
+		gadgetTalentRule: CICombatMedicRule new
 ]

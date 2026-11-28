@@ -445,6 +445,57 @@ CIThatGameLaunchInventoryTest >> testClassifiedUpgradesFollowEquippedSlots [
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testCombatMedicResolvesReviveProtectionAndOvercharge [
+	| reference rule effects |
+	reference := CIGameItemTypes buildCatalog
+			namedGearReferenceAt: 'Birdie''s Quick Fix Pack'.
+	rule := reference gadgetTalentRule.
+	self assert: (rule evidence includesSubstring: 'Gear Named + Exotics!F81:G81').
+	self assert: rule manualReviveSpeedBonus equals: 0.80.
+	self assert: rule weakenedDurationReduction equals: 0.50.
+	self assert: rule hiveEfficiencyBonus equals: 0.45.
+	self assert: (rule damageResistanceDuringReviveFor: #reviver) equals: 0.50.
+	self assert: (rule damageResistanceDuringReviveFor: #revivedAgent) equals: 0.50.
+	self assert: (rule damageResistanceDuringReviveFor: #bystander) equals: 0.
+	self
+		assert: (rule
+				damageResistanceAfterSuccessfulRevive: #hive
+				for: #revivedAgent
+				elapsedSeconds: 4.99)
+		equals: 0.50.
+	self
+		assert: (rule
+				damageResistanceAfterSuccessfulRevive: #hive
+				for: #revivedAgent
+				elapsedSeconds: 5)
+		equals: 0.
+	self
+		assert: (rule
+				damageResistanceAfterSuccessfulRevive: #manual
+				for: #reviver
+				elapsedSeconds: 9.99)
+		equals: 0.50.
+	self
+		assert: (rule
+				damageResistanceAfterSuccessfulRevive: #manual
+				for: #reviver
+				elapsedSeconds: 10)
+		equals: 0.
+	self
+		assert: (rule
+				damageResistanceAfterSuccessfulRevive: nil
+				for: #reviver
+				elapsedSeconds: 0) isNil.
+	effects := rule effectsOnSuccessfulReviveAtGadgetTier: 5.
+	self assert: (effects at: #gadgetTierBonus) equals: 1.
+	self assert: (effects at: #gadgetTierBonusSeconds) equals: 5.
+	self
+		assert: ((rule effectsOnSuccessfulReviveAtGadgetTier: 6) at: #overchargeSeconds)
+		equals: 15.
+	self assert: (rule effectsOnSuccessfulReviveAtGadgetTier: #overcharge) isNil
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testDoctorHomeMarksExpireAndNemesisKeepsItsDocumentedBounds [
 	| catalog doctor nemesis pickup |
 	catalog := CIGameItemTypes buildCatalog.
