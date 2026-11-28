@@ -506,6 +506,28 @@ CIThatGameLaunchInventoryTest >> testEquippedCreepingDeathSpreadsWithCooldown [
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testFullSpecializationSelectionsFitQualificationReplyBudget [
+	| owner catalog shared picks profile reply |
+	self startInventory.
+	owner := 'specialization-profile-budget-owner'.
+	catalog := CIGameItemTypes buildCatalog.
+	shared := (catalog specializationNamed: 'Universal') perks.
+	(catalog specializations reject: [ :each | each name = 'Universal' ])
+		do: [ :definition | 
+			picks := (definition perks , shared collect: #id)
+					reject: [ :id | id = 'technician.enhanceddiagnostics' ].
+			service
+				selectSpecialization: definition name
+				perks: picks
+				forVerifiedUser: owner.
+			profile := service specializationProfileForVerifiedUser: owner.
+			self assert: (profile at: 'selectedPerks') size equals: picks size.
+			reply := CIInventoryProfileGraph encodeReply: profile.
+			self assert: reply notNil.
+			self assert: reply size <= 4080 ]
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testFuturePerfectionUsesItsOwnStackCapAndDuration [
 	| catalog scanner encounter |
 	catalog := CIGameItemTypes buildCatalog.
@@ -1995,6 +2017,68 @@ CIThatGameLaunchInventoryTest >> testSpecializationPassivesHonorTargetKindKillAn
 		deny: (demolitionist crisisResponseRefillsMainWeaponMagazinesFromArmor: 5 to: 1).
 	self
 		deny: (inactive crisisResponseRefillsMainWeaponMagazinesFromArmor: 1 to: 0)
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testSpecializationQualificationReplyShowsOnlyVerifiedOwnersRewardState [
+	| owner other gadget request gateway binding previous response profile perks technician |
+	self startInventory.
+	owner := 'specialization-profile-owner'.
+	other := 'another-profile-owner'.
+	service
+		selectSpecialization: 'Technician'
+		perks: #('technician.artificer' 'technician.empgrenade' 'technician.amped')
+		forVerifiedUser: owner.
+	gadget := service
+			claimSpecializationGadgetForPerk: 'technician.artificer'
+			forVerifiedUser: owner.
+	request := CCQuicRequest new
+			operation: 109;
+			body: #[];
+			yourself.
+	gateway := CIInventoryGatewayQualificationApplication new.
+	binding := CIInventoryGatewayQualificationApplication classPool
+			associationAt: #InventoryService.
+	previous := binding value.
+	[ binding value: service.
+	response := (gateway
+			execute: request
+			asVerifiedUser: owner
+			using: nil) response.
+	self assert: response second equals: 0.
+	profile := STONJSON fromString: response first utf8Decoded.
+	self assert: (profile at: 'format') equals: 'inventory.specialization/1'.
+	self assert: (profile at: 'name') equals: 'Technician'.
+	perks := profile at: 'selectedPerks'.
+	self assert: perks size equals: 3.
+	technician := perks
+			detect: [ :perk | (perk at: 'perkIdentifier') = 'technician.artificer' ].
+	self
+		assert: (technician at: 'ownedRewardItemIdentifier')
+		equals: gadget itemIdentifier.
+	self
+		assert: (technician at: 'rewardDefinitionIdentifier')
+		equals: gadget definitionIdentifier.
+	self
+		assert: ((technician at: 'description') includesSubstring: 'micro electro-booster').
+	self assert: (technician at: 'evidence') equals: 'Specializations!G32:H32'.
+	technician := perks
+			detect: [ :perk | (perk at: 'perkIdentifier') = 'technician.empgrenade' ].
+	self deny: (technician includesKey: 'ownedRewardItemIdentifier').
+	response := (gateway
+			execute: request
+			asVerifiedUser: other
+			using: nil) response.
+	profile := STONJSON fromString: response first utf8Decoded.
+	self assert: (profile at: 'name') isNil.
+	self assertEmpty: (profile at: 'selectedPerks').
+	request body: owner utf8Encoded.
+	self
+		assert: (gateway
+				execute: request
+				asVerifiedUser: other
+				using: nil) response second
+		equals: 403 ] ensure: [ binding value: previous ]
 ]
 
 { #category : 'tests' }

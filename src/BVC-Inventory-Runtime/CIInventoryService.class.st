@@ -504,6 +504,47 @@ CIInventoryService >> specializationLoadoutForVerifiedUser: identity [
 	^ savedSetsLock critical: [ self resolvedSpecializationFor: identity ]
 ]
 
+{ #category : 'private' }
+CIInventoryService >> specializationPerkValuesFor: perk ownedByDefinition: ownedByDefinition [
+	| values |
+	values := {'perkIdentifier' -> perk id.
+			'name' -> perk name.
+			'category' -> perk category} asDictionary.
+	perk description
+		ifNotNil: [ :description | values at: 'description' put: description ].
+	perk evidence ifNotNil: [ :source | values at: 'evidence' put: source ].
+	perk rewardIdentifier
+		ifNotNil: [ :typeIdentifier | 
+			values at: 'rewardDefinitionIdentifier' put: typeIdentifier.
+			ownedByDefinition
+				at: typeIdentifier
+				ifPresent: [ :itemIdentifier | values at: 'ownedRewardItemIdentifier' put: itemIdentifier ] ].
+	^ values
+]
+
+{ #category : 'specializations' }
+CIInventoryService >> specializationProfileForVerifiedUser: identity [
+	^ savedSetsLock
+		critical: [ | loadout ownedByDefinition |
+			loadout := self resolvedSpecializationFor: identity.
+			loadout
+				ifNil: [ {'format' -> 'inventory.specialization/1'.
+						'name' -> nil.
+						'selectedPerks' -> #()} asDictionary ]
+				ifNotNil: [ ownedByDefinition := Dictionary new.
+					(readStore allRowsForOwner: identity)
+						do: [ :item | 
+							ownedByDefinition
+								at: item definitionIdentifier
+								ifAbsentPut: [ item itemIdentifier ] ].
+					{'format' -> 'inventory.specialization/1'.
+						'name' -> loadout definition name.
+						'selectedPerks'
+							-> (loadout selectedPerks
+									collect: [ :perk | self specializationPerkValuesFor: perk ownedByDefinition: ownedByDefinition ])}
+						asDictionary ] ]
+]
+
 { #category : 'lifecycle' }
 CIInventoryService >> start [
 	| snapshotPath |

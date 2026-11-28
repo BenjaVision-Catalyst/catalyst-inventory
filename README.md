@@ -60,6 +60,13 @@ one line, and rejects case-insensitive duplicates within the selected Gear
 Sets or Outfits list. The profile reply keeps the set's ID, position, and
 saved slots.
 
+Operation 109 reads the authenticated player's specialization profile in the
+qualification gateway. It accepts an empty request and returns
+`inventory.specialization/1` with the selected specialization and its perks.
+Reward entries include their catalog definition ID and, once owned, the
+player's inventory item ID. The reply uses the same size limit and optional
+ZLIB framing as the inventory profile.
+
 The [family milestone](docs/gear-family-v2.md) adds cumulative two-, three-,
 and four-piece thresholds and a proposed launch roster of manufacturers.
 

@@ -94,7 +94,7 @@ CIInventoryGatewayQualificationApplication class >> qualifyIn: directory [
 			nativeOptionsJson: (STONJSON toString: settings);
 			libraryPath: (directory / 'native-library-path') contents trimBoth;
 			principal: 'qualification-peer';
-			allowedOperations: #(101 102 103 104 105 106 107 108);
+			allowedOperations: #(101 102 103 104 105 106 107 108 109);
 			applicationClass: self;
 			bindings: {CRServiceBindingConfiguration new
 						identifier: #users;
@@ -369,6 +369,8 @@ CIInventoryGatewayQualificationApplication >> authenticationOperation [
 { #category : 'qualification' }
 CIInventoryGatewayQualificationApplication >> execute: request asVerifiedUser: identity using: producer [
 	| rows fields description reply bytes |
+	request operation = 109
+		ifTrue: [ ^ self specializationReplyFor: request body owner: identity ].
 	request operation = 108
 		ifTrue: [ ^ self renameReplyFor: request body owner: identity ].
 	(#(105 106 107) includes: request operation)
@@ -450,6 +452,16 @@ CIInventoryGatewayQualificationApplication >> renameReplyFor: body owner: identi
 			renameSavedSet: identifier utf8Decoded
 			to: name
 			forVerifiedUser: identity.
+	bytes ifNil: [ ^ self replyWith: #[] status: 422 ].
+	^ self replyWith: bytes status: 0
+]
+
+{ #category : 'qualification' }
+CIInventoryGatewayQualificationApplication >> specializationReplyFor: body owner: identity [
+	| bytes |
+	body isEmpty ifFalse: [ ^ self replyWith: #[] status: 403 ].
+	bytes := CIInventoryProfileGraph
+			encodeReply: (InventoryService specializationProfileForVerifiedUser: identity).
 	bytes ifNil: [ ^ self replyWith: #[] status: 422 ].
 	^ self replyWith: bytes status: 0
 ]
