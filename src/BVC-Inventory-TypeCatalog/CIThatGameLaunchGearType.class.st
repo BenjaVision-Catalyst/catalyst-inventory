@@ -15,6 +15,11 @@ CIThatGameLaunchGearType >> familyId: anIdentifier name: aName [
 	familyName := aName
 ]
 
+{ #category : 'accessing' }
+CIThatGameLaunchGearType >> gearFamilyIdentifier [
+	^ familyId copy
+]
+
 { #category : 'spawning' }
 CIThatGameLaunchGearType >> inventoryFamilyMetadata [
 	^ super inventoryFamilyMetadata

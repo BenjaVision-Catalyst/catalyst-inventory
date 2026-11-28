@@ -9,6 +9,24 @@ Class {
 	#package : 'BVC-Inventory-Connect-Tests'
 }
 
+{ #category : 'helpers' }
+CIThatGameLaunchInventoryTest >> gearRowsForFamily: familyId slots: slots catalogue: catalog [
+	^ slots
+		collect: [ :slot | 
+			| identifier spec row |
+			identifier := 'gear.launch.' , familyId , '.' , slot asLowercase.
+			spec := CIThatGameLaunchCatalog spawnSpecs
+					detect: [ :entry | entry key = identifier ].
+			row := CIItemGenerator new
+					generate: identifier
+					type: identifier
+					values: spec value
+					from: catalog
+					using: [ 0 ].
+			row equippedSlotIdentifier: slot.
+			row ]
+]
+
 { #category : 'tests' }
 CIThatGameLaunchInventoryTest >> rowsFor: identity [
 	^ (service
@@ -46,6 +64,84 @@ CIThatGameLaunchInventoryTest >> tearDown [
 	[ service ifNotNil: [ service stop ] ]
 		ensure: [ directory ensureDeleteAll.
 			super tearDown ]
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testClassifiedUpgradesFollowEquippedSlots [
+	| catalog evaluator rows chest backup red jupiter |
+	catalog := CIGameItemTypes buildCatalog.
+	evaluator := CILoadoutFamilyEvaluator new.
+	rows := self
+			gearRowsForFamily: 'redLotusAssault'
+			slots: #('Chest' 'Backpack' 'Mask' 'Gloves' 'KneePads')
+			catalogue: catalog.
+	chest := rows first.
+	backup := rows second.
+	red := [ (evaluator
+			evaluateRows: rows
+			catalogue: catalog
+			mode: #pve)
+			detect: [ :activation | activation family id = 'redLotusAssault' ] ].
+	chest equippedSlotIdentifier: nil.
+	self assert: red value equippedCount equals: 4.
+	self
+		assert: (red value activeTalents collect: #id)
+		equals: #('strikersGamble' 'riskManagement').
+	self assert: (red value effectiveSetParameters at: #maxStacks) equals: 100.
+	self
+		assert: (red value effectiveSetParameters at: #damagePerStack)
+		equals: 0.009.
+	chest equippedSlotIdentifier: 'Chest'.
+	self assert: (red value effectiveSetParameters at: #maxStacks) equals: 200.
+	chest equippedSlotIdentifier: nil.
+	backup equippedSlotIdentifier: nil.
+	self assertEmpty: red value activeTalents.
+	self assert: red value effectiveSetParameters isNil.
+	rows := self
+			gearRowsForFamily: 'jupiterTechnologies'
+			slots: #('Chest' 'Backpack' 'Mask' 'Gloves')
+			catalogue: catalog.
+	jupiter := (evaluator
+			evaluateRows: rows
+			catalogue: catalog
+			mode: #pve)
+			detect: [ :activation | activation family id = 'jupiterTechnologies' ].
+	self
+		assert: (jupiter effectiveSetParameters at: #spreadRadiusMetres)
+		equals: 15.
+	self
+		assert: (jupiter effectiveSetParameters at: #durationRefreshFraction)
+		equals: 0.75.
+	self
+		assert: (jupiter effectiveSetParameters at: #damageAmplificationToStatusTargets)
+		equals: 0.30
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testGearFamilyThresholdsAndModeValues [
+	| catalog evaluator rows pve pvp rook |
+	catalog := CIGameItemTypes buildCatalog.
+	evaluator := CILoadoutFamilyEvaluator new.
+	self assert: catalog gearFamilies size equals: 5.
+	rows := self
+			gearRowsForFamily: 'rookStandard'
+			slots: #('Mask' 'Gloves')
+			catalogue: catalog.
+	rook := [ :mode | 
+		(evaluator
+			evaluateRows: rows
+			catalogue: catalog
+			mode: mode) detect: [ :activation | activation family id = 'rookStandard' ] ].
+	pve := rook value: #pve.
+	pvp := rook value: #pvp.
+	self assert: (pve activeTiers collect: #pieceCount) equals: #(1 2).
+	self
+		assert: (pve modifiers detect: [ :effect | effect stat = #hazardProtection ]) magnitude
+		equals: 0.20.
+	self
+		assert: (pvp modifiers detect: [ :effect | effect stat = #hazardProtection ]) magnitude
+		equals: 0.15.
+	self assert: pvp activeTiers last evidence equals: 'Brandsets!F6,L6'
 ]
 
 { #category : 'tests' }

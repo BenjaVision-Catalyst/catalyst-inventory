@@ -4,7 +4,9 @@ Class {
 	#instVars : [
 		'id',
 		'manufacturer',
-		'tiers'
+		'tiers',
+		'setTalent',
+		'slotUpgrades'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -38,6 +40,23 @@ CIGearFamily >> manufacturer [
 ]
 
 { #category : 'accessing' }
+CIGearFamily >> setTalent [
+	^ setTalent
+]
+
+{ #category : 'initialization' }
+CIGearFamily >> setTalent: aTalent slotUpgrades: upgradesBySlot [
+	setTalent := aTalent.
+	slotUpgrades := upgradesBySlot copy
+]
+
+{ #category : 'accessing' }
 CIGearFamily >> tiers [
 	^ tiers copy
+]
+
+{ #category : 'accessing' }
+CIGearFamily >> upgradeAtSlot: aSlot [
+	slotUpgrades ifNil: [ ^ nil ].
+	^ slotUpgrades at: aSlot ifAbsent: [ nil ]
 ]

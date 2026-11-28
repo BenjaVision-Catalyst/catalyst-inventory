@@ -6,11 +6,23 @@ Class {
 		'talentsById',
 		'talentPoolsByTypeId',
 		'lootCatalogue',
-		'modCatalogue'
+		'modCatalogue',
+		'gearFamiliesById'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
 }
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> gearFamilies [
+	gearFamiliesById ifNil: [ ^ #() ].
+	^ (gearFamiliesById values sorted: [ :a :b | a id < b id ]) asArray
+]
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> gearFamilyAt: anId [
+	^ gearFamiliesById at: anId
+]
 
 { #category : 'initialization' }
 CIItemTypeCatalog >> initialize [
@@ -40,6 +52,16 @@ CIItemTypeCatalog >> register: aType [
 		ifTrue: [ self error: 'Duplicate item type: ' , identifier ].
 	typesById at: identifier put: aType.
 	^ aType
+]
+
+{ #category : 'registration' }
+CIItemTypeCatalog >> registerGearFamily: family [
+	| registry |
+	registry := gearFamiliesById ifNil: [ gearFamiliesById := Dictionary new ].
+	(registry includesKey: family id)
+		ifTrue: [ self error: 'Duplicate gear family' ].
+	registry at: family id put: family.
+	^ family
 ]
 
 { #category : 'registration' }

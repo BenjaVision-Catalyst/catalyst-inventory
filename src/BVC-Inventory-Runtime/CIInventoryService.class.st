@@ -66,6 +66,15 @@ CIInventoryService >> equipSavedSet: setIdentifier forVerifiedUser: identity [
 				sets: sets ]
 ]
 
+{ #category : 'reading' }
+CIInventoryService >> familyEvaluationForVerifiedUser: identity mode: mode [
+	^ savedSetsLock
+		critical: [ CILoadoutFamilyEvaluator new
+				evaluateRows: (readStore allRowsForOwner: identity)
+				catalogue: itemTypeCatalog
+				mode: mode ]
+]
+
 { #category : 'writing' }
 CIInventoryService >> grantGearMod: itemId definition: modId tier: tier value: value forVerifiedUser: identity [
 	^ savedSetsLock

@@ -37,6 +37,7 @@ CIGameItemTypes class >> buildCatalog [
 	CIThatGameLaunchCatalog registerIn: catalog.
 	self registerLootIn: catalog.
 	self registerModsIn: catalog.
+	self registerLaunchGearFamiliesIn: catalog.
 	^ catalog
 ]
 
@@ -76,6 +77,33 @@ CIGameItemTypes class >> fieldKneePads [
 		yourself
 ]
 
+{ #category : 'families' }
+CIGameItemTypes class >> launchFamilyModifiersFrom: specs [
+	^ specs
+		collect: [ :spec | 
+			CIGearModifier
+				stat: spec first
+				operation: #add
+				magnitude: spec second
+				targetClass: nil
+				duration: #whileEquipped ]
+]
+
+{ #category : 'families' }
+CIGameItemTypes class >> launchFamilyTierFrom: spec [
+	| tier |
+	tier := CIGearFamilyTier
+			pieces: spec first
+			modifiers: (self launchFamilyModifiersFrom: spec second)
+			trigger: nil
+			consumeOn: nil
+			limit: 1.
+	tier
+		pvpModifiers: (spec third ifNotNil: [ :values | self launchFamilyModifiersFrom: values ])
+		evidence: spec fourth.
+	^ tier
+]
+
 { #category : 'catalog' }
 CIGameItemTypes class >> pathfinderCarbine [
 	^ (CIWeaponType
@@ -96,6 +124,40 @@ CIGameItemTypes class >> pathfinderCarbine [
 { #category : 'talents' }
 CIGameItemTypes class >> perfectTalentDefinitions [
 	^ #(#('optimist' 'perfectOptimist' 'Perfect Optimist' #(#(damagePerStep 0.045)) 'Gain 4.5% weapon damage for every 10% ammo missing from the magazine.') #('fastHands' 'perfectFastHands' 'Perfect Fast Hands' #(#(reloadSpeedPerCriticalHit 0.05)) 'Each critical hit adds a 5% reload speed stack, up to 40 stacks.') #('ranger' 'perfectRanger' 'Perfect Ranger' #(#(distanceStepMetres 3)) 'Amplifies weapon damage by 2% per 3 m between you and the target.') #('preservation' 'perfectPreservation' 'Perfect Preservation' #(#(armorRepairOnKill 0.15) #(extraArmorRepairOnHeadshotKill 0.15)) 'A kill repairs 15% armor over 5 seconds. A headshot kill adds another 15% repair.') #('inSync' 'perfectInSync' 'Perfectly In Sync' #(#(skillDamageOnWeaponHit 0.20) #(weaponDamageOnSkillUseOrHit 0.20)) 'Weapon hits grant +20% skill damage for 5 seconds. Using a skill or hitting with one grants +20% weapon damage for 5 seconds. Both bonuses double while active together.') #('obliterate' 'perfectObliterate' 'Perfect Obliterate' #(#(maxStacks 24)) 'Each critical hit grants 1% total weapon damage for 10 seconds, up to 24 stacks.') #('unbreakable' 'perfectUnbreakable' 'Perfect Unbreakable' #(#(armorRepairOnDepletion 1.0) #(cooldownSeconds 55)) 'When armor is depleted, restore 100% armor. Cooldown is 55 seconds.') #('overwatch' 'perfectOverwatch' 'Perfect Overwatch' #(#(coverSeconds 8) #(squadWeaponDamage 0.14) #(squadSkillDamage 0.14)) 'After 8 seconds in cover, you and your squad gain 14% total weapon and skill damage while in cover or moving from cover to cover.') #('composure' 'perfectComposure' 'Perfect Composure' #(#(inCoverWeaponDamage 0.20)) 'While in cover, gain 20% total weapon damage.') #('combinedArms' 'perfectCombinedArms' 'Perfect Combined Arms' #(#(skillDamageOnWeaponHit 0.30)) 'Hitting an enemy with a weapon grants 30% total skill damage for 3 seconds.') #('creepingDeath' 'perfectCreepingDeath' 'Perfect Creeping Death' #(#(statusSpreadRadiusMetres 10) #(cooldownSeconds 10)) 'Applying a status effect also applies it to enemies within 10 m of the target. Cooldown is 10 seconds.'))
+]
+
+{ #category : 'families' }
+CIGameItemTypes class >> registerClassifiedFamilyEffectsIn: catalog [
+	#(#('redLotusAssault' 'strikersGamble' 'Striker''s Gamble' 'Weapon hits build stacks of 0.65% weapon damage, up to 100. Lose one stack per second up to 50 stacks and two per second above 50.' #(#(requiredPieces 4) #(trigger weaponHit) #(damagePerStack 0.0065) #(damageOperation amplifier) #(maxStacks 100) #(firstDecayThreshold 50) #(firstDecayPerSecond 1) #(secondDecayPerSecond 2)) 'pressTheAdvantage' 'riskManagement') #('jupiterTechnologies' 'indirectTransmission' 'Indirect Transmission' 'On a kill, spread status effects from that enemy to enemies within 10 m and refresh 50% of their duration.' #(#(requiredPieces 4) #(trigger kill) #(spreadRadiusMetres 10) #(durationRefreshFraction 0.50)) 'proliferation' 'symptomAggravator'))
+		do: [ :spec | 
+			| parameters talent |
+			parameters := Dictionary new.
+			spec fifth do: [ :pair | parameters at: pair first put: pair second ].
+			talent := catalog
+					registerTalent: (CIItemTalent
+							id: spec second
+							name: spec third
+							eligibility: #set
+							parameters: parameters
+							comment: spec fourth).
+			(catalog gearFamilyAt: spec first)
+				setTalent: talent
+				slotUpgrades: (Dictionary new
+						at: 'Chest' put: (catalog talentAt: (spec at: 6));
+						at: 'Backpack' put: (catalog talentAt: (spec at: 7));
+						yourself) ]
+]
+
+{ #category : 'families' }
+CIGameItemTypes class >> registerLaunchGearFamiliesIn: catalog [
+	#(#('vossAndVale' 'Voss & Vale' #(#(1 #(#(headshotDamage 0.13)) #(#(headshotDamage 0.13)) 'Brandsets!E33,K33') #(2 #(#(criticalHitChance 0.08)) #(#(criticalHitChance 0.08)) 'Brandsets!F33,L33') #(3 #(#(criticalHitDamage 0.13)) #(#(criticalHitDamage 0.13)) 'Brandsets!G33,M33'))) #('rookStandard' 'Rook Standard' #(#(1 #(#(totalArmor 0.05)) #(#(totalArmor 0.05)) 'Brandsets!E6,K6') #(2 #(#(hazardProtection 0.20)) #(#(hazardProtection 0.15)) 'Brandsets!F6,L6') #(3 #(#(armorRegeneration 0.02)) #(#(armorRegeneration 0.02)) 'Brandsets!G6,M6'))) #('morrowWorks' 'Morrow Works' #(#(1 #(#(skillHaste 0.10)) #(#(skillHaste 0.10)) 'Brandsets!E17,K17') #(2 #(#(skillDamage 0.13)) #(#(skillDamage 0.13)) 'Brandsets!F17,L17') #(3 #(#(weaponDamage 0.18)) #(#(weaponDamage 0.18)) 'Brandsets!G17,M17'))) #('redLotusAssault' 'Red Lotus Assault' #(#(2 #(#(weaponHandling 0.15)) nil 'Gearsets!C45') #(3 #(#(rateOfFire 0.15)) nil 'Gearsets!D45') #(4 #() nil 'Gearsets!E45:H45'))) #('jupiterTechnologies' 'Jupiter Technologies' #(#(2 #(#(statusEffects 0.15)) nil 'Gearsets!C15') #(3 #(#(skillHaste 0.15) #(hazardProtection 0.30)) nil 'Gearsets!D15') #(4 #() nil 'Gearsets!E15:H15'))))
+		do: [ :spec | 
+			catalog
+				registerGearFamily: (CIGearFamily
+						id: spec first
+						manufacturer: spec second
+						tiers: (spec third collect: [ :tier | self launchFamilyTierFrom: tier ])) ].
+	self registerClassifiedFamilyEffectsIn: catalog
 ]
 
 { #category : 'loot' }

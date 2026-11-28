@@ -6,7 +6,9 @@ Class {
 		'modifiers',
 		'trigger',
 		'consumeEvent',
-		'limit'
+		'limit',
+		'pvpModifiers',
+		'evidence'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -28,8 +30,13 @@ CIGearFamilyTier >> consumeEvent [
 ]
 
 { #category : 'accessing' }
+CIGearFamilyTier >> evidence [
+	^ evidence ifNotNil: #copy
+]
+
+{ #category : 'accessing' }
 CIGearFamilyTier >> initializePieces: count modifiers: someModifiers trigger: triggerEvent consumeOn: event limit: maxActivations [
-	(#(2 3 4) includes: count)
+	(count isInteger and: [ count > 0 ])
 		ifFalse: [ self error: 'Unsupported family threshold' ].
 	triggerEvent isNil = event isNil
 		ifFalse: [ self error: 'A triggered tier needs both events' ].
@@ -53,8 +60,21 @@ CIGearFamilyTier >> modifiers [
 ]
 
 { #category : 'accessing' }
+CIGearFamilyTier >> modifiersForMode: mode [
+	mode = #pvp
+		ifTrue: [ ^ pvpModifiers ifNil: [ self modifiers ] ifNotNil: #copy ].
+	^ self modifiers
+]
+
+{ #category : 'accessing' }
 CIGearFamilyTier >> pieceCount [
 	^ pieceCount
+]
+
+{ #category : 'initialization' }
+CIGearFamilyTier >> pvpModifiers: otherModifiers evidence: reference [
+	pvpModifiers := otherModifiers ifNotNil: #asArray.
+	evidence := reference copy
 ]
 
 { #category : 'accessing' }

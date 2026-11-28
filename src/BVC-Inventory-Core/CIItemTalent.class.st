@@ -61,7 +61,7 @@ CIItemTalent >> initializeComment: aString [
 CIItemTalent >> initializeId: anId name: aName eligibility: aKind parameters: aDictionary [
 	(anId isString and: [ anId notEmpty ])
 		ifFalse: [ self error: 'Talent ID required' ].
-	(#(weapon Chest Backpack) includes: aKind)
+	(#(weapon Chest Backpack set) includes: aKind)
 		ifFalse: [ self error: 'Invalid talent eligibility' ].
 	id := anId copy.
 	displayName := aName copy.
