@@ -282,6 +282,67 @@ CIThatGameLaunchInventoryTest >> testWeaponAttachmentUnlocksAndOwnedGearModsPers
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testWorkbookFactoryAttachmentsAreLockedAndPersist [
+	| catalog mods owner path store item reloaded attachment magazine |
+	catalog := CIGameItemTypes buildCatalog.
+	mods := catalog modCatalogue.
+	owner := 'factory-attachment-owner'.
+	path := (directory / 'factory.ston') fullName.
+	store := CIInventorySnapshotStore at: path.
+	self assert: CIWorkbookModData weaponAttachments size equals: 94.
+	self assert: CIWorkbookModData gearMods size equals: 11.
+	self assert: CIWorkbookModData factoryAttachments size equals: 7.
+	self
+		assert: (mods definitionAt: 'attachment.workbook72') modelRestriction
+		equals: 'Stoner only and Dare Only'.
+	item := store
+			grantItem: 'chatterbox'
+			type: 'weapon.launch.chatterbox'
+			values: (Dictionary new
+					at: 'weaponDamage' put: 0.1;
+					yourself)
+			from: catalog
+			forOwner: owner.
+	self assert: item modSlots size equals: 4.
+	self assert: (item modSlots allSatisfy: #isLocked).
+	magazine := item modSlots detect: [ :slot | slot slotIdentifier = 'magazine' ].
+	attachment := mods definitionAt: magazine equippedModIdentifier.
+	self assert: attachment effects first equals: #(magazineCapacity flat 10).
+	self assert: attachment evidence equals: 'Weapons Named + Exotics!F130'.
+	self
+		assertEmpty: (mods compatibleModsFor: 'weapon.launch.chatterbox' socket: 'magazine').
+	self
+		should: [ store
+				unlockWeaponMod: attachment id
+				from: catalog
+				forOwner: owner ]
+		raise: Error.
+	self
+		should: [ store
+				removeModFrom: 'chatterbox'
+				socket: 'magazine'
+				forOwner: owner ]
+		raise: Error.
+	reloaded := ((CIInventorySnapshotStore at: path) allRowsForOwner: owner) first.
+	self assert: (reloaded modSlots allSatisfy: #isLocked).
+	self
+		assert: (reloaded modSlots collect: #equippedModIdentifier)
+		equals: (item modSlots collect: #equippedModIdentifier).
+	store
+		replaceRows: {(catalog typeAt: 'weapon.launch.chatterbox')
+					inventoryItem: 'legacy'
+					values: (Dictionary new
+							at: 'weaponDamage' put: 0.1;
+							yourself)}
+		forOwner: owner.
+	store restoreFactoryAttachmentsFrom: catalog.
+	reloaded := ((CIInventorySnapshotStore at: path) allRowsForOwner: owner) first.
+	self assert: reloaded itemIdentifier equals: 'legacy'.
+	self assert: reloaded modSlots size equals: 4.
+	self assert: (reloaded modSlots allSatisfy: #isLocked)
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testWorkbookLootSourcesKeepUnknownOdds [
 	| catalog loot pools entry |
 	catalog := CIGameItemTypes buildCatalog.

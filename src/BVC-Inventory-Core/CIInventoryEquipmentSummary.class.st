@@ -224,6 +224,9 @@ CIInventoryEquipmentSummary >> utilityAttributes [
 { #category : 'modding' }
 CIInventoryEquipmentSummary >> withMod: aModIdentifier inSocket: socketIdentifier [
 	| slot updated |
+	(modSlots
+		anySatisfy: [ :each | each slotIdentifier = socketIdentifier and: [ each isLocked ] ])
+		ifTrue: [ self error: 'Factory attachment is locked' ].
 	slot := CIInventoryModSlotSummary
 			slot: socketIdentifier
 			equippedMod: aModIdentifier.

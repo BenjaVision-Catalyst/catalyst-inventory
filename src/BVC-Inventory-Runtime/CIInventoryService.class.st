@@ -289,6 +289,7 @@ CIInventoryService >> start [
 			ifNil: [ CIInventoryReadStore new ]
 			ifNotNil: [ CIInventorySnapshotStore at: snapshotPath ].
 	itemTypeCatalog := CIGameItemTypes buildCatalog.
+	readStore restoreFactoryAttachmentsFrom: itemTypeCatalog.
 	savedSetsByOwner := Dictionary new.
 	savedSetsLock := Semaphore forMutualExclusion.
 	super start

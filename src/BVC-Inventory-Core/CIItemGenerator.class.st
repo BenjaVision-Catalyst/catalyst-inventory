@@ -36,7 +36,13 @@ CIItemGenerator >> generate: itemIdentifier type: typeIdentifier values: supplie
 	(item isKindOf: CIInventoryEquipmentSummary)
 		ifTrue: [ (catalog modCatalogue socketsFor: typeIdentifier)
 				do: [ :socket | 
-					(item modSlots anySatisfy: [ :slot | slot slotIdentifier = socket id ])
-						ifFalse: [ item := item withMod: nil inSocket: socket id ] ] ].
+					socket fixedModIdentifier
+						ifNotNil: [ :modId | 
+							item
+								replaceModSocket: (CIInventoryModSlotSummary slot: socket id factoryMod: modId) ]
+						ifNil: [ (item modSlots
+								anySatisfy: [ :slot | slot slotIdentifier = socket id ])
+								ifFalse: [ item
+										replaceModSocket: (CIInventoryModSlotSummary slot: socket id equippedMod: nil) ] ] ] ].
 	^ item
 ]

@@ -265,18 +265,3 @@ CIGameItemTypes class >> traversalPack [
 				'inspectorArmour' -> 40} asDictionary;
 		yourself
 ]
-rvation' 'inSync') #(marksmanRifle 'ranger' 'preservation' 'inSync') #(pistol 'optimist' 'preservation' 'inSync') #(vest 'obliterate' 'unbreakable' 'overwatch') #(backpack 'composure' 'combinedArms' 'creepingDeath') #(capacitor 'capacitance') #(chatterbox 'incessantChatter') #(bluescreen 'disruptorRounds') #(scorpio 'septicShock') #(doctorHome 'doctorHome') #(nemesis 'electromagneticAccelerator') #(liberty 'libertyOrDeath') #(redLotusVest 'pressTheAdvantage') #(redLotusBackpack 'riskManagement') #(jupiterVest 'proliferation') #(jupiterBackpack 'symptomAggravator'))
-]
-
-{ #category : 'catalog' }
-CIGameItemTypes class >> traversalPack [
-	^ (CIGearType
-		id: 'gear.traversal.pack'
-		name: 'Traversal Pack'
-		slot: 'Backpack'
-		attributes: #(#('armor' 'Armor' 'defensive' 'signedNumber' 60 100) #('hazard' 'Hazard resistance' 'defensive' 'signedPercent' 0.04 0.12) #('reload' 'Reload speed' 'offensive' 'signedPercent' 0.03 0.10))
-		sockets: #('defensive' 'utility'))
-		inspectorIdentity: {'inspectorManufacturer' -> 'Crosswind Systems'.
-				'inspectorArmour' -> 40} asDictionary;
-		yourself
-]

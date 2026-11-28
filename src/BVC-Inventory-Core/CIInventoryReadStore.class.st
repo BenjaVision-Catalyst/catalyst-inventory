@@ -249,6 +249,36 @@ CIInventoryReadStore >> replaceRows: aCollection forOwner: anOwnerIdentifier [
 	rowsByOwner at: anOwnerIdentifier copy put: rows
 ]
 
+{ #category : 'writing' }
+CIInventoryReadStore >> restoreFactoryAttachmentsFrom: catalog [
+	| mods |
+	mods := catalog modCatalogue.
+	rowsByOwner keys
+		do: [ :owner | 
+			| current changed |
+			current := rowsByOwner at: owner.
+			changed := false.
+			current := current
+					collect: [ :row | 
+						| replacement |
+						replacement := row.
+						(row isKindOf: CIInventoryEquipmentSummary)
+							ifTrue: [ (mods socketsFor: row definitionIdentifier)
+									do: [ :socket | 
+										socket fixedModIdentifier
+											ifNotNil: [ :modId | 
+												(row modSlots
+													anySatisfy: [ :slot | 
+														slot slotIdentifier = socket id
+															and: [ slot isLocked and: [ slot equippedModIdentifier = modId ] ] ])
+													ifFalse: [ replacement == row ifTrue: [ replacement := row copy ].
+														replacement
+															replaceModSocket: (CIInventoryModSlotSummary slot: socket id factoryMod: modId).
+														changed := true ] ] ] ].
+						replacement ].
+			changed ifTrue: [ self replaceRows: current forOwner: owner ] ]
+]
+
 { #category : 'reading' }
 CIInventoryReadStore >> rowsAfterEquipping: savedSlots forOwner: identity outfit: isOutfit [
 	| rows byItem inSlot missing |
