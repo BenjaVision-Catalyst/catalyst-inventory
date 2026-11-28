@@ -289,6 +289,16 @@ CIItemTypeCatalog >> typeAt: anIdentifier ifAbsent: aBlock [
 ]
 
 { #category : 'accessing' }
+CIItemTypeCatalog >> weaponMountLayoutForType: typeIdentifier [
+	| reference |
+	typeIdentifier ifNil: [ ^ nil ].
+	reference := self weaponReferences
+			detect: [ :each | each kind = #statistics and: [ each itemDefinitionIdentifier = typeIdentifier ] ]
+			ifNone: [ ^ nil ].
+	^ reference mountLayout
+]
+
+{ #category : 'accessing' }
 CIItemTypeCatalog >> weaponReferenceAt: identifier [
 	weaponReferencesById ifNil: [ self error: 'No weapon references registered' ].
 	^ weaponReferencesById at: identifier

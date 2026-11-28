@@ -2143,6 +2143,57 @@ CIThatGameLaunchInventoryTest >> testWeaponAttachmentUnlocksAndOwnedGearModsPers
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testWeaponMountLayoutsPreserveReportedCountsMissingKindsAndEvidence [
+	| catalog ak pp m870 p90 zero blank |
+	catalog := CIGameItemTypes buildCatalog.
+	ak := catalog weaponMountLayoutForType: 'weapon.launch.akM'.
+	self assert: ak reportedSlotCount equals: 3.
+	self assert: ak rawNotation equals: '3!'.
+	self assert: ak evidence equals: 'Weapons!N4'.
+	self assert: ak missingSlotKinds equals: #(muzzle).
+	self assert: (ak statusOfSlotKind: #muzzle) equals: #absent.
+	self assert: (ak statusOfSlotKind: #optics) equals: #unspecified.
+	pp := catalog weaponMountLayoutForType: 'weapon.launch.pp19'.
+	self assert: pp reportedSlotCount equals: 2.
+	self assert: pp missingSlotKinds asSet equals: #(magazine underbarrel) asSet.
+	m870 := catalog weaponMountLayoutForType: 'weapon.launch.m870Express'.
+	self assert: m870 longRailReported.
+	self assert: (m870 statusOfSlotKind: #optics) equals: #unspecified.
+	self assert: (m870 statusOfSlotKind: #underbarrel) equals: #unspecified.
+	p90 := catalog weaponMountLayoutForType: 'weapon.launch.chatterbox'.
+	self assert: p90 status equals: #notApplicable.
+	self assert: p90 reportedSlotCount isNil.
+	self assert: (p90 statusOfSlotKind: #magazine) equals: #notApplicable.
+	zero := (catalog weaponReferenceAt: 'Weapons!C144') mountLayout.
+	self assert: zero reportedSlotCount equals: 0.
+	self assert: (zero statusOfSlotKind: #magazine) equals: #absent.
+	blank := CIWeaponMountLayout fromNotation: nil evidence: nil.
+	self assert: blank reportedSlotCount isNil.
+	self assert: (blank statusOfSlotKind: #magazine) equals: #unspecified
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testWeaponMountLayoutsRetainUnknownMarkersAndKeepFactorySocketsDistinct [
+	| catalog rpk stoner chatterbox magazine |
+	catalog := CIGameItemTypes buildCatalog.
+	rpk := catalog weaponMountLayoutForType: 'weapon.launch.classicRpk74'.
+	self assert: rpk reportedSlotCount equals: 4.
+	self assert: rpk unresolvedMarkers equals: '/'.
+	self deny: rpk longRailReported.
+	stoner := (catalog weaponReferenceAt: 'Weapons!C63') mountLayout.
+	self assert: stoner rawNotation equals: '4*'.
+	self assert: stoner unresolvedMarkers equals: '*'.
+	self assert: stoner evidence equals: 'Weapons!N63'.
+	chatterbox := 'weapon.launch.chatterbox'.
+	magazine := catalog modCatalogue socketAt: 'magazine' forItem: chatterbox.
+	self assert: magazine fixedModIdentifier notNil.
+	self
+		assertEmpty: (catalog modCatalogue compatibleModsFor: chatterbox socket: 'magazine').
+	self
+		assertEmpty: (catalog modCatalogue socketsFor: 'weapon.launch.classicRpk74')
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testWeaponReferencesAndNamedTalentsKeepWorkbookLinks [
 	| catalog references splash type store award source archivist |
 	catalog := CIGameItemTypes buildCatalog.

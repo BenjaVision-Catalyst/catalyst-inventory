@@ -61,6 +61,13 @@ CIWeaponWorkbookReference >> kind [
 ]
 
 { #category : 'accessing' }
+CIWeaponWorkbookReference >> mountLayout [
+	^ CIWeaponMountLayout
+		fromNotation: (self fieldAt: #socketNotation)
+		evidence: (self evidenceForField: #socketNotation)
+]
+
+{ #category : 'accessing' }
 CIWeaponWorkbookReference >> name [
 	^ name copy
 ]
