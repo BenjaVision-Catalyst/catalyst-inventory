@@ -14,11 +14,19 @@ Class {
 		'weaponReferencesById',
 		'familyReferencesByName',
 		'talentReferencesById',
-		'specializationsByName'
+		'specializationsByName',
+		'weaponRevisions',
+		'activeWeaponRevisions'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
 }
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> activeWeaponRevisionFor: identifier [
+	^ activeWeaponRevisions
+		ifNotNil: [ activeWeaponRevisions at: identifier ifAbsent: [ nil ] ]
+]
 
 { #category : 'accessing' }
 CIItemTypeCatalog >> attributeCatalogue [
@@ -61,6 +69,50 @@ CIItemTypeCatalog >> gearFamilyReferences [
 	^ (familyReferencesByName values sorted: [ :a :b | a name < b name ]) asArray
 ]
 
+{ #category : 'gt' }
+CIItemTypeCatalog >> gtDefinitionsFor: aView [
+	<gtView>
+	^ aView columnedList
+		title: 'Definitions';
+		priority: 10;
+		items: [ self types ];
+		column: 'Name' text: #displayName;
+		column: 'Identifier' text: #id;
+		column: 'Revision'
+			text: [ :type | (self activeWeaponRevisionFor: type id) ifNotNil: #revision ];
+		send: [ :type | (self activeWeaponRevisionFor: type id) ifNil: [ type ] ]
+]
+
+{ #category : 'gt' }
+CIItemTypeCatalog >> gtRelatedCataloguesFor: aView [
+	<gtView>
+	^ aView list
+		title: 'Related catalogs';
+		priority: 30;
+		items: [ {'Attributes' -> self attributeCatalogue.
+				'Mods' -> self modCatalogue.
+				'Loot' -> self lootCatalogue.
+				'Gear families' -> self gearFamilies.
+				'Gadget families' -> self gadgetFamilies.
+				'Specializations' -> self specializations.
+				'Talents'
+					-> (talentsById values sorted: [ :left :right | left id < right id ])} ];
+		itemText: #key;
+		send: #value
+]
+
+{ #category : 'gt' }
+CIItemTypeCatalog >> gtWeaponRevisionsFor: aView [
+	<gtView>
+	^ aView columnedList
+		title: 'Weapon revisions';
+		priority: 20;
+		items: [ self weaponRevisions ];
+		column: 'Name' text: #displayName;
+		column: 'Revision' text: #revision;
+		column: 'State' text: #state
+]
+
 { #category : 'initialization' }
 CIItemTypeCatalog >> initialize [
 	super initialize.
@@ -90,6 +142,11 @@ CIItemTypeCatalog >> namedGearReferenceAt: label [
 CIItemTypeCatalog >> namedGearReferences [
 	gearReferencesByName ifNil: [ ^ #() ].
 	^ (gearReferencesByName values sorted: [ :a :b | a name < b name ]) asArray
+]
+
+{ #category : 'registration' }
+CIItemTypeCatalog >> publishWeaponDraft: draft [
+	^ self registerWeaponRevision: (draft asReleaseIn: self)
 ]
 
 { #category : 'accessing' }
@@ -179,6 +236,38 @@ CIItemTypeCatalog >> registerWeaponReference: reference [
 	^ reference
 ]
 
+{ #category : 'registration' }
+CIItemTypeCatalog >> registerWeaponRevision: definition [
+	| id current type pool |
+	definition isDraft
+		ifTrue: [ self error: 'A draft cannot be registered as a weapon revision' ].
+	id := definition definitionIdentifier.
+	current := self activeWeaponRevisionFor: id.
+	(current isNil and: [ typesById includesKey: id ])
+		ifTrue: [ self error: 'A legacy item already uses this identifier' ].
+	(current notNil and: [ definition revision <= current revision ])
+		ifTrue: [ self error: 'Weapon revisions must increase' ].
+	type := definition asWeaponType.
+	pool := definition talentIdentifiers.
+	pool asSet size = pool size ifFalse: [ self error: 'Duplicate talent in pool' ].
+	(pool
+		allSatisfy: [ :each | 
+			(definition talentAt: each)
+				ifNil: [ false ]
+				ifNotNil: [ :talent | talent eligibility = type talentEligibility ] ])
+		ifFalse: [ self error: 'Ineligible talent in weapon revision' ].
+	weaponRevisions ifNil: [ weaponRevisions := Dictionary new ].
+	activeWeaponRevisions ifNil: [ activeWeaponRevisions := Dictionary new ].
+	weaponRevisions
+		at: {id.
+				definition revision}
+		put: definition.
+	typesById at: id put: type.
+	talentPoolsByTypeId at: id put: pool.
+	activeWeaponRevisions at: id put: definition.
+	^ definition
+]
+
 { #category : 'spawning' }
 CIItemTypeCatalog >> rollTalentFor: aTypeIdentifier using: randomSample [
 	| pool |
@@ -230,6 +319,17 @@ CIItemTypeCatalog >> talentAt: anIdentifier [
 CIItemTypeCatalog >> talentAt: anIdentifier ifAbsent: aBlock [
 	talentsById ifNil: [ ^ aBlock value ].
 	^ talentsById at: anIdentifier ifAbsent: aBlock
+]
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> talentForEquipment: item ifAbsent: absent [
+	| id definition |
+	id := item talentIdentifier ifNil: [ ^ absent value ].
+	definition := (item respondsTo: #weaponDefinitionRevision)
+			ifTrue: [ item weaponDefinitionRevision ].
+	^ definition
+		ifNil: [ self talentAt: id ifAbsent: absent ]
+		ifNotNil: [ (definition talentAt: id) ifNil: absent ]
 ]
 
 { #category : 'registration' }
@@ -289,6 +389,21 @@ CIItemTypeCatalog >> typeAt: anIdentifier ifAbsent: aBlock [
 ]
 
 { #category : 'accessing' }
+CIItemTypeCatalog >> typeForInventoryItem: item ifAbsent: absent [
+	| definition |
+	definition := (item respondsTo: #weaponDefinitionRevision)
+			ifTrue: [ item weaponDefinitionRevision ].
+	^ definition
+		ifNil: [ self typeAt: item definitionIdentifier ifAbsent: absent ]
+		ifNotNil: #asWeaponType
+]
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> types [
+	^ typesById values sorted: [ :left :right | left id < right id ]
+]
+
+{ #category : 'accessing' }
 CIItemTypeCatalog >> weaponMountLayoutForType: typeIdentifier [
 	| reference |
 	typeIdentifier ifNil: [ ^ nil ].
@@ -313,4 +428,18 @@ CIItemTypeCatalog >> weaponReferences [
 { #category : 'querying' }
 CIItemTypeCatalog >> weaponReferencesNamed: label [
 	^ self weaponReferences select: [ :reference | reference name sameAs: label ]
+]
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> weaponRevisionFor: identifier number: revisionNumber [
+	^ weaponRevisions
+		ifNotNil: [ weaponRevisions
+				at: {identifier.
+						revisionNumber}
+				ifAbsent: [ nil ] ]
+]
+
+{ #category : 'accessing' }
+CIItemTypeCatalog >> weaponRevisions [
+	^ weaponRevisions ifNil: [ #() ] ifNotNil: [ weaponRevisions values asArray ]
 ]

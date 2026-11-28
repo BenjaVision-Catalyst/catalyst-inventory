@@ -49,6 +49,28 @@ CIItemTalent >> eligibility [
 ]
 
 { #category : 'accessing' }
+CIItemTalent >> eligibilityText [
+	^ self eligibility asString
+]
+
+{ #category : 'gt' }
+CIItemTalent >> gtParametersFor: aView [
+	<gtView>
+	^ aView columnedList
+		title: 'Parameters';
+		priority: 20;
+		items: [ self parameters associations sorted: [ :left :right | left key < right key ] ];
+		column: 'Parameter' text: #key;
+		column: 'Value' text: #value;
+		send: #value
+]
+
+{ #category : 'gt' }
+CIItemTalent >> hasMagritteDescription [
+	^ true
+]
+
+{ #category : 'accessing' }
 CIItemTalent >> id [
 	^ id copy
 ]
@@ -69,6 +91,31 @@ CIItemTalent >> initializeId: anId name: aName eligibility: aKind parameters: aD
 	eligibility := aKind.
 	parameters := aDictionary copy.
 	^ self
+]
+
+{ #category : 'descriptions' }
+CIItemTalent >> magritteDescription [
+	^ MAContainer
+		withAll: {MAStringDescription new
+					accessor: #id;
+					label: 'Talent ID';
+					beReadOnly;
+					yourself.
+				MAStringDescription new
+					accessor: #displayName;
+					label: 'Name';
+					beReadOnly;
+					yourself.
+				MAStringDescription new
+					accessor: #eligibilityText;
+					label: 'Eligibility';
+					beReadOnly;
+					yourself.
+				MAMemoDescription new
+					accessor: #comment;
+					label: 'Effect';
+					beReadOnly;
+					yourself}
 ]
 
 { #category : 'initialization' }
@@ -98,4 +145,10 @@ CIItemTalent >> parametersForMode: mode [
 	profile parameters
 		keysAndValuesDo: [ :key :value | resolved at: key put: value ].
 	^ resolved
+]
+
+{ #category : 'copying' }
+CIItemTalent >> postCopy [
+	super postCopy.
+	modeProfiles := modeProfiles ifNotNil: #copy
 ]

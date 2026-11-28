@@ -16,7 +16,6 @@ CIGameItemTypes class >> buildCatalog [
 	catalog register: self fieldKneePads.
 	catalog register: self fieldBlade.
 	catalog register: self relaySidearm.
-	catalog register: self pathfinderCarbine.
 	self registerTalentDefinitionsIn: catalog.
 	self
 		configureTalentPoolFor: 'gear.response.aidVest'
@@ -30,10 +29,7 @@ CIGameItemTypes class >> buildCatalog [
 		configureTalentPoolFor: 'weapon.sidearm.relay'
 		profile: #pistol
 		in: catalog.
-	self
-		configureTalentPoolFor: 'weapon.ranged.pathfinder'
-		profile: #assaultRifle
-		in: catalog.
+	catalog registerWeaponRevision: (self pathfinderDraft asBaselineIn: catalog).
 	CIThatGameLaunchCatalog registerIn: catalog.
 	self registerLootIn: catalog.
 	self registerModsIn: catalog.
@@ -119,18 +115,26 @@ CIGameItemTypes class >> launchFamilyTierFrom: spec [
 
 { #category : 'catalog' }
 CIGameItemTypes class >> pathfinderCarbine [
-	^ (CIWeaponType
-		id: 'weapon.ranged.pathfinder'
-		name: 'Pathfinder Carbine'
-		slot: 'RangedWeapon'
-		core: #(#('Damage per hit' 25) #('Fire rate' '600 RPM') #('Magazine' '30 rounds') #('Optimal range' 32) #('Reload time' '2.1 s'))
-		handling: #(#('Accuracy' 82) #('Stability' 68))
-		sockets: #('optic' 'magazine' 'muzzle'))
-		inspectorIdentity: {'inspectorManufacturer' -> 'Meridian Range'.
-				'inspectorCategory' -> 'Carbine'.
-				'inspectorConsumable' -> 'Carbine ammunition'.
-				'inspectorConsumableIcon' -> 'cartridge'} asDictionary;
-		damageFalloff: #(#(72 65) #(100 65));
+	^ self pathfinderDraft asWeaponType
+]
+
+{ #category : 'catalog' }
+CIGameItemTypes class >> pathfinderDraft [
+	^ (CIWeaponDefinitionRevision id: 'weapon.ranged.pathfinder' revision: 1)
+		displayName: 'Pathfinder Carbine';
+		manufacturer: 'Meridian Range';
+		ammunitionName: 'Carbine ammunition';
+		weaponDamage: 25;
+		roundsPerMinute: 600;
+		magazineCapacity: 30;
+		optimalRangeMetres: 32;
+		reloadSeconds: 2.1;
+		accuracy: 82;
+		stability: 68;
+		falloffPoints: #(#(72 65) #(100 65));
+		socketIdentifiers: #('optic' 'magazine' 'muzzle');
+		talentIdentifiers: #('optimist' 'fastHands' 'preservation' 'inSync');
+		provenance: #('Pathfinder base stats, handling, falloff and sockets: ThatGame Pathfinder catalog definition, inventory commits 001783d8 and 2e91c0ee (2026-11-27). No external Division 2 weapon mapping established.' 'Optimist: Weapon Talents!B5:D5, 3.5% per 10% missing for standard and 4.5% for Perfect. TU22 (2024-10-29) superseded 3% and 4%. Rechecked against the published Spearfall changes (2026-11-26).' 'https://docs.google.com/spreadsheets/d/1JTLivI7FDB0HeHIX0GePMLJd4bD-xarH3ZpNxPCX218/edit' 'https://canopy.ubisoft.com/AssetLink/q717ot55m3eb6d360764v05ho2gxm871.pdf');
 		yourself
 ]
 

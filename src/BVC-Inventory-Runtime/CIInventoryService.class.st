@@ -594,9 +594,9 @@ CIInventoryService >> weaponTalentEncounterFor: weaponId forVerifiedUser: identi
 			((weapon isKindOf: CIInventoryWeaponToolSummary)
 				and: [ weapon equippedSlotIdentifier notNil ])
 				ifFalse: [ self error: 'A weapon must be equipped' ].
-			talent := weapon talentIdentifier
-					ifNil: [ self error: 'The equipped weapon has no talent' ]
-					ifNotNil: [ :id | itemTypeCatalog talentAt: id ].
+			talent := itemTypeCatalog
+					talentForEquipment: weapon
+					ifAbsent: [ self error: 'The equipped weapon has no talent' ].
 			CIWeaponTalentEncounter weapon: weapon itemIdentifier talent: talent ]
 ]
 

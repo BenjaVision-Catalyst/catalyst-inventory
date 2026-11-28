@@ -171,3 +171,40 @@ Ubisoft’s Season 10 notes corroborate Hermano's Perfect Overclock radius,
 reload speed, and cooldown reduction. The workbook explicitly includes the
 wearer and allies, so the catalog uses that recipient rule.
 [Ubisoft Season 10 notes](https://www.ubisoft.com/en-gb/game/the-division/the-division-2/news-updates/5OjGH5Q7IlAQzZ9igKTWLW/season-10-price-of-power)
+
+
+## Pathfinder GT authoring slice
+
+Revision 1 is a GT baseline for ThatGame's original Pathfinder Carbine. The
+existing ThatGame definition supplies its balance, including 25 base damage,
+600 RPM, 30 rounds, 32 metres of optimal range and a 2.1-second reload. The
+catalog retains its handling, falloff, sockets and ordinary talent pool. No
+external Division 2 weapon mapping is established. Weapon Talents B5:D5
+matches the TU22 Optimist change from 3%/4% to 3.5%/4.5% per 10% missing.
+The November 26, 2026 Spearfall release balance attachment lists no
+superseding Optimist change. A separate PvP value remains unspecified.
+
+- In GT, inspect `CIGameItemTypes buildCatalog`. Open **Definitions** and
+  select Pathfinder Carbine. **Weapon revisions** lists the baselines and
+  revisions registered in that catalog. **Related catalogs** leads to the
+  other current catalog objects.
+- Open **Definition details** for the typed UE binding object, talents,
+  sockets and sources. Open **Generation fields** for the normal grant
+  requirements. Use **Open next revision draft** and the Magritte Save
+  action to edit the draft. Use `writeDraftTo:` and
+  `CIWeaponDefinitionRevision readDraftFrom:` to save and reopen a local
+  STON draft file.
+- Inspect a Pathfinder row fetched from the inventory store. **Weapon
+  definition** follows the persisted revision and rolled talent. The row
+  records its generated rolls and installed mods. Legacy rows without a
+  pinned snapshot retain the prior catalog lookup.
+- Registration of a completed draft activates it in that catalog and keeps
+  its older revisions addressable. This slice seeds revision 1 from GT
+  source. Durable publication of later catalog revisions and UE asset/cook
+  qualification are separate from the local draft and inventory snapshots.
+  Revision 1 has no verified UE bindings. The draft release guard checks
+  presence of required fields.
+
+[Ubisoft TU22 release context](https://www.ubisoft.com/en-gb/game/the-division/the-division-2/news-updates/6xHUrSJ9z828rDyJSwzG2V/year-6-season-2-shades-of-red)
+[TU22 detailed notes as reproduced](https://thedivisionweekly.wordpress.com/2024/10/28/division-2-tu22-shades-of-red-full-patch-notes-oct-29-thedivision2/)
+[Ubisoft Spearfall release balance attachment](https://canopy.ubisoft.com/AssetLink/q717ot55m3eb6d360764v05ho2gxm871.pdf)

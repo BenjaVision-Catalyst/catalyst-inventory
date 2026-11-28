@@ -7,7 +7,8 @@ Class {
 		'isProficient',
 		'comparisonStats',
 		'maximumAttributes',
-		'talentIdentifiers'
+		'talentIdentifiers',
+		'weaponDefinitionRevision'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -21,6 +22,27 @@ CIInventoryWeaponToolSummary >> comparisonStats [
 { #category : 'accessing' }
 CIInventoryWeaponToolSummary >> consumableTypeIdentifier [
 	^ consumableTypeIdentifier copy
+]
+
+{ #category : 'gt' }
+CIInventoryWeaponToolSummary >> gtWeaponDefinitionFor: aView [
+	<gtView>
+	weaponDefinitionRevision ifNil: [ ^ aView empty ].
+	^ aView list
+		title: 'Weapon definition';
+		priority: 15;
+		items: [ {'Pinned revision' -> weaponDefinitionRevision.
+				'Generated talent'
+					-> (weaponDefinitionRevision talentAt: self talentIdentifier).
+				'Generated rolls' -> self comparisonStats.
+				'Installed mods' -> self modSlots} ];
+		itemText: #key;
+		send: #value
+]
+
+{ #category : 'gt' }
+CIInventoryWeaponToolSummary >> hasMagritteDescription [
+	^ true
 ]
 
 { #category : 'initialization' }
@@ -97,6 +119,15 @@ CIInventoryWeaponToolSummary >> maximumAttributes [
 	^ maximumAttributes collect: #copy
 ]
 
+{ #category : 'initialization' }
+CIInventoryWeaponToolSummary >> pinWeaponDefinitionRevision: definition [
+	(weaponDefinitionRevision isNil
+		and: [ definition isDraft not
+				and: [ definition definitionIdentifier = self definitionIdentifier ] ])
+		ifFalse: [ self error: 'Cannot change the pinned weapon revision' ].
+	weaponDefinitionRevision := definition
+]
+
 { #category : 'accessing' }
 CIInventoryWeaponToolSummary >> requiredPlayerLevel [
 	^ requiredPlayerLevel
@@ -105,4 +136,9 @@ CIInventoryWeaponToolSummary >> requiredPlayerLevel [
 { #category : 'accessing' }
 CIInventoryWeaponToolSummary >> talentIdentifiers [
 	^ talentIdentifiers collect: #copy
+]
+
+{ #category : 'accessing' }
+CIInventoryWeaponToolSummary >> weaponDefinitionRevision [
+	^ weaponDefinitionRevision
 ]

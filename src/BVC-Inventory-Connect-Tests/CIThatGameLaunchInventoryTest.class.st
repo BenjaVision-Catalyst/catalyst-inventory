@@ -1901,6 +1901,81 @@ CIThatGameLaunchInventoryTest >> testOverclockUsesWorkbookRangeAndReducesOnlyAct
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testPathfinderDraftMagritteValidationAndRevisionRegistration [
+	| catalog id baseline draft field restored path released |
+	catalog := CIGameItemTypes buildCatalog.
+	id := 'weapon.ranged.pathfinder'.
+	baseline := catalog activeWeaponRevisionFor: id.
+	self assert: baseline state equals: #baseline.
+	self assert: baseline magazineCapacity equals: 30.
+	self assert: baseline presentation missingBindings size equals: 16.
+	self should: [ baseline magazineCapacity: 31 ] raise: Error.
+	self should: [ baseline presentation icon: '/Game/Test' ] raise: Error.
+	draft := baseline draftForNextRevision.
+	field := draft magritteDescription children
+			detect: [ :each | each label = 'Magazine capacity (rounds)' ].
+	self deny: field isReadOnly.
+	self should: [ field validate: 0 ] raise: Error.
+	field validate: 31.
+	field write: 31 to: draft.
+	draft presentation icon: '/Game/Test/Icon'.
+	path := directory / 'pathfinder-draft.ston'.
+	draft writeDraftTo: path.
+	restored := CIWeaponDefinitionRevision readDraftFrom: path.
+	self assert: restored revision equals: 2.
+	self assert: restored magazineCapacity equals: 31.
+	self assert: restored presentation icon equals: '/Game/Test/Icon'.
+	self assert: catalog weaponRevisions size equals: 1.
+	self should: [ catalog publishWeaponDraft: restored ] raise: Error.
+	restored presentation magritteDescription children
+		do: [ :binding | binding write: '/Game/Test/FixtureBinding' to: restored presentation ].
+	released := catalog publishWeaponDraft: restored.
+	restored magazineCapacity: 32.
+	self assert: released magazineCapacity equals: 31.
+	self assert: (catalog typeAt: id) baseMagazineCapacity equals: 31.
+	self assert: (catalog weaponRevisionFor: id number: 1) identicalTo: baseline.
+	self should: [ catalog publishWeaponDraft: restored ] raise: Error
+]
+
+{ #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testPathfinderGrantPinsDefinitionAndRolledTalentAcrossReload [
+	| catalog id store path item restored revision encounter |
+	catalog := CIGameItemTypes buildCatalog.
+	id := 'weapon.ranged.pathfinder'.
+	path := (directory / 'pathfinder-inventory.ston') fullName.
+	store := CIInventorySnapshotStore at: path.
+	item := store
+			grantItem: 'pathfinder-instance'
+			type: id
+			values: {'weaponDamage' -> 0.05} asDictionary
+			from: catalog
+			forOwner: 'rifle-test-owner'
+			using: [ 0 ].
+	self
+		assert: item weaponDefinitionRevision
+		identicalTo: (catalog activeWeaponRevisionFor: id).
+	restored := ((CIInventorySnapshotStore at: path)
+			allRowsForOwner: 'rifle-test-owner') first.
+	self assert: restored itemIdentifier equals: 'pathfinder-instance'.
+	self assert: restored talentIdentifier equals: 'optimist'.
+	self assert: restored comparisonStats first value equals: 0.05.
+	revision := restored weaponDefinitionRevision.
+	self assert: revision definitionIdentifier equals: id.
+	self assert: revision revision equals: 1.
+	self assert: revision weaponDamage equals: 25.
+	self assert: revision magazineCapacity equals: 30.
+	encounter := CIWeaponTalentEncounter
+			weapon: restored itemIdentifier
+			talent: (revision talentAt: restored talentIdentifier).
+	self
+		assert: (encounter weaponDamageBonusForMagazine: 30 remaining: 28)
+		equals: 0.
+	self
+		assert: (encounter weaponDamageBonusForMagazine: 30 remaining: 27)
+		equals: 0.035
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testPrototypeConversionRequiresEligibleQualityLevelAndGrade [
 	| catalog rule capacitor |
 	catalog := CIGameItemTypes buildCatalog.

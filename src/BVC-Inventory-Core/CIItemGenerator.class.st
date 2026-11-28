@@ -28,13 +28,20 @@ CIItemGenerator >> completeValues: suppliedValues for: type [
 
 { #category : 'generating' }
 CIItemGenerator >> generate: itemIdentifier type: typeIdentifier values: suppliedValues from: catalog using: randomSample [
-	| type values item |
-	type := catalog typeAt: typeIdentifier.
+	| revision type values item talent |
+	revision := catalog activeWeaponRevisionFor: typeIdentifier.
+	type := revision
+			ifNil: [ catalog typeAt: typeIdentifier ]
+			ifNotNil: #asWeaponType.
 	values := self completeValues: suppliedValues for: type.
+	talent := revision
+			ifNil: [ catalog rollTalentFor: typeIdentifier using: randomSample ]
+			ifNotNil: [ revision rollTalentUsing: randomSample ].
 	item := type
 			inventoryItem: itemIdentifier
 			values: values
-			talentIdentifier: (catalog rollTalentFor: typeIdentifier using: randomSample).
+			talentIdentifier: talent.
+	revision ifNotNil: [ item pinWeaponDefinitionRevision: revision ].
 	(item isKindOf: CIInventoryEquipmentSummary)
 		ifTrue: [ (catalog modCatalogue socketsFor: typeIdentifier)
 				do: [ :socket | 

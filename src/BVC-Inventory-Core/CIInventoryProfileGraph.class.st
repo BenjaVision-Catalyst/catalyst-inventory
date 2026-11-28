@@ -592,7 +592,7 @@ CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets
 			values := card at: 'values'.
 			(values includesKey: 'isEmptySlot')
 				ifFalse: [ item := itemsById at: ((values at: 'itemIdentifier') at: 'value').
-					type := catalog typeAt: item definitionIdentifier ifAbsent: [ nil ].
+					type := catalog typeForInventoryItem: item ifAbsent: [ nil ].
 					type
 						ifNotNil: [ self
 								addInspectorIdentity: (type inspectorIdentityFor: item)
@@ -742,7 +742,7 @@ CIInventoryProfileGraph class >> inspectorSectionsFor: type item: item utilityTi
 			ifFalse: [ type inspectorSectionsAtUtilityTier: tier item: item ].
 	(item respondsTo: #talentIdentifier) ifFalse: [ ^ sections ].
 	item talentIdentifier ifNil: [ ^ sections ].
-	talent := catalog talentAt: item talentIdentifier ifAbsent: [ ^ sections ].
+	talent := catalog talentForEquipment: item ifAbsent: [ ^ sections ].
 	talent comment ifEmpty: [ ^ sections ].
 	^ sections
 		copyWith: {'talent'.
