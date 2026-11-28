@@ -413,6 +413,40 @@ CIThatGameLaunchInventoryTest >> testBluescreenStackBandsShieldGateAndMarkedKill
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testCalculatedVariantsReportCooldownReductionOnlyOnKillsFromCover [
+	| catalog reference standard perfect |
+	catalog := CIGameItemTypes buildCatalog.
+	reference := catalog talentReferenceAt: 'Gear Talents!D45'.
+	standard := CIGearTalentEncounter
+			talent: (catalog talentAt: reference talentIdentifier).
+	perfect := CIGearTalentEncounter
+			talent: (catalog talentAt: reference perfectTalentIdentifier).
+	self
+		assert: (standard gadgetCooldownReductionFractionOnEnemyKillAt: 0)
+		equals: 0.
+	standard coverState: #inCover at: 1.
+	self
+		assert: (standard gadgetCooldownReductionFractionOnEnemyKillAt: 1)
+		equals: 0.10.
+	self
+		assert: (standard gadgetCooldownReductionFractionOnEnemyKillAt: 2)
+		equals: 0.10.
+	standard coverState: #exposed at: 3.
+	self
+		assert: (standard gadgetCooldownReductionFractionOnEnemyKillAt: 3)
+		equals: 0.
+	perfect coverState: #inCover at: 0.
+	self
+		assert: (perfect gadgetCooldownReductionFractionOnEnemyKillAt: 0)
+		equals: 0.15.
+	self
+		should: [ CIGearTalentEncounter
+				talent: (catalog talentAt: reference perfectTalentIdentifier)
+				mode: #pvp ]
+		raise: Error
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testCapacitorAndLibertyHitStacksUseWorkbookParameters [
 	| catalog capacitor liberty |
 	catalog := CIGameItemTypes buildCatalog.

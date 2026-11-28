@@ -86,10 +86,20 @@ CIGearTalentEncounter >> evidence [
 	^ evidence copy
 ]
 
+{ #category : 'combat' }
+CIGearTalentEncounter >> gadgetCooldownReductionFractionOnEnemyKillAt: seconds [
+	"Answers the documented reduction fraction. The cooldown basis is unspecified."
+
+	self advanceTo: seconds.
+	^ (mechanic = #calculated and: [ coverState = #inCover ])
+		ifTrue: [ parameters at: #cooldownReductionFraction ]
+		ifFalse: [ 0 ]
+]
+
 { #category : 'initialization' }
 CIGearTalentEncounter >> initializeTalent: aTalent [
 	| rule |
-	rule := #(#(obliterate 'obliterate' 'perfectObliterate' 'Gear Talents!D7:F7') #(unbreakable 'unbreakable' 'perfectUnbreakable' 'Gear Talents!D14:F14') #(overwatch 'overwatch' 'perfectOverwatch' 'Gear Talents!D11:F11') #(composure 'composure' 'perfectComposure' 'Gear Talents!D33:F33, Gear Named + Exotics!F25:G25') #(combinedArms 'combinedArms' 'perfectCombinedArms' 'Gear Talents!D26:F26') #(tagTeam 'tagTeam' 'tagTeam' 'Gear Talents!D22:F22') #(creepingDeath 'creepingDeath' 'perfectCreepingDeath' 'Gear Talents!D47:F47'))
+	rule := #(#(obliterate 'obliterate' 'perfectObliterate' 'Gear Talents!D7:F7') #(unbreakable 'unbreakable' 'perfectUnbreakable' 'Gear Talents!D14:F14') #(overwatch 'overwatch' 'perfectOverwatch' 'Gear Talents!D11:F11') #(composure 'composure' 'perfectComposure' 'Gear Talents!D33:F33, Gear Named + Exotics!F25:G25') #(combinedArms 'combinedArms' 'perfectCombinedArms' 'Gear Talents!D26:F26') #(calculated 'calculated' 'perfectlyCalculated' 'Gear Talents!D45:F45, Gear Named + Exotics!F19:G19') #(tagTeam 'tagTeam' 'tagTeam' 'Gear Talents!D22:F22') #(creepingDeath 'creepingDeath' 'perfectCreepingDeath' 'Gear Talents!D47:F47'))
 			detect: [ :spec | aTalent id = spec second or: [ aTalent id = spec third ] ]
 			ifNone: [ self error: 'Unsupported gear talent' ].
 	mechanic := rule first.
