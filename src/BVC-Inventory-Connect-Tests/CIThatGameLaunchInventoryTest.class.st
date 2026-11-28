@@ -3565,6 +3565,49 @@ CIThatGameLaunchInventoryTest >> testTacticalLinksUseSelectedPerksAndTargetCondi
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testTagTeamConsumesLatestMarkOnlyToReduceActiveCooldowns [
+	| catalog reference encounter remaining result |
+	catalog := CIGameItemTypes buildCatalog.
+	reference := catalog talentReferenceAt: 'Gear Talents!D22'.
+	encounter := CIGearTalentEncounter
+			talent: (catalog talentAt: reference talentIdentifier).
+	self assert: encounter evidence equals: 'Gear Talents!D22:F22'.
+	encounter recordGadgetDamageToEnemy: 'first' at: 0.
+	encounter recordGadgetDamageToEnemy: 'last' at: 1.
+	self assert: encounter markedEnemyIdentifier equals: 'last'.
+	self
+		assertEmpty: (encounter
+				recordWeaponDamageToEnemy: 'last'
+				at: 1
+				remainingGadgetCooldowns: Dictionary new).
+	self assert: encounter markedEnemyIdentifier equals: 'last'.
+	remaining := {#hive -> 9.
+			#pulse -> 2.
+			#shield -> 0} asDictionary.
+	self
+		assert: (encounter
+				recordWeaponDamageToEnemy: 'first'
+				at: 2
+				remainingGadgetCooldowns: remaining)
+		equals: remaining.
+	result := encounter
+			recordWeaponDamageToEnemy: 'last'
+			at: 2
+			remainingGadgetCooldowns: remaining.
+	self
+		assert: result
+		equals: {#hive -> 3.
+				#pulse -> 0.
+				#shield -> 0} asDictionary.
+	self assert: (remaining at: #hive) equals: 9.
+	self assert: encounter markedEnemyIdentifier isNil.
+	encounter recordGadgetDamageToEnemy: 'first' at: 5.99.
+	self assert: encounter markedEnemyIdentifier isNil.
+	encounter recordGadgetDamageToEnemy: 'first' at: 6.
+	self assert: encounter markedEnemyIdentifier equals: 'first'
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testTransferenceOverclockUsesRecipientLockout [
 	| reference rule effects |
 	reference := CIGameItemTypes buildCatalog

@@ -11,7 +11,8 @@ Class {
 		'coverSince',
 		'overwatchPrimed',
 		'buffUntil',
-		'cooldownUntil'
+		'cooldownUntil',
+		'markedEnemyIdentifier'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -88,7 +89,7 @@ CIGearTalentEncounter >> evidence [
 { #category : 'initialization' }
 CIGearTalentEncounter >> initializeTalent: aTalent [
 	| rule |
-	rule := #(#(obliterate 'obliterate' 'perfectObliterate' 'Gear Talents!D7:F7') #(unbreakable 'unbreakable' 'perfectUnbreakable' 'Gear Talents!D14:F14') #(overwatch 'overwatch' 'perfectOverwatch' 'Gear Talents!D11:F11') #(composure 'composure' 'perfectComposure' 'Gear Talents!D33:F33, Gear Named + Exotics!F25:G25') #(combinedArms 'combinedArms' 'perfectCombinedArms' 'Gear Talents!D26:F26') #(creepingDeath 'creepingDeath' 'perfectCreepingDeath' 'Gear Talents!D47:F47'))
+	rule := #(#(obliterate 'obliterate' 'perfectObliterate' 'Gear Talents!D7:F7') #(unbreakable 'unbreakable' 'perfectUnbreakable' 'Gear Talents!D14:F14') #(overwatch 'overwatch' 'perfectOverwatch' 'Gear Talents!D11:F11') #(composure 'composure' 'perfectComposure' 'Gear Talents!D33:F33, Gear Named + Exotics!F25:G25') #(combinedArms 'combinedArms' 'perfectCombinedArms' 'Gear Talents!D26:F26') #(tagTeam 'tagTeam' 'tagTeam' 'Gear Talents!D22:F22') #(creepingDeath 'creepingDeath' 'perfectCreepingDeath' 'Gear Talents!D47:F47'))
 			detect: [ :spec | aTalent id = spec second or: [ aTalent id = spec third ] ]
 			ifNone: [ self error: 'Unsupported gear talent' ].
 	mechanic := rule first.
@@ -98,6 +99,11 @@ CIGearTalentEncounter >> initializeTalent: aTalent [
 	coverState := #exposed.
 	overwatchPrimed := false.
 	^ self
+]
+
+{ #category : 'accessing' }
+CIGearTalentEncounter >> markedEnemyIdentifier [
+	^ markedEnemyIdentifier ifNotNil: #copy
 ]
 
 { #category : 'private' }
@@ -115,6 +121,32 @@ CIGearTalentEncounter >> recordEnemyShotCritical: isCritical at: seconds [
 				ifTrue: [ criticalExpiries add: seconds + (parameters at: #durationSeconds) ] ].
 	mechanic = #combinedArms
 		ifTrue: [ buffUntil := seconds + (parameters at: #durationSeconds) ]
+]
+
+{ #category : 'combat' }
+CIGearTalentEncounter >> recordGadgetDamageToEnemy: enemyIdentifier at: seconds [
+	self advanceTo: seconds.
+	mechanic = #tagTeam ifFalse: [ ^ self ].
+	(cooldownUntil isNil or: [ seconds >= cooldownUntil ])
+		ifTrue: [ markedEnemyIdentifier := enemyIdentifier copy ]
+]
+
+{ #category : 'combat' }
+CIGearTalentEncounter >> recordWeaponDamageToEnemy: enemyIdentifier at: seconds remainingGadgetCooldowns: remaining [
+	| result reduction |
+	self advanceTo: seconds.
+	result := remaining copy.
+	(mechanic = #tagTeam
+		and: [ markedEnemyIdentifier notNil and: [ markedEnemyIdentifier = enemyIdentifier ] ])
+		ifFalse: [ ^ result ].
+	(remaining values anySatisfy: [ :duration | duration > 0 ])
+		ifFalse: [ ^ result ].
+	(self beginCooldownAt: seconds) ifFalse: [ ^ result ].
+	markedEnemyIdentifier := nil.
+	reduction := parameters at: #cooldownReductionSeconds.
+	remaining
+		keysAndValuesDo: [ :gadget :duration | result at: gadget put: (duration - reduction max: 0) ].
+	^ result
 ]
 
 { #category : 'combat' }
