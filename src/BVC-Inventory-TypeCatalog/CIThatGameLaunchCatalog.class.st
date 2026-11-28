@@ -60,7 +60,7 @@ CIThatGameLaunchCatalog class >> registerIn: catalog [
 
 { #category : 'registration' }
 CIThatGameLaunchCatalog class >> registerWeapon: spec in: catalog [
-	| slot weapon |
+	| slot weapon reference range |
 	slot := spec fourth = #pistol
 			ifTrue: [ 'LeftHandWeapon' ]
 			ifFalse: [ 'RangedWeapon' ].
@@ -84,6 +84,16 @@ CIThatGameLaunchCatalog class >> registerWeapon: spec in: catalog [
 		inspectorIdentity: (Dictionary new
 				at: 'inspectorCategory' put: spec fourth asString;
 				yourself).
+	reference := catalog
+			typeAt: (spec fourth = #pistol
+					ifTrue: [ 'weapon.sidearm.relay' ]
+					ifFalse: [ 'weapon.ranged.pathfinder' ]).
+	range := spec last.
+	weapon
+		damageFalloff: ((reference inspectorFalloffRows allButFirst: 2)
+				collect: [ :point |
+					{(point third * range / reference optimalRangeMetres) rounded.
+						point second} ]).
 	catalog register: weapon.
 	CIGameItemTypes
 		configureTalentPoolFor: weapon id

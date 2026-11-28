@@ -76,17 +76,23 @@ CIInventoryProfileGraph class >> addInspectorRows: rows in: id descriptions: des
 
 { #category : 'projection' }
 CIInventoryProfileGraph class >> addItemInspector: sections forCard: card descriptions: descriptions objects: objects [
-	| id children values |
+	| id children values falloff |
 	id := 'item:' , (((card at: 'values') at: 'itemIdentifier') at: 'value')
 			, ':inspector'.
 	children := OrderedCollection new.
 	values := Dictionary new.
+	falloff := ((card at: 'values')
+			at: 'definitionIdentifier'
+			ifAbsent: [ Dictionary new ]) at: 'value' ifAbsent: [ '' ].
+	falloff := (falloff beginsWith: 'weapon.launch.')
+			ifTrue: [ sections detect: [ :each | each first = 'falloff' ] ifNone: [ nil ] ]
+			ifFalse: [ nil ].
 	sections
 		withIndexDo: [ :section :index |
 			| sectionId relation relationId rows fieldIds |
 			rows := section third.
-			rows
-				ifNotEmpty: [ sectionId := id , ':' , section first.
+			(rows notEmpty and: [ falloff isNil or: [ section first ~= 'falloff' ] ])
+				ifTrue: [ sectionId := id , ':' , section first.
 					relationId := sectionId , ':section'.
 					relation := self
 							relation: relationId
@@ -98,6 +104,15 @@ CIInventoryProfileGraph class >> addItemInspector: sections forCard: card descri
 					(relation at: 'properties')
 						at: 'metadata:ciCard'
 						put: (self atom: 'string' value: section first).
+					(falloff notNil
+						and: [ falloff third notEmpty and: [ section first = 'stats' ] ])
+						ifTrue: [ (relation at: 'properties')
+								at: 'metadata:ciFalloff'
+								put: (self
+										atom: 'string'
+										value: (','
+												join: (falloff third
+														collect: [ :point | point third asString , ':' , point second asString ]))) ].
 					relation at: 'accessor' put: self inspectorAccessor.
 					descriptions add: relation.
 					children add: relationId.
