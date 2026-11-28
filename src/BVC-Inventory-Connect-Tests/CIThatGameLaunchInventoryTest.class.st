@@ -248,8 +248,11 @@ CIThatGameLaunchInventoryTest >> testAttributeCataloguePreservesScopeMissingValu
 	self assert: value unit equals: #fraction.
 	self assert: value evidence equals: 'Attribute Info!F2'.
 	rifle := attributes definitionAt: 'weapon.class.rifle'.
-	self assert: (rifle valueFor: #standardMaximum) status equals: #conflicting.
-	self assert: (rifle valueFor: #standardMaximum) magnitude isNil.
+	self assert: (rifle valueFor: #standardMaximum) status equals: #documented.
+	self assert: (rifle valueFor: #standardMaximum) magnitude equals: 0.34.
+	self assert: (rifle valueFor: #standardMaximum) rawText equals: '34'.
+	self assert: (rifle valueFor: #prototypeMaximum) status equals: #documented.
+	self assert: (rifle valueFor: #prototypeMaximum) magnitude equals: 0.51.
 	self assert: (rifle valueFor: #weaponsTabMaximum) magnitude equals: 0.17.
 	self assert: (rifle valueFor: #prototypeMaximum) rawText equals: '51%%'.
 	self
@@ -2794,7 +2797,13 @@ CIThatGameLaunchInventoryTest >> testStandardWeaponClassGenerationUsesOnlyDocume
 	self
 		assert: (lmg classGenerationRule maximumFor: #standardMaximum)
 		equals: 0.12.
-	self assert: (rifle classGenerationRule maximumFor: #standardMaximum) isNil.
+	self
+		assert: (rifle classGenerationRule maximumFor: #standardMaximum)
+		equals: 0.34.
+	self
+		assert: (rifle classGenerationRule maximumFor: #prototypeMaximum)
+		equals: 0.51.
+	self assert: rifle classGenerationRule innateHeadshotDamage equals: 0.80.
 	self
 		assert: (mmr classGenerationRule maximumFor: #standardMaximum)
 		equals: 1.11.
@@ -2820,11 +2829,19 @@ CIThatGameLaunchInventoryTest >> testStandardWeaponClassGenerationUsesOnlyDocume
 				value: 'criticalHitChance'
 				value: 0.10 ]
 		raise: Error.
+	item := create
+			value: rifle id
+			value: 'criticalHitDamage'
+			value: 0.34.
+	self
+		assert: item comparisonStats last statIdentifier
+		equals: 'criticalHitDamage'.
+	self assert: item comparisonStats last value equals: 0.34.
 	self
 		should: [ create
 				value: rifle id
 				value: 'criticalHitDamage'
-				value: 0.17 ]
+				value: 0.341 ]
 		raise: Error.
 	self
 		should: [ create
