@@ -543,7 +543,11 @@ CIInventoryProfileGraph class >> forVerifiedUser: identity rows: items savedSets
 								addInspectorIdentity: (type inspectorIdentityFor: item)
 								to: card
 								descriptions: descriptions.
-							sections := type inspectorSectionsAtUtilityTier: tier item: item.
+							sections := self
+									inspectorSectionsFor: type
+									item: item
+									utilityTier: tier
+									catalog: catalog.
 							sections
 								ifNotEmpty: [ self
 										addItemInspector: sections
@@ -648,6 +652,23 @@ CIInventoryProfileGraph class >> inspectorAccessor [
 					at: 'type' put: 'nil';
 					yourself);
 		yourself
+]
+
+{ #category : 'projection' }
+CIInventoryProfileGraph class >> inspectorSectionsFor: type item: item utilityTier: tier catalog: catalog [
+	| sections talent |
+	sections := type inspectorSectionsAtUtilityTier: tier item: item.
+	(item respondsTo: #talentIdentifier) ifFalse: [ ^ sections ].
+	item talentIdentifier ifNil: [ ^ sections ].
+	talent := catalog talentAt: item talentIdentifier ifAbsent: [ ^ sections ].
+	talent comment ifEmpty: [ ^ sections ].
+	^ sections
+		copyWith: {'talent'.
+				'Talent'.
+				{{'Name'.
+						talent displayName}.
+					{'Comment'.
+						talent comment}}}
 ]
 
 { #category : 'projection' }
