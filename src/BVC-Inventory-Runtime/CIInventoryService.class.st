@@ -118,6 +118,26 @@ CIInventoryService >> gadgetStatsForFamily: familyName variant: variantName tier
 	^ variant knownStatsAtTier: tier
 ]
 
+{ #category : 'reading' }
+CIInventoryService >> gearTalentEncounterFor: itemId forVerifiedUser: identity mode: mode [
+	^ savedSetsLock
+		critical: [ | item talent slot |
+			item := (readStore allRowsForOwner: identity)
+					detect: [ :row | row itemIdentifier = itemId ]
+					ifNone: [ self error: 'Gear item is not owned' ].
+			(item isKindOf: CIInventoryGearSummary)
+				ifFalse: [ self error: 'Expected a gear item' ].
+			slot := item equippedSlotIdentifier.
+			(#('Chest' 'Backpack') includes: slot)
+				ifFalse: [ self error: 'A vest or backpack must be equipped' ].
+			talent := item talentIdentifier
+					ifNil: [ self error: 'The gear item has no talent' ]
+					ifNotNil: [ :id | itemTypeCatalog talentAt: id ].
+			talent eligibility = slot asSymbol
+				ifFalse: [ self error: 'Talent is ineligible for this gear slot' ].
+			CIGearTalentEncounter talent: talent mode: mode ]
+]
+
 { #category : 'writing' }
 CIInventoryService >> grantGearMod: itemId definition: modId tier: tier value: value forVerifiedUser: identity [
 	^ savedSetsLock
@@ -280,22 +300,10 @@ CIInventoryService >> provisionStarterGadgetsForVerifiedUser: identity [
 
 { #category : 'reading' }
 CIInventoryService >> pveGearTalentEncounterFor: itemId forVerifiedUser: identity [
-	^ savedSetsLock
-		critical: [ | item talent slot |
-			item := (readStore allRowsForOwner: identity)
-					detect: [ :row | row itemIdentifier = itemId ]
-					ifNone: [ self error: 'Gear item is not owned' ].
-			(item isKindOf: CIInventoryGearSummary)
-				ifFalse: [ self error: 'Expected a gear item' ].
-			slot := item equippedSlotIdentifier.
-			(#('Chest' 'Backpack') includes: slot)
-				ifFalse: [ self error: 'A vest or backpack must be equipped' ].
-			talent := item talentIdentifier
-					ifNil: [ self error: 'The gear item has no talent' ]
-					ifNotNil: [ :id | itemTypeCatalog talentAt: id ].
-			talent eligibility = slot asSymbol
-				ifFalse: [ self error: 'Talent is ineligible for this gear slot' ].
-			CIGearTalentEncounter talent: talent ]
+	^ self
+		gearTalentEncounterFor: itemId
+		forVerifiedUser: identity
+		mode: #pve
 ]
 
 { #category : 'writing' }

@@ -575,6 +575,53 @@ CIThatGameLaunchInventoryTest >> testLootAwardPersistsSelectionAndGeneratedTalen
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testPvPGearTalentProfilesPreserveConflictsAndUseDocumentedOverrides [
+	| catalog normal perfect conflicting missing owner row encounter cover |
+	catalog := CIGameItemTypes buildCatalog.
+	normal := catalog talentAt: 'obliterate'.
+	perfect := catalog talentAt: 'perfectObliterate'.
+	self assert: ((normal parametersForMode: #pvp) at: #maxStacks) equals: 16.
+	self assert: ((perfect parametersForMode: #pvp) at: #maxStacks) equals: 20.
+	self assert: ((perfect parametersForMode: #pve) at: #maxStacks) equals: 24.
+	conflicting := (catalog talentAt: 'unbreakable') modeProfileFor: #pvp.
+	self assert: conflicting status equals: #conflicting.
+	self
+		assert: ((conflicting sources at: 'Gear Talents!H14') includesSubstring: '50%').
+	self
+		assert: ((conflicting sources at: 'Gear Talents!K14') includesSubstring: '30%').
+	self assert: ((catalog talentAt: 'unbreakable') parametersForMode: #pvp) isNil.
+	self
+		should: [ CIGearTalentEncounter talent: (catalog talentAt: 'unbreakable') mode: #pvp ]
+		raise: Error.
+	missing := (catalog talentAt: 'creepingDeath') modeProfileFor: #pvp.
+	self assert: missing status equals: #unspecified.
+	self assert: (missing sources at: 'Gear Talents!K47') isNil.
+	self startInventory.
+	owner := 'pvp-talent-owner'.
+	row := (catalog typeAt: 'gear.launch.vossAndVale.chest')
+			inventoryItem: 'vest'
+			values: (Dictionary new
+					at: 'weaponDamage' put: 0.1;
+					yourself)
+			talentIdentifier: 'obliterate'.
+	row equippedSlotIdentifier: 'Chest'.
+	service replaceReadRows: {row} forOwner: owner.
+	encounter := service
+			gearTalentEncounterFor: 'vest'
+			forVerifiedUser: owner
+			mode: #pvp.
+	20 timesRepeat: [ encounter recordEnemyShotCritical: true at: 0 ].
+	self assert: (encounter totalWeaponDamageBonusAt: 0) closeTo: 0.16.
+	self assert: (encounter totalWeaponDamageBonusAt: 10) equals: 0.
+	cover := CIGearTalentEncounter
+			talent: (catalog talentAt: 'perfectOverwatch')
+			mode: #pvp.
+	cover coverState: #inCover at: 0.
+	self assert: ((cover squadDamageBonusesAt: 5) at: #weaponDamage) equals: 0.
+	self assert: ((cover squadDamageBonusesAt: 6) at: #weaponDamage) equals: 0.18
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testRedLotusCombatStacksDecayAndRefreshWithLoadout [
 	| owner catalog rows encounter |
 	self startInventory.

@@ -6,7 +6,8 @@ Class {
 		'displayName',
 		'eligibility',
 		'parameters',
-		'comment'
+		'comment',
+		'modeProfiles'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -70,7 +71,31 @@ CIItemTalent >> initializeId: anId name: aName eligibility: aKind parameters: aD
 	^ self
 ]
 
+{ #category : 'initialization' }
+CIItemTalent >> modeProfile: profile for: mode [
+	modeProfiles ifNil: [ modeProfiles := Dictionary new ].
+	modeProfiles at: mode put: profile
+]
+
+{ #category : 'accessing' }
+CIItemTalent >> modeProfileFor: mode [
+	modeProfiles ifNil: [ ^ nil ].
+	^ modeProfiles at: mode ifAbsent: [ nil ]
+]
+
 { #category : 'accessing' }
 CIItemTalent >> parameters [
 	^ parameters copy
+]
+
+{ #category : 'accessing' }
+CIItemTalent >> parametersForMode: mode [
+	| profile resolved |
+	mode = #pve ifTrue: [ ^ self parameters ].
+	profile := self modeProfileFor: mode.
+	(profile notNil and: [ profile isResolved ]) ifFalse: [ ^ nil ].
+	resolved := self parameters.
+	profile parameters
+		keysAndValuesDo: [ :key :value | resolved at: key put: value ].
+	^ resolved
 ]

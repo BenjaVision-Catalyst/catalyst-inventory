@@ -254,6 +254,23 @@ CIGameItemTypes class >> registerModsIn: catalog [
 ]
 
 { #category : 'talents' }
+CIGameItemTypes class >> registerPvPGearTalentProfilesIn: catalog [
+	#(#('obliterate' documented #(#(maxStacks 16)) #(#('Gear Talents!H7' nil) #('Gear Talents!K7' 'Critical hits increase total weapon damage by 1% for 10s. Stacks up to 🔴16 🔴(20) times.'))) #('perfectObliterate' documented #(#(maxStacks 20)) #(#('Gear Talents!H7' nil) #('Gear Talents!K7' 'Critical hits increase total weapon damage by 1% for 10s. Stacks up to 🔴16 🔴(20) times.'))) #('overwatch' documented #(#(coverSeconds 8) #(squadWeaponDamage 0.14) #(squadSkillDamage 0.14)) #(#('Gear Talents!H11' nil) #('Gear Talents!K11' 'After staying in cover for 🟢8s 🟢(6s), increase your and all allies’ TWD and skill damage by 🔴14% (18%) as long as you remain in cover or in a cover-to-cover move.'))) #('perfectOverwatch' documented #(#(coverSeconds 6) #(squadWeaponDamage 0.18) #(squadSkillDamage 0.18)) #(#('Gear Talents!H11' nil) #('Gear Talents!K11' 'After staying in cover for 🟢8s 🟢(6s), increase your and all allies’ TWD and skill damage by 🔴14% (18%) as long as you remain in cover or in a cover-to-cover move.'))) #('unbreakable' conflicting #() #(#('Gear Talents!H14' '50% Armor repaired; 60s cooldown; Perfect: 55% armor, 55s cooldown.') #('Gear Talents!K14' 'When your armor is depleted, repair 🔴30% 🔴(50%) of your armor. 🟢50s cool down.'))) #('perfectUnbreakable' conflicting #() #(#('Gear Talents!H14' '50% Armor repaired; 60s cooldown; Perfect: 55% armor, 55s cooldown.') #('Gear Talents!K14' 'When your armor is depleted, repair 🔴30% 🔴(50%) of your armor. 🟢50s cool down.'))) #('combinedArms' unspecified #() #(#('Gear Talents!H26' nil) #('Gear Talents!K26' nil))) #('perfectCombinedArms' unspecified #() #(#('Gear Talents!H26' nil) #('Gear Talents!K26' nil))) #('composure' unspecified #() #(#('Gear Talents!H33' nil) #('Gear Talents!K33' nil))) #('perfectComposure' unspecified #() #(#('Gear Talents!H33' nil) #('Gear Talents!K33' nil))) #('creepingDeath' unspecified #() #(#('Gear Talents!H47' nil) #('Gear Talents!K47' nil))) #('perfectCreepingDeath' unspecified #() #(#('Gear Talents!H47' nil) #('Gear Talents!K47' nil))))
+		do: [ :spec | 
+			| overrides cells |
+			overrides := Dictionary new.
+			spec third do: [ :pair | overrides at: pair first put: pair second ].
+			cells := Dictionary new.
+			spec fourth do: [ :pair | cells at: pair first put: pair second ].
+			(catalog talentAt: spec first)
+				modeProfile: (CITalentModeProfile
+						status: spec second
+						parameters: overrides
+						sources: cells)
+				for: #pvp ]
+]
+
+{ #category : 'talents' }
 CIGameItemTypes class >> registerTalentDefinitionsIn: catalog [
 	self talentDefinitions
 		do: [ :spec | 
@@ -280,7 +297,8 @@ CIGameItemTypes class >> registerTalentDefinitionsIn: catalog [
 						eligibility: base eligibility
 						parameters: parameters
 						comment: spec fifth) ].
-	self registerGadgetOverchargeTalentsIn: catalog
+	self registerGadgetOverchargeTalentsIn: catalog.
+	self registerPvPGearTalentProfilesIn: catalog
 ]
 
 { #category : 'catalog' }

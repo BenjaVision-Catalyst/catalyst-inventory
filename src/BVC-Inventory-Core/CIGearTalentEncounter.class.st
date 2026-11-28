@@ -22,6 +22,11 @@ CIGearTalentEncounter class >> talent: aTalent [
 	^ self new initializeTalent: aTalent
 ]
 
+{ #category : 'instance creation' }
+CIGearTalentEncounter class >> talent: aTalent mode: mode [
+	^ (self talent: aTalent) configureTalent: aTalent mode: mode
+]
+
 { #category : 'private' }
 CIGearTalentEncounter >> advanceTo: seconds [
 	(seconds isNumber
@@ -45,6 +50,22 @@ CIGearTalentEncounter >> beginCooldownAt: seconds [
 	(cooldownUntil notNil and: [ seconds < cooldownUntil ]) ifTrue: [ ^ false ].
 	cooldownUntil := seconds + (parameters at: #cooldownSeconds).
 	^ true
+]
+
+{ #category : 'initialization' }
+CIGearTalentEncounter >> configureTalent: aTalent mode: mode [
+	| profile resolved |
+	(#(pve pvp) includes: mode) ifFalse: [ self error: 'Unknown talent mode' ].
+	mode = #pve ifTrue: [ ^ self ].
+	profile := aTalent modeProfileFor: mode.
+	resolved := aTalent parametersForMode: mode.
+	resolved
+		ifNil: [ self
+				error: 'Unresolved PvP gear talent: '
+						, (profile ifNil: [ 'unspecified' ] ifNotNil: [ profile status asString ]) ].
+	parameters := resolved.
+	evidence := ', ' join: profile sources keys sorted.
+	^ self
 ]
 
 { #category : 'combat' }
