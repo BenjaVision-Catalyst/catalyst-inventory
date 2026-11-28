@@ -1966,6 +1966,87 @@ CIThatGameLaunchInventoryTest >> testRedLotusCombatStacksDecayAndRefreshWithLoad
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testRiggerAppliesNonRefreshingBuffAndResetsCanceledGadget [
+	| catalog rule standard improved |
+	catalog := CIGameItemTypes buildCatalog.
+	rule := (catalog gearFamilyReferenceAt: 'Rigger') gadgetTalentRule.
+	self assert: rule evidence equals: 'Gearsets!E43:G43'.
+	standard := {#interactedGadgetDamageBonus -> 0.25.
+			#buffDurationSeconds -> 10} asDictionary.
+	improved := {#interactedGadgetDamageBonus -> 0.50.
+			#buffDurationSeconds -> 10} asDictionary.
+	#(use deploy changeTarget heal)
+		do: [ :action | 
+			self
+				assert: (rule
+						damageBuffOnGadgetInteraction: action
+						equippedPieces: 4
+						buffActive: false
+						bestBuds: false)
+				equals: standard ].
+	self
+		assert: (rule
+				damageBuffOnGadgetInteraction: #heal
+				equippedPieces: 4
+				buffActive: false
+				bestBuds: true)
+		equals: improved.
+	self
+		assertEmpty: (rule
+				damageBuffOnGadgetInteraction: #heal
+				equippedPieces: 4
+				buffActive: true
+				bestBuds: true).
+	self
+		assertEmpty: (rule
+				damageBuffOnGadgetInteraction: #deploy
+				equippedPieces: 3
+				buffActive: false
+				bestBuds: false).
+	self
+		assertEmpty: (rule
+				damageBuffOnGadgetInteraction: #cancel
+				equippedPieces: 4
+				buffActive: false
+				bestBuds: false).
+	self
+		assert: (rule
+				cooldownAfterGadgetEndsBy: #cancel
+				remainingSeconds: 24
+				equippedPieces: 4
+				completeUptime: true)
+		equals: 0.
+	self
+		assert: (rule
+				cooldownAfterGadgetEndsBy: #expired
+				remainingSeconds: 24
+				equippedPieces: 4
+				completeUptime: true)
+		equals: 24.
+	self
+		assert: (rule
+				cooldownAfterGadgetEndsBy: #destroyed
+				remainingSeconds: 24
+				equippedPieces: 4
+				completeUptime: true)
+		equals: 24.
+	self
+		assert: (rule
+				cooldownAfterGadgetEndsBy: #cancel
+				remainingSeconds: 24
+				equippedPieces: 4
+				completeUptime: false)
+		equals: 24.
+	self
+		assert: (rule
+				cooldownAfterGadgetEndsBy: #cancel
+				remainingSeconds: 24
+				equippedPieces: 3
+				completeUptime: true)
+		equals: 24
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testRockNRollGeneratesWithPerfectlyExtraIncludedInMagazineCapacity [
 	| catalog weapon talent item acs12 |
 	catalog := CIGameItemTypes buildCatalog.

@@ -75,5 +75,7 @@ CIWorkbookFamilyData class >> registerIn: catalog [
 	(catalog gearFamilyReferenceAt: 'Measured Assembly')
 		gadgetTalentRule: CIHuddleRule new.
 	(catalog gearFamilyReferenceAt: 'Hard Wired')
-		gadgetTalentRule: CIHardWiredFeedbackLoopRule new
+		gadgetTalentRule: CIHardWiredFeedbackLoopRule new.
+	(catalog gearFamilyReferenceAt: 'Rigger')
+		gadgetTalentRule: CIRiggerGadgetRule new
 ]
