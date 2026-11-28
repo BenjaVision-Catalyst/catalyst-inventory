@@ -26,6 +26,19 @@ CIWorkbookTalentData class >> gearPart4 [
 ]
 
 { #category : 'registration' }
+CIWorkbookTalentData class >> registerEnergizeRulesIn: catalog [
+	| standard perfect |
+	standard := CIEnergizeRule cooldownSeconds: 60 evidence: 'Gear Talents!D44:F44'.
+	perfect := CIEnergizeRule
+			cooldownSeconds: 30
+			evidence: 'Gear Talents!D44:F44; Gear Named + Exotics!F23:G23'.
+	(catalog talentReferenceAt: 'Gear Talents!D44')
+		gadgetTalentRule: standard
+		perfect: perfect.
+	(catalog namedGearReferenceAt: 'Axel') gadgetTalentRule: perfect
+]
+
+{ #category : 'registration' }
 CIWorkbookTalentData class >> registerIn: catalog [
 	#(weaponPart1 weaponPart2 weaponPart3 weaponPart4 weaponPart5)
 		do: [ :selector | 
@@ -38,7 +51,8 @@ CIWorkbookTalentData class >> registerIn: catalog [
 			(self perform: selector)
 				do: [ :row | 
 					catalog
-						registerTalentReference: (CIWorkbookTalentReference fromWorkbookRow: row sheet: 'Gear Talents') ] ]
+						registerTalentReference: (CIWorkbookTalentReference fromWorkbookRow: row sheet: 'Gear Talents') ] ].
+	self registerEnergizeRulesIn: catalog
 ]
 
 { #category : 'workbook data' }

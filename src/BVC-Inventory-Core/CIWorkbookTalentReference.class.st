@@ -9,7 +9,9 @@ Class {
 		'fields',
 		'fieldReferences',
 		'talentIdentifier',
-		'perfectTalentIdentifier'
+		'perfectTalentIdentifier',
+		'gadgetTalentRule',
+		'perfectGadgetTalentRule'
 	],
 	#category : 'BVC-Inventory-Core',
 	#package : 'BVC-Inventory-Core'
@@ -28,6 +30,17 @@ CIWorkbookTalentReference >> evidenceForField: key [
 { #category : 'accessing' }
 CIWorkbookTalentReference >> fieldAt: key [
 	^ (fields at: key ifAbsent: [ nil ]) ifNotNil: #copy
+]
+
+{ #category : 'accessing' }
+CIWorkbookTalentReference >> gadgetTalentRule [
+	^ gadgetTalentRule
+]
+
+{ #category : 'accessing' }
+CIWorkbookTalentReference >> gadgetTalentRule: standard perfect: perfect [
+	gadgetTalentRule := standard.
+	perfectGadgetTalentRule := perfect
 ]
 
 { #category : 'accessing' }
@@ -55,6 +68,11 @@ CIWorkbookTalentReference >> initializeWorkbookRow: row sheet: title [
 { #category : 'accessing' }
 CIWorkbookTalentReference >> name [
 	^ name copy
+]
+
+{ #category : 'accessing' }
+CIWorkbookTalentReference >> perfectGadgetTalentRule [
+	^ perfectGadgetTalentRule
 ]
 
 { #category : 'accessing' }

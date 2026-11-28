@@ -537,6 +537,41 @@ CIThatGameLaunchInventoryTest >> testDoctorHomeMarksExpireAndNemesisKeepsItsDocu
 ]
 
 { #category : 'tests' }
+CIThatGameLaunchInventoryTest >> testEnergizeVariantsRespectCooldownAndPreserveUnknownOverchargeDuration [
+	| catalog reference standard perfect tierBonus overcharge |
+	catalog := CIGameItemTypes buildCatalog.
+	reference := catalog talentReferenceAt: 'Gear Talents!D44'.
+	standard := reference gadgetTalentRule.
+	perfect := reference perfectGadgetTalentRule.
+	self
+		assert: (catalog namedGearReferenceAt: 'Axel') gadgetTalentRule
+		identicalTo: perfect.
+	self assert: standard cooldownSeconds equals: 60.
+	self assert: perfect cooldownSeconds equals: 30.
+	tierBonus := standard
+			effectsOnArmorKitUseAtGadgetTier: 5
+			secondsSinceLastActivation: nil.
+	self assert: (tierBonus at: #gadgetTierBonus) equals: 1.
+	self assert: (tierBonus at: #gadgetTierBonusSeconds) equals: 15.
+	self
+		assertEmpty: (standard effectsOnArmorKitUseAtGadgetTier: 5 secondsSinceLastActivation: 59.99).
+	self
+		assert: (standard effectsOnArmorKitUseAtGadgetTier: 5 secondsSinceLastActivation: 60)
+		equals: tierBonus.
+	self
+		assertEmpty: (perfect effectsOnArmorKitUseAtGadgetTier: 6 secondsSinceLastActivation: 29.99).
+	overcharge := perfect
+			effectsOnArmorKitUseAtGadgetTier: 6
+			secondsSinceLastActivation: 30.
+	self assert: (overcharge at: #overcharge).
+	self deny: (overcharge includesKey: #overchargeSeconds).
+	self
+		assert: (perfect
+				effectsOnArmorKitUseAtGadgetTier: #overcharge
+				secondsSinceLastActivation: 30) isNil
+]
+
+{ #category : 'tests' }
 CIThatGameLaunchInventoryTest >> testEquippedCreepingDeathSpreadsWithCooldown [
 	| owner catalog row encounter application distances targets |
 	self startInventory.
